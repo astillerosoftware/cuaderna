@@ -1258,7 +1258,7 @@ html.lz-on,html.lz-on body{overflow:hidden}
 <script src="servidor.js"></script>
 <script>
 "use strict";
-const VERSION = "0.38.0";
+const VERSION = "0.38.1";
 let avisoVersion = false;
 /* ================= Iconos ================= */
 const ICONOS = {
@@ -3500,7 +3500,7 @@ let asCanal = lsGet("chispa.asCanal") || "wa";
 function personasParaPasar(n){
   const out = [], ya = new Set(), add = (p) => { const k = norm(p.n || p.e || p.tel).trim(); if (!k || ya.has(k)) return; ya.add(k); out.push(p); };
   const telDe = nom => (config.telefonos || {})[norm(nom)]?.tel || telDeTarjetas(nom)[0]?.tel || "";
-  for (const p of implicados(n)) add({n: p.nombre, tel: telDe(p.nombre), e: (config.companerosCorreo || []).find(c => norm(c.n) === norm(p.nombre))?.e || ""});
+  for (const p of implicados(n)) add({n: p.nombre, tel: telDe(p.nombre), e: (config.companerosCorreo || []).find(c => norm(c.n) === norm(p.nombre))?.e || "", deNota: true});
   for (const p of config.personasPasar || []) add(p);
   for (const c of config.companerosCorreo || []) add({n: c.n, e: c.e, tel: c.n ? telDe(c.n) : ""});
   return out.slice(0, 10);
@@ -3558,7 +3558,7 @@ function pintarCanal(){
   $("#asRec").innerHTML = asPersonas.filter(p => wa ? true : p.e).map((p, i) => `<button class="opc" data-asr="${asPersonas.indexOf(p)}" type="button">${esc(p.n || p.e || p.tel)}${!wa || p.tel ? "" : "<small>sin móvil</small>"}</button>`).join("");
   $("#asRec").classList.toggle("oculto", !$("#asRec").innerHTML);
 }
-function abrirAsignar(){
+async function abrirAsignar(){
   cerrarHojaEnviar();
   asPersonas = personasParaPasar(notaDelEditor());
   if (!conMS() && asCanal === "correo") asCanal = "wa";
@@ -3566,7 +3566,10 @@ function abrirAsignar(){
   $("#asYo").classList.toggle("oculto", !!config.miNombre); $("#asYo").value = config.miNombre || "";
   $("#asMotivo").value = ""; $("#asLimite").value = $("#eFecha").value || "";
   $("#asNombre").value = ""; $("#asTel").value = ""; $("#asPara").value = "";
-  const p0 = asPersonas[0]; asTelAuto = null; $("#asSugs").innerHTML = ""; if (p0){ $("#asNombre").value = p0.n || ""; $("#asTel").value = p0.tel || ""; $("#asPara").value = p0.e || ""; asTelAuto = p0.n || null; }
+  // solo se rellena con la persona de la nota (Para quién o nombrada en el texto); si no hay, el formulario queda vacío
+  const p0 = asPersonas[0]?.deNota ? asPersonas[0] : null; asTelAuto = null; $("#asSugs").innerHTML = "";
+  if (p0 && !p0.tel && esApp()){ try { const r = await nativo("ChispaNativo").telefonos({nombres: [p0.n]}); const l = r?.telefonos?.[p0.n] || []; p0.tel = (l.find(t => t.movil) || l[0])?.tel || ""; } catch(e){} }
+  if (p0){ $("#asNombre").value = p0.n || ""; $("#asTel").value = p0.tel || ""; $("#asPara").value = p0.e || ""; asTelAuto = p0.n || null; }
   pintarCanal();
   abrirHoja("#hAsignar"); $("#hEditar").classList.add("on");
   setTimeout(() => ($("#asNombre").value ? $("#asMotivo") : $("#asNombre")).focus(), 250);
