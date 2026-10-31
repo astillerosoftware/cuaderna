@@ -1,0 +1,28 @@
+{
+  "appId": "es.astillerosoftware.cuaderna",
+  "appName": "Cuaderna",
+  "webDir": "www",
+  "server": {
+    "url": "https://cuaderna.astillerosoftware.es/",
+    "allowNavigation": [
+      "cuaderna.astillerosoftware.es",
+      "login.microsoftonline.com",
+      "*.microsoftonline.com",
+      "login.live.com",
+      "*.live.com",
+      "account.microsoft.com",
+      "*.msauth.net",
+      "*.msftauth.net"
+    ],
+    "errorPath": "sin-conexion.html"
+  },
+  "android": {
+    "backgroundColor": "#F4ECDD"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_chispa",
+      "iconColor": "#A8322D"
+    }
+  }
+}

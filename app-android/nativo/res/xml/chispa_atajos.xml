@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Accesos al mantener pulsado el icono de Cuaderna (y para «Ok Google, abre Grabar nota de Cuaderna») -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="grabar" android:enabled="true" android:icon="@drawable/ic_w_mic"
+        android:shortcutShortLabel="@string/atajo_grabar" android:shortcutLongLabel="@string/atajo_grabar_largo">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="es.astillerosoftware.cuaderna" android:targetClass="es.astillerosoftware.cuaderna.MainActivity">
+            <extra android:name="chispa_accion" android:value="voz" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="anotar" android:enabled="true" android:icon="@drawable/ic_w_pluma"
+        android:shortcutShortLabel="@string/atajo_anotar" android:shortcutLongLabel="@string/atajo_anotar">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="es.astillerosoftware.cuaderna" android:targetClass="es.astillerosoftware.cuaderna.MainActivity">
+            <extra android:name="chispa_accion" android:value="anotar" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="ancla" android:enabled="true" android:icon="@drawable/ic_w_ancla"
+        android:shortcutShortLabel="@string/atajo_ancla" android:shortcutLongLabel="@string/atajo_ancla">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="es.astillerosoftware.cuaderna" android:targetClass="es.astillerosoftware.cuaderna.MainActivity">
+            <extra android:name="chispa_accion" android:value="ancla" />
+        </intent>
+    </shortcut>
+</shortcuts>

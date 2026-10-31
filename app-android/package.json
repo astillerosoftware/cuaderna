@@ -1,0 +1,17 @@
+{
+  "name": "chispa-android",
+  "version": "1.0.0",
+  "private": true,
+  "description": "App Android de Cuaderna: envuelve la web de GitHub Pages y añade widget, avisos, compartir, llamadas y modo coche",
+  "scripts": {
+    "aplicar": "node scripts/aplicar.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/local-notifications": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.0.0"
+  }
+}

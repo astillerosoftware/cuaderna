@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cuaderna · Instálala en un minuto</title>
+<meta name="description" content="Cuaderna: lo que se te ocurre, bien guardado. Dicta, escribe o haz una foto; Cuaderna lo ordena y te lo recuerda.">
+<meta property="og:title" content="Cuaderna · Lo que se te ocurre, bien guardado">
+<meta property="og:description" content="Dicta, escribe o haz una foto. Cuaderna lo ordena, te lo recuerda y lo compartes con quien quieras.">
+<meta property="og:image" content="https://cuaderna.astillerosoftware.es/icon-512.png">
+<meta name="theme-color" content="#F4ECDD">
+<link rel="icon" href="../icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F4ECDD;--papel:#FBF6EC;--tinta:#2B1D14;--suave:#7A6652;--linea:#E3D6BE;--lacre:#A8322D;--lacre-hi:#D0614F;--lacre-deep:#7E211D;--mostaza:#F0C96A;--crema:#FBF3E4}
+@media (prefers-color-scheme: dark){:root{--bg:#1E1510;--papel:#2A1E16;--tinta:#F1E6D2;--suave:#B9A48A;--linea:#45331F;--mostaza:#C9A04A}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tinta);font:16px/1.5 "Figtree",system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(rgba(122,102,82,.13) 1.2px,transparent 1.6px);background-size:16px 16px}
+.envoltura{max-width:560px;margin:0 auto;padding:0 16px 40px}
+svg.i{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+h1,h2{font-family:"Fraunces",Georgia,serif;letter-spacing:-.01em;margin:0}
+
+/* portada */
+.portada{text-align:center;padding:36px 0 8px}
+.portada img.logo{width:92px;height:92px;border-radius:24px;border:4px solid var(--tinta);box-shadow:6px 6px 0 var(--tinta)}
+.portada h1{font-size:56px;line-height:1;margin:18px 0 8px}
+.portada p{font:italic 600 20px "Fraunces",Georgia,serif;color:var(--suave);margin:0}
+.video{margin:24px auto 0;max-width:340px;border:4px solid var(--tinta);border-radius:22px;overflow:hidden;box-shadow:8px 8px 0 var(--tinta);background:#000}
+.video video{display:block;width:100%;aspect-ratio:9/16;object-fit:cover}
+.boton{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:22px;padding:17px 20px;border-radius:18px;border:3px solid var(--tinta);
+  background:var(--lacre);color:var(--crema);font:700 18px "Figtree",sans-serif;text-decoration:none;box-shadow:5px 5px 0 var(--tinta);transition:transform .1s,box-shadow .1s}
+.boton:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--tinta)}
+.boton svg{width:22px;height:22px;stroke-width:2.2}
+.boton.sec{background:var(--papel);color:var(--tinta)}
+
+/* bloques */
+section{margin-top:44px}
+.etiqueta{display:inline-block;background:var(--mostaza);color:#2B1D14;border:3px solid var(--tinta);padding:4px 12px;font:700 13px "Figtree";letter-spacing:.12em;text-transform:uppercase;transform:rotate(-2deg);box-shadow:3px 3px 0 var(--tinta)}
+section h2{font-size:30px;margin:14px 0 18px}
+
+.ventajas{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ventaja{background:var(--papel);border:3px solid var(--tinta);border-radius:18px;padding:16px 14px;box-shadow:4px 4px 0 var(--tinta)}
+.ventaja .ic{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--lacre);color:var(--crema);font-size:22px;border:3px solid var(--tinta);margin-bottom:10px}
+.ventaja:nth-child(even) .ic{background:var(--mostaza);color:#2B1D14}
+.ventaja b{display:block;font:700 17px/1.2 "Fraunces",Georgia,serif}
+.ventaja span{display:block;color:var(--suave);font-size:14px;margin-top:4px;line-height:1.35}
+
+/* instalación */
+.pestanas{display:flex;gap:6px;background:var(--papel);border:3px solid var(--tinta);border-radius:18px;padding:5px;box-shadow:4px 4px 0 var(--tinta)}
+.pestanas button{flex:1;border:0;background:none;color:var(--suave);font:600 15px "Figtree";padding:11px 6px;border-radius:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+.pestanas button[aria-selected="true"]{background:var(--tinta);color:var(--bg)}
+.pasos{list-style:none;padding:0;margin:22px 0 0;counter-reset:paso}
+.pasos li{counter-increment:paso;display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}
+.pasos li::before{content:counter(paso);flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--lacre);color:var(--crema);font:700 19px "Fraunces",Georgia,serif;border:3px solid var(--tinta)}
+.pasos li div{padding-top:7px}
+.pasos b{font-weight:700}
+.pasos small{display:block;color:var(--suave);font-size:14px;margin-top:2px}
+.panel[hidden]{display:none}
+
+.requisito{display:flex;gap:14px;align-items:center;background:var(--papel);border:3px dashed var(--tinta);border-radius:18px;padding:16px;margin-top:8px}
+.requisito .ic{font-size:30px;color:var(--lacre)}
+.requisito small{display:block;color:var(--suave)}
+
+details{background:var(--papel);border:3px solid var(--tinta);border-radius:16px;margin-bottom:10px;box-shadow:3px 3px 0 var(--tinta)}
+summary{cursor:pointer;list-style:none;padding:14px 16px;font-weight:700;display:flex;justify-content:space-between;gap:10px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font:700 22px/1 "Fraunces",serif;color:var(--lacre)}
+details[open] summary::after{content:"–"}
+details p{margin:0;padding:0 16px 16px;color:var(--suave)}
+
+footer{text-align:center;color:var(--suave);font-size:14px;margin-top:44px}
+footer b{font-family:"Fraunces",Georgia,serif;color:var(--tinta)}
+</style>
+</head>
+<body>
+<div class="envoltura">
+
+  <header class="portada">
+    <img class="logo" src="../icon-512.png" alt="">
+    <h1>Cuaderna</h1>
+    <p>Lo que se te ocurre, bien guardado.</p>
+    <a class="boton" href="#instalar"><svg class="i" viewBox="0 0 24 24"><path d="M12 4v13M6 11l6 6 6-6M5 20.5h14"/></svg>Instálala en un minuto</a>
+    <div class="video"><video src="cuaderna.mp4" poster="portada.jpg" controls playsinline preload="none"></video></div>
+  </header>
+
+  <section>
+    <span class="etiqueta">Qué hace</span>
+    <h2>Tu cuaderno de todo, en el bolsillo</h2>
+    <div class="ventajas">
+      <div class="ventaja"><div class="ic"><svg class="i" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></div><b>Dicta y listo</b><span>Habla, escribe a mano o haz una foto.</span></div>
+      <div class="ventaja"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M12 3.5c.7 4.3 2.7 6.3 7 7-4.3.7-6.3 2.7-7 7-.7-4.3-2.7-6.3-7-7 4.3-.7 6.3-2.7 7-7z"/></svg></div><b>Se ordena sola</b><span>Título, fecha, para quién y tareas.</span></div>
+      <div class="ventaja"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 21a2 2 0 0 0 4 0"/></svg></div><b>Te lo recuerda</b><span>Avisos, calendario y resumen diario.</span></div>
+      <div class="ventaja"><div class="ic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.2"/><path d="M12 7.2V21M8 11h8M4 13.5a8 8 0 0 0 16 0"/></svg></div><b>Nada se escapa</b><span>Ancla rápida y las ideas de madrugada.</span></div>
+      <div class="ventaja"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4l2 2.2h8A1.5 1.5 0 0 1 20.5 9.7V17.5A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5z"/></svg></div><b>Por asuntos</b><span>Un viaje, una reforma, cada persona.</span></div>
+      <div class="ventaja"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/></svg></div><b>Compártela</b><span>Pasa notas a tu familia o amigos.</span></div>
+      <div class="ventaja"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M5 4.5h4v15H5zM10.5 4.5h4v15h-4zM16 5.5l3.6-.9 3 14.4-3.6.9z"/></svg></div><b>Tu biblioteca</b><span>Libretas, etiquetas y plantillas.</span></div>
+      <div class="ventaja"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H7z"/><path d="M14 3.5v4h4M3.5 13h17"/></svg></div><b>Escanea y guarda</b><span>Documentos en PDF y páginas web.</span></div>
+      <div class="ventaja"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4.5v4h4M12 8v4.5l3 2"/></svg></div><b>A tu manera</b><span>Formato, enlaces y versiones anteriores.</span></div>
+      <div class="ventaja"><div class="ic"><svg class="i" viewBox="0 0 24 24"><path d="M7 18.5a4.5 4.5 0 0 1-.6-9A6 6 0 0 1 18 9a4.8 4.8 0 0 1-.5 9.5z"/></svg></div><b>Siempre tuyas</b><span>En tu OneDrive. Exporta o trae Evernote.</span></div>
+    </div>
+  </section>
+
+  <section id="instalar">
+    <span class="etiqueta">Empieza</span>
+    <h2>Instálala en un minuto</h2>
+    <div class="pestanas" role="tablist">
+      <button role="tab" data-p="android" aria-selected="true"><svg class="i" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>Android</button>
+      <button role="tab" data-p="iphone" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>iPhone</button>
+      <button role="tab" data-p="pc" aria-selected="false"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg>Ordenador</button>
+    </div>
+
+    <div class="panel" id="p-android">
+      <a class="boton" href="https://github.com/astillerosoftware/cuaderna/releases/latest/download/Cuaderna.apk"><svg class="i" viewBox="0 0 24 24"><path d="M12 4v13M6 11l6 6 6-6M5 20.5h14"/></svg>Descargar Cuaderna</a>
+      <ol class="pasos">
+        <li><div><b>Abre el archivo descargado</b><small>Si te lo pide, permite «instalar apps desconocidas».</small></div></li>
+        <li><div><b>Si sale Play Protect</b>, pulsa «Más detalles» › «Instalar de todas formas»<small>Sale porque la app no viene de Play Store.</small></div></li>
+        <li><div><b>Entra con tu cuenta de Microsoft</b><small>Y acepta el micrófono y las notificaciones.</small></div></li>
+        <li><div><b>Pon el widget</b> en tu pantalla de inicio<small>Para grabar con un solo toque.</small></div></li>
+      </ol>
+    </div>
+    <div class="panel" id="p-iphone" hidden>
+      <a class="boton" href="https://cuaderna.astillerosoftware.es/"><svg class="i" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Abrir Cuaderna en Safari</a>
+      <ol class="pasos">
+        <li><div><b>Entra con tu cuenta de Microsoft</b></div></li>
+        <li><div><b>Pulsa Compartir</b> (el cuadrado con la flecha)</div></li>
+        <li><div><b>Elige «Añadir a pantalla de inicio»</b><small>Y ya la tienes como una app más.</small></div></li>
+      </ol>
+    </div>
+    <div class="panel" id="p-pc" hidden>
+      <a class="boton" href="https://cuaderna.astillerosoftware.es/"><svg class="i" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Abrir Cuaderna</a>
+      <ol class="pasos">
+        <li><div><b>Ábrela en Chrome o Edge</b></div></li>
+        <li><div><b>Entra con tu cuenta de Microsoft</b><small>Verás las mismas notas que en el móvil.</small></div></li>
+        <li><div><b>Opcional:</b> instálala desde el icono de la barra de direcciones</div></li>
+      </ol>
+    </div>
+
+    <div class="requisito"><div class="ic"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg></div>
+      <div><b>Mejor con tu cuenta personal de Microsoft</b><small>Outlook, Hotmail o Live: tus notas quedan a salvo en tu OneDrive y las ves en el móvil y el PC. ¿Sin cuenta? Pulsa «Probar sin cuenta»: todo se guarda solo en ese dispositivo.</small></div></div>
+  </section>
+
+  <section>
+    <span class="etiqueta">Dudas</span>
+    <h2>Por si acaso</h2>
+    <details><summary>¿Dónde se guardan mis notas?</summary><p>En tu propio OneDrive, en la carpeta Aplicaciones. Nadie más puede verlas.</p></details>
+    <details><summary>¿Cuesta algo?</summary><p>No. Solo usa el espacio de tu OneDrive, y con el gratuito sobra.</p></details>
+    <details><summary>¿Puedo usarla sin cuenta de Microsoft?</summary><p>Sí: en la entrada pulsa «Probar sin cuenta». Tus notas se guardan solo en ese dispositivo, así que si borras la app o pierdes el móvil, se pierden. Cuando quieras, conecta tu cuenta en Más › Ajustes y todo se sube a tu OneDrive. Calendario, correo, compartir con otros y versiones necesitan la cuenta.</p></details>
+    <details><summary>¿Puedo traer mis notas de Evernote?</summary><p>Sí. Exporta tus libretas desde Evernote como archivo .enex y en Cuaderna ve a Más › Ajustes › Tus datos › Importar. Llegan con sus fotos, archivos y etiquetas.</p></details>
+    <details><summary>¿Cómo la actualizo?</summary><p>La app te avisa cuando hay versión nueva: la descargas e instalas encima. No pierdes nada.</p></details>
+    <details><summary>Tengo una idea o algo no va</summary><p>Dentro de la app, en Ayuda, pulsa «Sugerencias y mejoras».</p></details>
+  </section>
+
+  <footer><b>Cuaderna</b> · Lo que se te ocurre, bien guardado.<br><a href="../privacidad.html" style="color:inherit">Privacidad</a></footer>
+</div>
+<script src="../servidor.js"></script>
+<script>
+const tabs = [...document.querySelectorAll("[data-p]")];
+function elegir(p){ tabs.forEach(t => t.setAttribute("aria-selected", t.dataset.p === p)); ["android", "iphone", "pc"].forEach(x => document.getElementById("p-" + x).hidden = x !== p); }
+tabs.forEach(t => t.onclick = () => elegir(t.dataset.p));
+try { if (!sessionStorage.getItem("cuaderna.visto")){ sessionStorage.setItem("cuaderna.visto", "1"); window.cuadernaEvento?.("bienvenida"); } } catch(e){}
+document.querySelectorAll('a[href$=".apk"]').forEach(a => a.addEventListener("click", () => window.cuadernaEvento?.("bienvenida_instalar")));
+const ua = navigator.userAgent;
+elegir(/android/i.test(ua) ? "android" : /iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1) ? "iphone" : /mobi/i.test(ua) ? "android" : "pc");
+</script>
+</body>
+</html>

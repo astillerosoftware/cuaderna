@@ -1,0 +1,66 @@
+
+        <!-- Widget de la pantalla de inicio -->
+        <receiver
+            android:name=".ChispaWidget"
+            android:exported="true"
+            android:label="Cuaderna">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_chispa_info" />
+        </receiver>
+
+        <!-- Aviso al colgar una llamada -->
+        <receiver
+            android:name=".LlamadaReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Modo coche: Bluetooth del coche conectado o desconectado -->
+        <receiver
+            android:name=".CocheReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
+                <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Modo coche: comprueba cada pocos minutos que el coche sigue conectado -->
+        <service
+            android:name=".CocheJob"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+
+        <!-- Resumen diario por correo -->
+        <service
+            android:name=".ResumenJob"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+
+        <!-- Compartir notas como PDF -->
+        <provider
+            android:name=".ArchivosCompartidos"
+            android:authorities="es.astillerosoftware.cuaderna.archivos"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/chispa_compartir" />
+        </provider>
+
+        <!-- Pregunta de la mañana (buzón Sueños): sigue al despertador -->
+        <receiver
+            android:name=".Suenos"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.app.action.NEXT_ALARM_CLOCK_CHANGED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>

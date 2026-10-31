@@ -1,0 +1,30 @@
+name: Servidor
+# Publica el servidor de Cuaderna (carpeta servidor/) en la Function App de Azure.
+# Necesita el secreto AZURE_FUNCTIONAPP_PUBLISH_PROFILE y la variable AZURE_FUNCTIONAPP_NAME.
+on:
+  push:
+    branches: [main]
+    paths: ["servidor/**", ".github/workflows/servidor.yml"]
+  workflow_dispatch:
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    env:
+      PERFIL: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Instalar dependencias
+        working-directory: servidor
+        run: npm install --omit=dev
+      - name: Aviso si falta configurar
+        if: env.PERFIL == ''
+        run: echo "::warning::Falta el secreto AZURE_FUNCTIONAPP_PUBLISH_PROFILE; no se publica el servidor."
+      - name: Publicar en Azure
+        if: env.PERFIL != ''
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ vars.AZURE_FUNCTIONAPP_NAME }}
+          package: servidor
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}

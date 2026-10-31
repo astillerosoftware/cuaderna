@@ -1,0 +1,11 @@
+{
+  "name": "cuaderna-servidor",
+  "version": "1.0.0",
+  "description": "Servidor de Cuaderna: usuarios autorizados, IA y voz sin compartir claves, y sugerencias",
+  "main": "src/functions/*.js",
+  "private": true,
+  "dependencies": {
+    "@azure/data-tables": "^13.3.0",
+    "@azure/functions": "^4.6.0"
+  }
+}

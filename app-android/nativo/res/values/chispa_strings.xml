@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="chispa_widget_descripcion">Graba, anota o deja un ancla con un toque</string>
+    <string name="atajo_grabar">Grabar nota</string>
+    <string name="atajo_grabar_largo">Grabar una nota de voz</string>
+    <string name="atajo_anotar">Anotar</string>
+    <string name="atajo_ancla">Ancla</string>
+</resources>

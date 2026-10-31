@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacidad · Cuaderna</title>
+<meta name="description" content="Qué datos usa Cuaderna, dónde se guardan y cómo borrarlos.">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#F4ECDD;--papel:#FBF6EC;--tinta:#2B1D14;--suave:#7A6652;--linea:#E3D6BE;--lacre:#A8322D}
+@media (prefers-color-scheme: dark){:root{--bg:#1E1510;--papel:#2A1E16;--tinta:#F1E6D2;--suave:#B9A48A;--linea:#45331F;--lacre:#D0614F}}
+body{margin:0;background:var(--bg);color:var(--tinta);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:28px 16px 48px}
+h1{font-family:Georgia,serif;font-size:32px;margin:12px 0 4px}
+h2{font-family:Georgia,serif;font-size:21px;margin:28px 0 6px}
+.fecha{color:var(--suave);font-size:14px}
+.caja{background:var(--papel);border:1px solid var(--linea);border-radius:14px;padding:14px 18px;margin:16px 0}
+a{color:var(--lacre)}
+ul{padding-left:20px}
+header img{width:56px;height:56px;border-radius:14px}
+</style>
+</head>
+<body><main>
+<header><img src="icon-192.png" alt=""><h1>Privacidad en Cuaderna</h1><div class="fecha">Última actualización: 31 de octubre de 2026</div></header>
+
+<div class="caja"><b>En resumen:</b> tus notas son tuyas. Se guardan en tu propio OneDrive o Google Drive, o solo en tu dispositivo si la usas sin cuenta. Cuaderna no vende datos, no muestra publicidad y no lee tus archivos fuera de su propia carpeta.</div>
+
+<h2>Quién es el responsable</h2>
+<p>Cuaderna es una aplicación de <b>Astillero</b>, un proyecto independiente. Para cualquier duda sobre privacidad, escribe desde la propia app (Más › Ajustes › Sugerencias y mejoras) o a quien te pasó el enlace de Cuaderna.</p>
+
+<h2>Dónde se guardan tus notas</h2>
+<ul>
+<li><b>Con cuenta de Microsoft:</b> en tu OneDrive, en la carpeta de aplicaciones de Cuaderna. Cuaderna solo tiene acceso a esa carpeta.</li>
+<li><b>Con cuenta de Google:</b> en tu Google Drive, en la carpeta «Cuaderna». Cuaderna solo puede ver los archivos que ella misma crea (permiso <i>drive.file</i>), nunca el resto de tu Drive.</li>
+<li><b>Sin cuenta:</b> solo en tu dispositivo. Si borras la app o sus datos, se pierden.</li>
+</ul>
+<p>Las notas, fotos, audios y archivos no pasan por ningún servidor de Cuaderna: van directamente de tu dispositivo a tu nube.</p>
+
+<h2>Qué datos usa el servidor de Cuaderna</h2>
+<p>Cuaderna tiene un pequeño servidor para la inteligencia artificial, la voz a texto, el control de acceso y las sugerencias. Guarda solo esto:</p>
+<ul>
+<li><b>Tu nombre y tu correo</b> (los de tu cuenta de Microsoft o Google), para autorizar el uso de la IA y la voz, y el número de usos al día para poner un límite.</li>
+<li><b>Las sugerencias</b> que envías desde la app, con tu nombre y correo.</li>
+<li><b>Las notas que pasas a otra persona con enlace corto:</b> el contenido de esa nota se guarda en el servidor durante 180 días, para que quien la recibe pueda abrirla. Después se borra.</li>
+<li><b>Estadísticas anónimas:</b> solo totales por día (por ejemplo, «12 notas pasadas hoy»), sin datos de ninguna persona.</li>
+</ul>
+
+<h2>Inteligencia artificial y voz</h2>
+<p>Cuando usas la IA (ordenar una nota, leer una foto, «Pregúntale a tus notas») o la voz a texto, el texto, la imagen o el audio necesarios se envían a los servicios Azure OpenAI y Azure Speech de Microsoft para procesarlos, y la respuesta vuelve a tu dispositivo. No se usan para entrenar modelos ni se guardan en el servidor de Cuaderna.</p>
+
+<h2>Permisos del móvil</h2>
+<p>Micrófono (para dictar), cámara (fotos, escáner, tarjetas), notificaciones (recordatorios), contactos (sugerir nombres y teléfonos; nunca se copian a la nube), teléfono (aviso al colgar) y Bluetooth (modo coche). Cada uno se pide solo cuando activas la función que lo usa, y puedes quitarlo cuando quieras en los ajustes del móvil.</p>
+
+<h2>Datos de Google</h2>
+<p>El uso que hace Cuaderna de la información recibida de las API de Google cumple la <a href="https://developers.google.com/terms/api-services-user-data-policy">Política de datos de usuario de los servicios de API de Google</a>, incluidos los requisitos de uso limitado. Cuaderna solo usa tu nombre y tu correo para identificarte, y Google Drive solo para guardar y leer los archivos que ella misma crea.</p>
+
+<h2>Cómo borrar tus datos</h2>
+<ul>
+<li><b>Tus notas:</b> borra la carpeta de Cuaderna de tu OneDrive o Google Drive. Puedes exportarlo todo antes en Más › Ajustes › Tus datos.</li>
+<li><b>El acceso de Cuaderna a tu cuenta:</b> quítalo en <a href="https://account.live.com/consent/Manage">tu cuenta de Microsoft</a> o en <a href="https://myaccount.google.com/permissions">tu cuenta de Google</a>.</li>
+<li><b>Tus datos del servidor</b> (nombre, correo, sugerencias): pídelo desde Sugerencias y se borran.</li>
+</ul>
+
+<p class="fecha">Cuaderna, una app de Astillero · <a href="bienvenida/">cuaderna.astillerosoftware.es</a></p>
+</main></body></html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Volviendo a Cuaderna</title><meta name="robots" content="noindex">
+<style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#F4ECDD;color:#2B1D14;font:16px/1.5 system-ui,sans-serif;text-align:center;padding:24px}
+img{width:84px;height:84px;border-radius:22px}a{display:inline-block;margin-top:8px;background:#2B1D14;color:#FBF3E4;padding:14px 22px;border-radius:14px;text-decoration:none;font-weight:600}</style></head>
+<body><img src="icon-192.png" alt=""><b>Volviendo a Cuaderna…</b><span id="m">Si no se abre sola, pulsa el botón.</span><a id="b" href="#">Abrir Cuaderna</a>
+<script>
+// Puente para la app de Android: Google devuelve aquí el código (en el navegador) y esta página se lo pasa a la app.
+// En un ordenador (sin la app), sigue a la web de Cuaderna con el mismo código.
+const q = location.search;
+// en Android, el formato intent:// es el que Chrome abre con más seguridad (y sin la app instalada, sigue a la web)
+const web = new URL("./", location.href).href + q;
+const app = "intent://google" + q + "#Intent;scheme=es.astillerosoftware.cuaderna;package=es.astillerosoftware.cuaderna;S.browser_fallback_url=" + encodeURIComponent(web) + ";end";
+document.getElementById("b").href = app;
+if (/android/i.test(navigator.userAgent)) location.href = app;
+else location.replace(web);
+</script></body></html>

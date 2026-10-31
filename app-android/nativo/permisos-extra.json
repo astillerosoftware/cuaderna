@@ -1,0 +1,7 @@
+[
+  "android.permission.READ_PHONE_STATE",
+  "android.permission.READ_CALL_LOG",
+  "android.permission.BLUETOOTH_CONNECT",
+  "android.permission.BLUETOOTH|30",
+  "android.permission.READ_CONTACTS"
+]

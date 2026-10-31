@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cuaderna sin conexión</title>
+<style>
+  :root{--bg:#F4ECDD;--text:#2B1D14;--muted:#7A6652;--btn:#2B1D14;--on:#FBF6EC;--lacre:#A8322D}
+  @media (prefers-color-scheme: dark){:root{--bg:#1E1510;--text:#F1E6D2;--muted:#B9A48A;--btn:#F1E6D2;--on:#1E1510;--lacre:#C0443A}}
+  body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;box-sizing:border-box;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);text-align:center}
+  h1{font-family:Georgia,"Times New Roman",serif;font-size:26px;margin:10px 0 0} p{color:var(--muted);max-width:320px;margin:0;line-height:1.5}
+  button{margin-top:14px;border:0;border-radius:14px;padding:13px 24px;font:inherit;font-weight:600;background:var(--btn);color:var(--on)}
+  .sello{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 34% 28%,#D0614F,#A8322D 55%,#7E211D);color:#FBF3E4;font:700 44px Georgia,serif;box-shadow:0 12px 30px -10px rgba(126,33,29,.6)}
+  small{color:var(--muted);font-size:13px;margin-top:6px}
+</style>
+</head>
+<body>
+  <div class="sello">C</div>
+  <h1>Sin conexión con Cuaderna</h1>
+  <p>No llego a la red ahora mismo. Comprueba el wifi o los datos móviles: en cuanto vuelva la conexión, se abre sola.</p>
+  <button id="b">Reintentar</button>
+  <small id="e"></small>
+<script>
+  const URL_APP = "https://cuaderna.astillerosoftware.es/";
+  const ir = () => { location.href = URL_APP; };
+  document.getElementById("b").onclick = ir;
+  addEventListener("online", ir);
+  let n = 0; setInterval(() => { n++; document.getElementById("e").textContent = navigator.onLine ? "Reintentando…" : "Esperando conexión…"; if (navigator.onLine && n % 2 === 0) ir(); }, 5000);
+</script>
+</body>
+</html>
