@@ -18,7 +18,7 @@ const ADMIN = ADMINS[0] || "";
 const esAdmin = email => !!email && ADMINS.includes(String(email).toLowerCase());
 // la dirección nueva y la antigua (que redirige) siempre valen, aunque en Azure haya otra lista
 const lista = (env, base) => [...new Set([...(env || "").split(","), ...base].map(s => s.trim()).filter(Boolean))];
-const ORIGENES = lista(process.env.ORIGENES, ["https://cuaderna.astillerosoftware.es", "https://jamormar.github.io"]);
+const ORIGENES = lista(process.env.ORIGENES, ["https://cuaderna.astillerosoftware.es", "https://astillerosoftware.es", "https://www.astillerosoftware.es", "https://jamormar.github.io"]);
 const MAX_IA = +process.env.MAX_IA_DIA || 300;
 const G_CLIENT = (process.env.GOOGLE_CLIENT_ID || "520507807981-ulvru7sh3ippbc510m1eo1ji532ptb8c.apps.googleusercontent.com").trim();
 // el secreto puede venir solo o dentro del JSON que descarga Google ({"web":{"client_secret":…}}): se acepta de las dos formas
@@ -306,6 +306,19 @@ app.http("api", {
       const e = await leer(await tabla("cortos"), "c", ruta.slice(6));
       if (!e || Date.now() - new Date(e.creado) > 180 * 864e5) return json(request, {error: "Enlace caducado"}, 404);
       return json(request, {d: e.d}, 200, {"Cache-Control": "public, max-age=3600"});
+    }
+    // formulario de contacto del portal astillerosoftware.es: anónimo; llega al panel de Administración como una sugerencia más
+    if (request.method === "POST" && ruta === "contacto"){
+      let e = {}; try { e = JSON.parse((await request.text()).slice(0, 8000)); } catch(err){}
+      const nombre = String(e.nombre || "").trim().slice(0, 120), email = String(e.email || "").trim().slice(0, 200), mensaje = String(e.mensaje || "").trim().slice(0, 3000);
+      if (e.web) return json(request, {ok: true});   // campo trampa para robots
+      if (nombre.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || mensaje.length < 20) return json(request, {error: "Faltan datos"}, 400);
+      if (frenar(request)) return json(request, {error: "Demasiados mensajes seguidos. Prueba en unos minutos."}, 429);
+      const empresa = String(e.empresa || "").trim().slice(0, 120), tel = String(e.tel || "").trim().slice(0, 40);
+      const texto = `${mensaje}\n\n— ${nombre}${empresa ? " · " + empresa : ""} · ${email}${tel ? " · " + tel : ""}`;
+      const id = new Date().toISOString().replace(/[-:.TZ]/g, "") + crypto.randomBytes(3).toString("hex");
+      await (await tabla("sugerencias")).createEntity({partitionKey: "s", rowKey: id, email, nombre: nombre + (empresa ? " (" + empresa + ")" : ""), tipo: "contacto web", texto, version: "astillerosoftware.es", dispositivo: "portal", fecha: new Date().toISOString(), leida: false});
+      return json(request, {ok: true});
     }
     if (request.method === "POST" && ruta === "evento"){   // anónimo: sin cuenta y sin guardar quién
       try { const e = JSON.parse((await request.text()).slice(0, 200) || "{}");
