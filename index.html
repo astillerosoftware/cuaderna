@@ -1258,7 +1258,7 @@ html.lz-on,html.lz-on body{overflow:hidden}
 <script src="servidor.js"></script>
 <script>
 "use strict";
-const VERSION = "0.38.1";
+const VERSION = "0.38.2";
 let avisoVersion = false;
 /* ================= Iconos ================= */
 const ICONOS = {
@@ -1924,7 +1924,9 @@ function pintarOpcionesCat(actual){
 }
 
 /* ================= Anotar ================= */
-let borrador = null, tocado = false, anclaAbierta = null, ignorar = {};
+let borrador = null, tocado = false, anclaAbierta = null, ignorar = {}, usoNocturno = false;
+// cualquier toque o tecla cuenta como «he usado la app»: así no se crea el ancla nocturna al salir
+addEventListener("pointerdown", () => { usoNocturno = true; }, true); addEventListener("keydown", () => { usoNocturno = true; }, true);
 $("#cAmbito").innerHTML = `<button data-a="trabajo">${ic("maletin")}Trabajo</button><button data-a="personal">${ic("casa")}Personal</button>`;
 $("#bAncla").innerHTML = ic("ancla"); $("#bFoto").innerHTML = ic("camara"); $("#bMic").innerHTML = ic("mic");
 $("#bLimpiar").innerHTML = ic("borrar") + "Borrar"; $("#bGuardar").innerHTML = ic("check"); $("#icTeclado").outerHTML = ic("teclado");
@@ -2657,10 +2659,14 @@ $("#aPalabra").addEventListener("keydown", e => { if (e.key === "Enter"){ e.prev
 
 document.addEventListener("visibilitychange", async () => {
   if (document.visibilityState === "hidden"){
-    if (anclaAbierta && !tocado && borrador && vacio()){ const a = anclaAbierta; anclaAbierta = null; await guardarAncla(a, false); }
+    // modo noche: si abriste Cuaderna y la cierras sin hacer nada, queda un ancla con la hora.
+    // No si has usado la app (mirar notas, recorrido…) ni si ya hay un ancla vacía de hace menos de 15 minutos.
+    const anclaVaciaReciente = deNotas().some(n => n.ancla && !n.texto && !n.titulo && Date.now() - new Date(n.creada) < 15 * 60000);
+    if (anclaAbierta && !tocado && !usoNocturno && vista === "anotar" && !rc && borrador && vacio() && !anclaVaciaReciente){ const a = anclaAbierta; anclaAbierta = null; await guardarAncla(a, false); }
+    anclaAbierta = null;
   } else {
     aplicarTema();
-    if (borrador && !tocado && vacio()) anclaAbierta = esNoche() && esMovil() ? new Date() : null;
+    usoNocturno = false; if (borrador && !tocado && vacio()) anclaAbierta = esNoche() && esMovil() ? new Date() : null;
     sincronizar(false, "pronto"); if (vista !== "anotar") refrescar();
   }
 });
@@ -6103,7 +6109,7 @@ function pintarAyuda(){
   <h3>Notas</h3><p>Todo lo anotado, agrupado por día. Busca por texto, nombre o fecha y filtra con las etiquetas de arriba.</p>
   <h3>Editar una nota</h3><p>Al abrirla ves el dictado, escuchas el audio, amplías las fotos y cambias ámbito, tipo, para quién y fecha. Puedes quitar adjuntos o añadir fotos.</p>
   <h3>Sincronización</h3><p>Cada nota se guarda primero en el dispositivo y se sube sola a tu OneDrive. Sin cobertura se sube al volver. El indicador de la nube te dice si está todo guardado; si pide <b>volver a entrar</b>, tócalo.</p>
-  <h3>Modo noche</h3><p>En tu horario la pantalla del móvil se pone negra. Si abres Cuaderna y la cierras sin escribir, queda un ancla con la hora.</p>
+  <h3>Modo noche</h3><p>En tu horario la pantalla del móvil se pone negra. Si abres Cuaderna y la cierras sin tocar nada, queda un ancla con la hora, para que por la mañana recuerdes que se te ocurrió algo. Si miras tus notas o usas la app, no se crea.</p>
   <h3>En el móvil</h3><p>En Android, instala la app Cuaderna (Ajustes › App Android). Si mantienes pulsado el icono tienes los atajos <b>Grabar voz</b> y <b>Ancla rápida</b>.</p>
   <h3>Privacidad</h3><p>Tus notas solo están en tu nube o en tu dispositivo. <a href="privacidad.html" target="_blank" rel="noopener">Lee aquí qué datos usa Cuaderna</a>.</p>
   <h3>Microsoft o Google</h3><p>Puedes entrar con tu cuenta de Microsoft (tus notas van a OneDrive) o con la de Google (van a Google Drive, en la carpeta «Cuaderna»). Todo funciona igual, salvo el resumen diario por correo y el calendario de Outlook, que necesitan Microsoft. Con Google, para pasar notas a otros usa WhatsApp.</p>
