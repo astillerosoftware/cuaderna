@@ -2,6 +2,7 @@
 // - Registra a cada persona que entra y deja que el administrador la autorice o la bloquee.
 // - Hace de puente con Azure OpenAI y Azure Speech: las claves viven aquí, nunca en el móvil.
 // - Recoge las sugerencias que se envían desde la app.
+// - Guarda el estado de las notas pasadas (solo un código y horas, sin texto ni nombres) y lo borra a los 90 días.
 // - Cuenta, de forma anónima (solo totales por día), cómo se difunde Cuaderna: notas pasadas, abiertas, instalaciones…
 // Ajustes de la Function App: ADMIN_EMAIL, AOAI_ENDPOINT, AOAI_CLAVE, AOAI_DESPLIEGUE,
 // SPEECH_CLAVE, SPEECH_REGION, ORIGENES (opcional), MAX_IA_DIA (opcional), MAX_VOZ_MIN_DIA (opcional),
@@ -359,5 +360,19 @@ app.http("api", {
       context.error(e);
       return json(request, {error: "Error del servidor"}, 500);
     }
+  }
+});
+
+// Limpieza diaria: los estados de notas pasadas se borran a los 90 días de su último cambio
+// (la app deja de consultarlos a los 90 días, así que no se guarda nada que ya no sirva).
+app.timer("limpiarEstados", {
+  schedule: "0 30 3 * * *",   // cada día a las 3:30 (UTC)
+  handler: async (_t, context) => {
+    const t = await tabla("estados"), limite = new Date(Date.now() - 90 * 864e5).toISOString();
+    let borrados = 0;
+    for await (const e of t.listEntities({queryOptions: {filter: `PartitionKey eq 'a' and cambio lt '${limite}'`}})){
+      try { await t.deleteEntity(e.partitionKey, e.rowKey); borrados++; } catch(err){}
+    }
+    context.log(`limpiarEstados: ${borrados} borrados`);
   }
 });
