@@ -168,21 +168,28 @@ async function pintar(){
     <footer>Enviado por ${esc(de)} con Cuaderna · <a href="${BIENVENIDA}" style="color:inherit">cuaderna.astillerosoftware.es</a></footer>`;
   // casillas: se pueden ir marcando (se recuerdan en este móvil)
   const ev = e => { try { window.cuadernaEvento?.(e); } catch(err){} };
+  // el estado (vista, progreso, hecha) se guarda en el servidor para que quien la mandó lo vea en su Cuaderna
+  const estado = (e, p) => { try { const b = String(window.CUADERNA_API || "").replace(/\/+$/, ""); if (!b || !d.id) return;
+    fetch(b + "/estado", {method: "POST", headers: {"Content-Type": "text/plain"}, body: JSON.stringify({id: d.id, e, p}), keepalive: true}).catch(() => {}); } catch(err){} };
+  const progreso = () => items.length ? `${marcados.filter(Boolean).length}/${items.length}` : undefined;
   if (!est.abierta){ ev("nota_abierta"); guardar(clave, Object.assign(est, {abierta: true})); }
+  if (!est.avisado) estado("vista", progreso());
   $("#raiz").querySelectorAll('a[href*="?asignacion="]').forEach(a => a.addEventListener("click", () => ev("nota_guardar")));
   $("#raiz").querySelector('.invita .botones a:first-child').addEventListener("click", () => ev("invita_probar"));
   $("#raiz").querySelector('.invita .botones a:last-child').addEventListener("click", () => ev("invita_video"));
-  $("#raiz").querySelectorAll(".lista li").forEach(li => li.onclick = () => { const i = +li.dataset.i; marcados[i] = !marcados[i]; li.classList.toggle("on", marcados[i]); guardar(clave, {...est, items: marcados}); });
+  $("#raiz").querySelectorAll(".lista li").forEach(li => li.onclick = () => { const i = +li.dataset.i; marcados[i] = !marcados[i]; li.classList.toggle("on", marcados[i]); guardar(clave, {...est, items: marcados}); estado("progreso", progreso()); });
   const enlaceHecho = async () => APP + "?hecho=" + await empaquetar({v: 1, id: d.id, por: {n: "", e: ""}, en: new Date().toISOString()});
   const mensaje = async () => `✅ Hecho: *${titulo}*${items.length ? `\n${items.map((it, i) => (marcados[i] ? "☑ " : "☐ ") + it.texto).join("\n")}` : ""}\n\nToca aquí para marcarla en tu Cuaderna:\n${await enlaceHecho()}`;
   if (est.avisado) $("#hechoOk").style.display = "block";
   $("#bHecho").onclick = async () => {
     const url = `https://wa.me/${d.de?.tel ? String(d.de.tel).replace(/\D/g, "") : ""}?text=${encodeURIComponent(await mensaje())}`;
     if (!est.avisado) ev("nota_hecha");
+    estado("hecha", progreso());
     guardar(clave, {...est, items: marcados, avisado: true}); $("#hechoOk").style.display = "block";
-    location.href = url;
+    setTimeout(() => { location.href = url; }, 150);
   };
   if ($("#bCorreo")) $("#bCorreo").onclick = async e => { e.preventDefault();
+    estado("hecha", progreso());
     location.href = `mailto:${encodeURIComponent(d.de.e)}?subject=${encodeURIComponent("Hecho: " + titulo)}&body=${encodeURIComponent(await mensaje())}`;
     guardar(clave, {...est, items: marcados, avisado: true}); $("#hechoOk").style.display = "block"; };
 }

@@ -320,6 +320,27 @@ app.http("api", {
       await (await tabla("sugerencias")).createEntity({partitionKey: "s", rowKey: id, email, nombre: nombre + (empresa ? " (" + empresa + ")" : ""), tipo: "contacto web", texto, version: "astillerosoftware.es", dispositivo: "portal", fecha: new Date().toISOString(), leida: false});
       return json(request, {ok: true});
     }
+    // estado de las notas pasadas: la página pública dice «vista» y «hecha»; la app de quien la mandó lo consulta.
+    // Solo se guarda el identificador aleatorio de la nota, fechas y el progreso de la lista: ningún contenido ni dato personal.
+    if (request.method === "POST" && ruta === "estado"){
+      let e = {}; try { e = JSON.parse((await request.text()).slice(0, 600)); } catch(err){}
+      const id = String(e.id || "");
+      if (!/^[a-z0-9]{6,40}$/i.test(id) || !["vista", "hecha", "progreso"].includes(e.e) || frenar(request)) return json(request, {error: "No válido"}, 400);
+      const t = await tabla("estados"), ahora = new Date().toISOString(), prev = await leer(t, "a", id) || {};
+      const ent = {partitionKey: "a", rowKey: id, vista: prev.vista || ahora, cambio: ahora};
+      if (e.e === "hecha") ent.hecha = prev.hecha || ahora;
+      if (/^\d{1,3}\/\d{1,3}$/.test(String(e.p || ""))) ent.progreso = String(e.p);
+      await t.upsertEntity(ent, "Merge");
+      return json(request, {ok: true});
+    }
+    if (request.method === "POST" && ruta === "estados"){
+      let e = {}; try { e = JSON.parse((await request.text()).slice(0, 6000)); } catch(err){}
+      const ids = (Array.isArray(e.ids) ? e.ids : []).map(String).filter(x => /^[a-z0-9]{6,40}$/i.test(x)).slice(0, 100);
+      if (frenar(request)) return json(request, {error: "Demasiadas consultas"}, 429);
+      const t = await tabla("estados"), out = {};
+      await Promise.all(ids.map(async id => { const x = await leer(t, "a", id); if (x) out[id] = {vista: x.vista || null, hecha: x.hecha || null, progreso: x.progreso || null, cambio: x.cambio || null}; }));
+      return json(request, {estados: out}, 200, {"Cache-Control": "no-store"});
+    }
     if (request.method === "POST" && ruta === "evento"){   // anónimo: sin cuenta y sin guardar quién
       try { const e = JSON.parse((await request.text()).slice(0, 200) || "{}");
         if (EVENTOS.has(e.e) && !frenar(request)) await sumarEvento(e.e); } catch(err){ context.warn(err); }
