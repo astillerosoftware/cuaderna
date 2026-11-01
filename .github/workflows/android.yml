@@ -2,6 +2,7 @@ name: App Android
 
 # Compila la app de Cuaderna cada vez que cambia algo en app-android/
 # y la publica en «Releases» para descargarla desde el móvil.
+# También deja el paquete .aab para subirlo a Google Play (en Artifacts).
 on:
   push:
     branches: [main]
@@ -83,6 +84,27 @@ jobs:
             exit 1
           fi
           cp app/build/outputs/apk/release/app-release.apk ../Cuaderna.apk
+
+      - name: Compilar el paquete para Google Play (AAB)
+        if: env.PRUEBA != '1'
+        working-directory: app-android/android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: 1.0.${{ github.run_number }}
+          CHISPA_KS_PASS: ${{ secrets.CHISPA_KS_PASS }}
+        run: |
+          node ../scripts/play.mjs
+          set -o pipefail
+          ./gradlew bundleRelease --no-daemon 2>&1 | tail -20
+          cp app/build/outputs/bundle/release/app-release.aab ../Cuaderna-play.aab
+
+      - name: Guardar el AAB de Google Play como artefacto
+        if: env.PRUEBA != '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cuaderna-play-${{ github.run_number }}
+          path: app-android/Cuaderna-play.aab
+          retention-days: 30
 
       - name: Guardar la llave nueva para descargarla
         if: env.LLAVE_NUEVA == '1'
