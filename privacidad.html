@@ -21,7 +21,7 @@ header img{width:56px;height:56px;border-radius:14px}
 </style>
 </head>
 <body><main>
-<header><img src="icon-192.png" alt=""><h1>Privacidad en Cuaderna</h1><div class="fecha">Última actualización: 31 de octubre de 2026</div></header>
+<header><img src="icon-192.png" alt=""><h1>Privacidad en Cuaderna</h1><div class="fecha">Última actualización: 1 de noviembre de 2026</div></header>
 
 <div class="caja"><b>En resumen:</b> tus notas son tuyas. Se guardan en tu propio OneDrive o Google Drive, o solo en tu dispositivo si la usas sin cuenta. Cuaderna no vende datos, no muestra publicidad y no lee tus archivos fuera de su propia carpeta.</div>
 
@@ -42,6 +42,7 @@ header img{width:56px;height:56px;border-radius:14px}
 <li><b>Tu nombre y tu correo</b> (los de tu cuenta de Microsoft o Google), para autorizar el uso de la IA y la voz, y el número de usos al día para poner un límite.</li>
 <li><b>Las sugerencias</b> que envías desde la app, con tu nombre y correo.</li>
 <li><b>Las notas que pasas a otra persona con enlace corto:</b> el contenido de esa nota se guarda en el servidor durante 180 días, para que quien la recibe pueda abrirla. Después se borra.</li>
+<li><b>El estado de las notas que pasas:</b> un código aleatorio, cuándo se abrió, cuántos puntos van hechos y cuándo se terminó, para que quien la envió vea cómo va. Sin texto, sin nombres y sin teléfonos. Se borra a los 90 días.</li>
 <li><b>Estadísticas anónimas:</b> solo totales por día (por ejemplo, «12 notas pasadas hoy»), sin datos de ninguna persona.</li>
 </ul>
 
@@ -49,16 +50,16 @@ header img{width:56px;height:56px;border-radius:14px}
 <p>Cuando usas la IA (ordenar una nota, leer una foto, «Pregúntale a tus notas») o la voz a texto, el texto, la imagen o el audio necesarios se envían a los servicios Azure OpenAI y Azure Speech de Microsoft para procesarlos, y la respuesta vuelve a tu dispositivo. No se usan para entrenar modelos ni se guardan en el servidor de Cuaderna.</p>
 
 <h2>Permisos del móvil</h2>
-<p>Micrófono (para dictar), cámara (fotos, escáner, tarjetas), notificaciones (recordatorios), contactos (sugerir nombres y teléfonos; nunca se copian a la nube), teléfono (aviso al colgar) y Bluetooth (modo coche). Cada uno se pide solo cuando activas la función que lo usa, y puedes quitarlo cuando quieras en los ajustes del móvil.</p>
+<p>Micrófono (para dictar), cámara (fotos, escáner, tarjetas), notificaciones (recordatorios), contactos (sugerir nombres y teléfonos; nunca se copian a la nube), teléfono (aviso al colgar), Bluetooth (modo coche) y ubicación (solo si activas «Guardar ubicación» en Ajustes; se guarda en la propia nota, en tu nube). En la versión de Google Play, Cuaderna no lee el registro de llamadas. Cada uno se pide solo cuando activas la función que lo usa, y puedes quitarlo cuando quieras en los ajustes del móvil.</p>
 
 <h2>Datos de Google</h2>
 <p>El uso que hace Cuaderna de la información recibida de las API de Google cumple la <a href="https://developers.google.com/terms/api-services-user-data-policy">Política de datos de usuario de los servicios de API de Google</a>, incluidos los requisitos de uso limitado. Cuaderna solo usa tu nombre y tu correo para identificarte, y Google Drive solo para guardar y leer los archivos que ella misma crea.</p>
 
-<h2>Cómo borrar tus datos</h2>
+<h2 id="borrar">Cómo borrar tus datos y tu cuenta</h2>
 <ul>
 <li><b>Tus notas:</b> borra la carpeta de Cuaderna de tu OneDrive o Google Drive. Puedes exportarlo todo antes en Más › Ajustes › Tus datos.</li>
 <li><b>El acceso de Cuaderna a tu cuenta:</b> quítalo en <a href="https://account.live.com/consent/Manage">tu cuenta de Microsoft</a> o en <a href="https://myaccount.google.com/permissions">tu cuenta de Google</a>.</li>
-<li><b>Tus datos del servidor</b> (nombre, correo, sugerencias): pídelo a hola@astillerosoftware.es o desde Sugerencias y se borran.</li>
+<li><b>Tu cuenta y tus datos del servidor</b> (nombre, correo, contador de usos y sugerencias): escribe a <a href="mailto:hola@astillerosoftware.es?subject=Borrar%20mi%20cuenta%20de%20Cuaderna">hola@astillerosoftware.es</a> con el asunto «Borrar mi cuenta de Cuaderna» desde el correo con el que entras, o pídelo desde la app (Ayuda › Sugerencias y mejoras). Se borra todo en un plazo máximo de 30 días y te lo confirmamos. Las notas pasadas con enlace corto se borran solas a los 180 días y los estados, a los 90.</li>
 </ul>
 
 <p class="fecha">Cuaderna, una app de Astillero · <a href="bienvenida/">cuaderna.astillerosoftware.es</a></p>
