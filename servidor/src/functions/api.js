@@ -10,6 +10,29 @@
 const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
 const crypto = require("crypto");
+const dns = require("dns").promises, net = require("net");
+// direcciones a las que el servidor nunca debe conectarse en nombre de un usuario (red interna, loopback, metadatos…)
+const PRIVADAS = new net.BlockList();
+for (const [r, b] of [["0.0.0.0", 8], ["10.0.0.0", 8], ["100.64.0.0", 10], ["127.0.0.0", 8], ["169.254.0.0", 16], ["172.16.0.0", 12], ["192.0.0.0", 24], ["192.168.0.0", 16], ["198.18.0.0", 15], ["224.0.0.0", 3]]) PRIVADAS.addSubnet(r, b, "ipv4");
+for (const [r, b] of [["::", 127], ["::1", 128], ["fc00::", 7], ["fe80::", 10], ["ff00::", 8]]) PRIVADAS.addSubnet(r, b, "ipv6");
+function ipPrivada(ip){
+  const m = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(ip); if (m) ip = m[1];
+  return PRIVADAS.check(ip, net.isIP(ip) === 6 ? "ipv6" : "ipv4");
+}
+async function urlPublica(u){
+  if (!/^https?:$/.test(u.protocol) || u.username || u.password) return false;
+  const host = u.hostname.replace(/^\[|\]$/g, "");
+  const ips = net.isIP(host) ? [host] : (await dns.lookup(host, {all: true}).catch(() => [])).map(x => x.address);
+  return ips.length > 0 && !ips.some(ipPrivada);
+}
+// lee como mucho «max» bytes del cuerpo, sin cargar en memoria páginas enormes
+async function leerTexto(r, max){
+  const lector = r.body?.getReader?.(); if (!lector) return (await r.text()).slice(0, max);
+  const trozos = []; let n = 0;
+  while (n < max){ const {done, value} = await lector.read(); if (done) break; trozos.push(value); n += value.length; }
+  try { await lector.cancel(); } catch(e){}
+  return Buffer.concat(trozos.map(x => Buffer.from(x))).subarray(0, max).toString("utf8");
+}
 
 const CLIENT_ID = process.env.CLIENT_ID || "3dc57230-4cdb-4e60-bb83-2def7cd5441f";
 const EMISOR = "https://login.microsoftonline.com/9188040d-6c67-4c5b-b112-36a304b66dad/v2.0";   // cuentas personales de Microsoft
@@ -45,7 +68,7 @@ async function tabla(nombre){
 async function leer(t, p, r){ try { return await t.getEntity(p, r); } catch(e){ if (e.statusCode === 404) return null; throw e; } }
 
 // ---------- identidad: el id_token de Microsoft que ya tiene la app ----------
-let jwks = null, jwksT = 0;
+let jwks = null, jwksT = 0, ultimaRecarga = 0;
 async function clavesMS(forzar){
   if (forzar || !jwks || Date.now() - jwksT > 6 * 3600e3){
     const r = await fetch("https://login.microsoftonline.com/consumers/discovery/v2.0/keys");
@@ -74,14 +97,14 @@ async function quienEs(request){
   const google = dat.iss === "https://accounts.google.com" || dat.iss === "accounts.google.com";
   const claves = google ? clavesGoogle : clavesMS;
   let k = (await claves()).find(x => x.kid === cab.kid);
-  if (!k) k = (await claves(true)).find(x => x.kid === cab.kid);
+  if (!k && Date.now() - ultimaRecarga > 60000){ ultimaRecarga = Date.now(); k = (await claves(true)).find(x => x.kid === cab.kid); }   // una firma desconocida no obliga a descargar claves en cada petición
   if (!k) throw new NoAutorizado("Firma desconocida");
   const ok = crypto.verify("RSA-SHA256", Buffer.from(h64 + "." + p64), crypto.createPublicKey({key: k, format: "jwk"}), b64(f64));
   if (!ok) throw new NoAutorizado("Firma no válida");
   if (google){
     if (!G_CLIENT || dat.aud !== G_CLIENT) throw new NoAutorizado("Identificación de otra aplicación");
     if (dat.exp * 1000 < Date.now() - 60e3) throw new NoAutorizado("Identificación caducada");
-    if (dat.email && dat.email_verified === false) throw new NoAutorizado("Correo de Google sin verificar");
+    if (dat.email && dat.email_verified !== true && dat.email_verified !== "true") throw new NoAutorizado("Correo de Google sin verificar");
     return { id: "g-" + dat.sub, email: String(dat.email || "").toLowerCase(), nombre: dat.name || "", proveedor: "google" };
   }
   if (dat.aud !== CLIENT_ID || dat.iss !== EMISOR) throw new NoAutorizado("Identificación de otra aplicación");
@@ -134,13 +157,16 @@ const rutas = {
     if (u.estado !== "autorizado") return [{error: "Tu acceso aún no está autorizado"}, 403];
     if (!hayIA()) return [{error: "La IA no está configurada en el servidor"}, 503];
     if (u.dia === hoy() && (u.iaHoy || 0) >= MAX_IA) return [{error: "Has llegado al límite de IA de hoy"}, 429];
-    const e = await request.json();
+    const bruto = await request.text();
+    if (bruto.length > 120000) return [{error: "Demasiado texto para la IA de una vez"}, 413];
+    let e; try { e = JSON.parse(bruto); } catch(err){ return [{error: "Petición no válida"}, 400]; }
+    if (!Array.isArray(e.messages)) return [{error: "Petición no válida"}, 400];
+    await contar(u, "ia", 1);   // se descuenta antes de llamar, para que muchas peticiones a la vez no se salten el límite
     let base = process.env.AOAI_ENDPOINT.trim(); try { base = new URL(base).origin; } catch(err){}
     const url = `${base}/openai/deployments/${encodeURIComponent(process.env.AOAI_DESPLIEGUE || "gpt-4.1-mini")}/chat/completions?api-version=2024-10-21`;
     const cuerpo = {messages: e.messages, temperature: e.temperature ?? 0.2, max_tokens: Math.min(+e.max_tokens || 900, 4000), ...(e.response_format ? {response_format: e.response_format} : {})};
     const r = await fetch(url, {method: "POST", headers: {"Content-Type": "application/json", "api-key": process.env.AOAI_CLAVE.trim()}, body: JSON.stringify(cuerpo)});
     const texto = await r.text();
-    if (r.ok) await contar(u, "ia", 1);
     const extra = {}; for (const h of ["retry-after", "retry-after-ms"]) if (r.headers.get(h)) extra[h] = r.headers.get(h);
     return {crudo: texto, status: r.status, extra};
   },
@@ -151,6 +177,7 @@ const rutas = {
     if (!hayVoz()) return [{error: "La voz no está configurada en el servidor"}, 503];
     if (u.dia === hoy() && (u.vozSegHoy || 0) >= MAX_VOZ * 60) return [{error: "Has llegado al límite de voz de hoy"}, 429];
     const audio = Buffer.from(await request.arrayBuffer());
+    if (audio.length > 8 * 1024 * 1024) return [{error: "Audio demasiado largo"}, 413];
     const url = `https://${process.env.SPEECH_REGION}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=es-ES&format=simple`;
     const r = await fetch(url, {method: "POST", headers: {"Ocp-Apim-Subscription-Key": process.env.SPEECH_CLAVE, "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000", "Accept": "application/json"}, body: audio});
     const texto = await r.text();
@@ -164,12 +191,21 @@ const rutas = {
     if (u.estado !== "autorizado") return [{error: "Tu acceso aún no está autorizado"}, 403];
     const {url} = await request.json();
     let dir; try { dir = new URL(String(url)); } catch(e){ return [{error: "Dirección no válida"}, 400]; }
-    if (!/^https?:$/.test(dir.protocol) || /^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.)/.test(dir.hostname)) return [{error: "Dirección no permitida"}, 400];
+    if (!(await urlPublica(dir))) return [{error: "Dirección no permitida"}, 400];
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 9000);
     let html = "";
-    try { const r = await fetch(dir.href, {signal: ctl.signal, redirect: "follow", headers: {"User-Agent": "Mozilla/5.0 (compatible; CuadernaBot/1.0)", "Accept-Language": "es-ES,es;q=0.9"}});
+    try {
+      let r, actual = dir;
+      for (let salto = 0; ; salto++){   // las redirecciones se siguen a mano para comprobar cada destino
+        r = await fetch(actual.href, {signal: ctl.signal, redirect: "manual", headers: {"User-Agent": "Mozilla/5.0 (compatible; CuadernaBot/1.0)", "Accept-Language": "es-ES,es;q=0.9"}});
+        if (![301, 302, 303, 307, 308].includes(r.status)) break;
+        if (salto >= 3) return [{error: "Demasiadas redirecciones"}, 502];
+        actual = new URL(r.headers.get("location") || "", actual);
+        if (!(await urlPublica(actual))) return [{error: "Dirección no permitida"}, 400];
+      }
       if (!/html|text/.test(r.headers.get("content-type") || "")) return {titulo: "", descripcion: "", imagen: "", texto: "", resumen: ""};
-      html = (await r.text()).slice(0, 1500000); } catch(e){ return [{error: "No se pudo abrir la página"}, 502]; } finally { clearTimeout(t); }
+      html = await leerTexto(r, 400000);
+    } catch(e){ return [{error: "No se pudo abrir la página"}, 502]; } finally { clearTimeout(t); }
     const ent = s => s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ").replace(/&#(\d+);/g, (m, n) => String.fromCharCode(+n));
     const meta = k => ent((html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${k}["'][^>]*content=["']([^"']*)`, "i")) || html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]*(?:property|name)=["']${k}["']`, "i")) || [])[1] || "").trim();
     const titulo = meta("og:title") || ent((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "").trim();
@@ -190,6 +226,8 @@ const rutas = {
   },
 
   async "POST sugerencia"(request, yo){
+    if (frenar(request)) return [{error: "Demasiadas sugerencias seguidas"}, 429];
+    if ((await usuarioDe(yo)).estado === "bloqueado") return [{error: "Acceso bloqueado"}, 403];
     const e = await request.json();
     const texto = String(e.texto || "").trim().slice(0, 4000);
     if (!texto) return [{error: "Escribe tu sugerencia"}, 400];
@@ -246,9 +284,11 @@ async function sumarEvento(ev){
 }
 const recientesIP = new Map();   // freno sencillo: como mucho 60 eventos por minuto desde la misma dirección
 function frenar(request){
-  const ip = (request.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "?", ahora = Date.now();
+  // la IP la toma de lo que añade Azure (el último salto), no de lo que pueda inventarse el cliente
+  const xff = (request.headers.get("x-forwarded-for") || "").split(",").map(x => x.trim()).filter(Boolean);
+  const ip = request.headers.get("x-azure-clientip") || request.headers.get("client-ip") || xff[xff.length - 1] || "?", ahora = Date.now();
   const l = (recientesIP.get(ip) || []).filter(x => ahora - x < 60000); l.push(ahora); recientesIP.set(ip, l);
-  if (recientesIP.size > 5000) recientesIP.clear();
+  if (recientesIP.size > 5000) for (const [k, v] of recientesIP) if (!v.some(x => ahora - x < 60000)) recientesIP.delete(k);
   return l.length > 60;
 }
 rutas["GET admin/estadisticas"] = async (request, yo) => {
@@ -272,7 +312,7 @@ app.http("api", {
     if (request.method === "GET" && ruta === "salud"){
       // comprobación de Google sin revelar el secreto: solo longitud, formato y los 4 últimos (como los muestra Google)
       const sec = G_SECRETO, bruto = process.env.GOOGLE_CLIENT_SECRET || "";
-      const google = !sec ? "sin secreto" : `${bruto.includes("client_secret") ? "(sacado del JSON) " : ""}secreto de ${sec.length} caracteres${sec !== sec.trim() ? " (¡con espacios!)" : ""}${/^["']|["']$/.test(sec.trim()) ? " (¡con comillas!)" : ""}${sec.trim().startsWith("GOCSPX-") ? "" : " (no empieza por GOCSPX-)"} · acaba en ${sec.trim().slice(-4)} · cliente ${G_CLIENT.slice(0, 12)}…`;
+      const google = !sec || !G_CLIENT ? "sin configurar" : (sec !== sec.trim() || /^["']|["']$/.test(sec.trim()) || bruto.includes("client_secret") ? "revisar el secreto (espacios, comillas o JSON)" : "configurado");
       return json(request, {ok: true, ia: hayIA(), voz: hayVoz(), admin: ADMINS.length > 0, google});
     }
     // Entrar con Google: el canje del código y la renovación necesitan el secreto, que solo está aquí
@@ -373,7 +413,9 @@ app.timer("limpiarEstados", {
     for await (const e of t.listEntities({queryOptions: {filter: `PartitionKey eq 'a' and cambio lt '${limite}'`}})){
       try { await t.deleteEntity(e.partitionKey, e.rowKey); borrados++; } catch(err){}
     }
-    context.log(`limpiarEstados: ${borrados} borrados`);
+    const c = await tabla("cortos"), lim2 = new Date(Date.now() - 180 * 864e5).toISOString();
+    for await (const e of c.listEntities({queryOptions: {filter: `PartitionKey eq 'c' and creado lt '${lim2}'`}})){ try { await c.deleteEntity(e.partitionKey, e.rowKey); borrados++; } catch(err){} }
+    context.log(`limpiarEstados: ${borrados} borrados (estados de 90 días y enlaces cortos de 180)`);
   }
 });
 

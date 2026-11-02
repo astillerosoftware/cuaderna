@@ -53,13 +53,8 @@ jobs:
           KS_B64: ${{ secrets.CHISPA_KEYSTORE_B64 }}
           KS_PASS: ${{ secrets.CHISPA_KS_PASS }}
         run: |
-          if [ -z "$KS_B64" ] && [ -n "$KS_PASS" ]; then
-            # hay contraseña pero no llave: se crea una llave nueva con esa contraseña y se deja para descargar
-            keytool -genkeypair -keystore android/app/chispa.keystore -alias chispa -keyalg RSA -keysize 2048 -validity 10000 -storepass "$KS_PASS" -keypass "$KS_PASS" -dname "CN=Astillero Software"
-            cp android/app/chispa.keystore llave-nueva.keystore
-            echo "LLAVE_NUEVA=1" >> "$GITHUB_ENV"
-            echo "::warning::Se ha creado un keystore nuevo. Descárgalo en Artifacts (llave-nueva), guárdalo en un sitio seguro y crea con él el secreto CHISPA_KEYSTORE_B64. Después borra el artefacto."
-          elif [ -z "$KS_B64" ]; then
+          # Nota de seguridad: la llave de firma nunca se genera ni se publica aquí (el repositorio es público).
+          if [ -z "$KS_B64" ]; then
             echo "::warning::Falta el secreto CHISPA_KEYSTORE_B64: se firma con una llave de prueba y no se publica"
             keytool -genkeypair -keystore android/app/chispa.keystore -alias chispa -keyalg RSA -keysize 2048 -validity 365 -storepass prueba1234 -keypass prueba1234 -dname "CN=Prueba"
             echo "CHISPA_KS_PASS=prueba1234" >> "$GITHUB_ENV"
@@ -105,14 +100,6 @@ jobs:
           name: Cuaderna-play-${{ github.run_number }}
           path: app-android/Cuaderna-play.aab
           retention-days: 30
-
-      - name: Guardar la llave nueva para descargarla
-        if: env.LLAVE_NUEVA == '1'
-        uses: actions/upload-artifact@v4
-        with:
-          name: llave-nueva
-          path: app-android/llave-nueva.keystore
-          retention-days: 1
 
       - name: Guardar el APK como artefacto
         uses: actions/upload-artifact@v4
