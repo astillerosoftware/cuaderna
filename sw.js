@@ -1,5 +1,5 @@
 // Chispa: permite abrir la app sin cobertura. Nunca guarda datos de OneDrive ni de Microsoft.
-const CACHE = "chispa-v81";
+const CACHE = "chispa-v82";
 const FICHEROS = ["./", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./astillero.svg", "./servidor.js", "./google.html"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHEROS.map(f => new Request(f, {cache: "reload"})))).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => {
