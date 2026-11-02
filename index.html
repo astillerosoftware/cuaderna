@@ -3249,6 +3249,7 @@ async function compartirPdfEditor(){
 /* ================= Servidor de Cuaderna: acceso, IA y voz sin repartir claves, sugerencias ================= */
 const apiBase = () => (lsGet("chispa.api") || API || window.CUADERNA_API || "").replace(/\/+$/, "");
 const estadistica = e => { try { if (apiBase() && !lsGet("chispa.api")) window.cuadernaEvento?.(e); } catch(err){} };
+document.addEventListener("click", e => { if (e.target.closest(".firma-enl")) estadistica("visita_astillero"); });   // solo se cuenta el total del día, sin saber quién
 let acceso = lsGet("chispa.acceso") || null;      // {estado, admin, ia, voz, t}
 const expDe = t => { try { return JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).exp * 1000; } catch(e){ return 0; } };
 async function idToken(){
@@ -3316,7 +3317,7 @@ function htmlEstadisticas(est){
     <div class="est-barras" role="img" aria-label="Personas activas por día">${serie.map(x => `<i style="height:${Math.round(x.n / max * 100)}%" title="${x.d}: ${x.n}"></i>`).join("")}</div>
     <div class="est-t">De nota pasada a instalación (30 días)</div>
     <div class="est-emb">${embudo.map(([t, n]) => `<div><span>${t}</span><b>${n}</b><i style="width:${Math.round(n / maxE * 100)}%"></i></div>`).join("")}</div>
-    <div class="est-pie">Página de bienvenida: ${s30("bienvenida")} visitas y ${s30("bienvenida_instalar")} descargas este mes · ${s30("sin_cuenta")} empezaron sin cuenta y ${s30("cuenta_conectada")} la conectaron después.</div>`;
+    <div class="est-pie">Página de bienvenida: ${s30("bienvenida")} visitas y ${s30("bienvenida_instalar")} descargas este mes · ${s30("sin_cuenta")} empezaron sin cuenta y ${s30("cuenta_conectada")} la conectaron después · ${s30("visita_astillero")} fueron a la web de Astillero desde la app.</div>`;
 }
 // Sección de Administración: difusión, personas que piden acceso y sugerencias
 let admPest = lsGet("chispa.admPest") || "resumen";

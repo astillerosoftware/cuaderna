@@ -232,7 +232,7 @@ const rutas = {
 };
 // ---------- estadísticas anónimas: solo contadores por día y evento, sin datos de nadie ----------
 const EVENTOS = new Set(["app_nueva", "app_dia", "sin_cuenta", "cuenta_conectada", "pasada_wa", "pasada_correo", "nota_abierta", "nota_hecha", "nota_guardar",
-  "invita_probar", "invita_video", "bienvenida", "bienvenida_instalar"]);
+  "invita_probar", "invita_video", "bienvenida", "bienvenida_instalar", "visita_astillero"]);
 async function sumarEvento(ev){
   const t = await tabla("estadisticas"), dia = hoy();
   for (let i = 0; i < 5; i++){
