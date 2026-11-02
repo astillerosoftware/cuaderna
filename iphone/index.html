@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cuaderna en iPhone</title>
+<meta name="description" content="Guía rápida para instalar y usar Cuaderna en tu iPhone, paso a paso.">
+<meta property="og:title" content="Cuaderna en iPhone">
+<meta property="og:description" content="Instálala en un minuto desde Safari y empieza a anotar.">
+<meta property="og:image" content="https://cuaderna.astillerosoftware.es/iphone/hoy.jpg">
+<meta name="theme-color" content="#F4ECDD">
+<link rel="icon" href="../icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F4ECDD;--surface:#FBF6EC;--raise:#EFE4D0;--line:#E3D6BE;--ink:#2B1D14;--muted:#7A6652;--spark:#A8322D;--spark-soft:#F4DFD3;--ios:#007AFF;--ok:#5C7F52}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.55 Figtree,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--spark)}
+.cab{max-width:760px;margin:0 auto;padding:40px 20px 10px;text-align:center}
+.cab img{width:76px;height:76px;border-radius:18px;box-shadow:0 12px 26px -12px rgba(43,29,20,.45)}
+h1{font-family:Fraunces,Georgia,serif;font-weight:700;font-size:clamp(34px,8vw,48px);line-height:1.05;margin:18px 0 10px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:18px;max-width:520px;margin:0 auto}
+.tiempo{display:inline-flex;gap:8px;align-items:center;margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 14px;font-size:14px;font-weight:600;color:var(--spark)}
+main{max-width:760px;margin:0 auto;padding:10px 16px 60px}
+.parte{font-family:Fraunces,Georgia,serif;font-size:24px;font-weight:600;margin:42px 4px 14px;display:flex;align-items:center;gap:10px}
+.parte span{font:600 13px Figtree,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--spark)}
+.paso{display:grid;grid-template-columns:1fr 210px;gap:22px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px;margin-bottom:14px}
+.paso.sin{grid-template-columns:1fr}
+.num{width:34px;height:34px;border-radius:50%;background:var(--spark);color:#fff;font-weight:700;display:grid;place-items:center;font-size:16px;margin-bottom:10px}
+.paso h2{font-family:Fraunces,Georgia,serif;font-size:22px;font-weight:600;line-height:1.2;margin-bottom:6px}
+.paso p{color:#4a3a2e}
+.paso p+p{margin-top:8px}
+.paso b{color:var(--ink)}
+kbd{font:600 15px Figtree,sans-serif;background:var(--raise);border:1px solid var(--line);border-radius:7px;padding:1px 7px;white-space:nowrap}
+.ojo{margin-top:10px;font-size:15px;color:var(--muted)}
+/* teléfono */
+.tel{width:210px;justify-self:center;border-radius:34px;background:#1d1611;padding:8px;box-shadow:0 22px 40px -22px rgba(43,29,20,.55)}
+.pant{border-radius:27px;overflow:hidden;background:#fff;aspect-ratio:9/17.5;position:relative}
+.pant img{width:100%;display:block}
+/* dibujo de Safari */
+.saf{position:absolute;inset:0;background:#f2f2f7;display:flex;flex-direction:column;font-family:-apple-system,system-ui,sans-serif}
+.saf .web{flex:1;background:var(--bg);display:grid;place-items:center}
+.saf .web img{width:46%;border-radius:14px;box-shadow:0 8px 18px -10px rgba(0,0,0,.4)}
+.saf .barra{background:rgba(249,249,249,.96);border-top:1px solid #d8d8dc;padding:8px 10px 14px}
+.saf .url{background:#e4e4e9;border-radius:10px;font-size:10.5px;text-align:center;padding:7px 4px;color:#111;margin-bottom:8px;white-space:nowrap;overflow:hidden}
+.saf .iconos{display:flex;justify-content:space-around;align-items:center;color:var(--ios)}
+.saf .iconos svg{width:19px;height:19px}
+.saf .marca{position:relative}
+.saf .marca::after{content:"";position:absolute;inset:-9px;border:2.5px solid var(--spark);border-radius:50%;animation:latido 1.6s ease-in-out infinite}
+@keyframes latido{50%{transform:scale(1.15);opacity:.55}}
+.hoja{position:absolute;left:0;right:0;bottom:0;background:#f2f2f7;border-radius:16px 16px 0 0;padding:10px 10px 14px;box-shadow:0 -10px 30px rgba(0,0,0,.18);font-family:-apple-system,system-ui,sans-serif}
+.hoja .asa{width:34px;height:4px;border-radius:2px;background:#c7c7cc;margin:0 auto 10px}
+.hoja .fila{background:#fff;border-radius:10px;font-size:11.5px;padding:9px 10px;display:flex;justify-content:space-between;align-items:center;margin-top:6px;color:#111}
+.hoja .fila svg{width:15px;height:15px;color:#111}
+.hoja .fila.sel{outline:2.5px solid var(--spark);outline-offset:1px}
+.anadir{position:absolute;inset:0;background:#f2f2f7;font-family:-apple-system,system-ui,sans-serif;font-size:11.5px}
+.anadir .top{display:flex;justify-content:space-between;padding:14px 12px 10px;color:var(--ios)}
+.anadir .top b{color:#111}
+.anadir .top .ok{font-weight:700;position:relative}
+.anadir .top .ok::after{content:"";position:absolute;inset:-7px -9px;border:2.5px solid var(--spark);border-radius:10px;animation:latido 1.6s ease-in-out infinite}
+.anadir .ficha{background:#fff;margin:6px 10px;border-radius:12px;padding:10px;display:flex;gap:10px;align-items:center}
+.anadir .ficha img{width:44px;height:44px;border-radius:10px}
+.anadir .ficha small{display:block;color:#8e8e93;font-size:10px}
+.inicio{position:absolute;inset:0;background:linear-gradient(160deg,#c9b8e8,#f2c7b0 60%,#f7e3c4);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px 12px;padding:40px 16px;align-content:start;font-family:-apple-system,system-ui,sans-serif}
+.inicio i{display:block;aspect-ratio:1;border-radius:12px;background:rgba(255,255,255,.55)}
+.inicio .app{text-align:center;font-size:9.5px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.inicio .app img{width:100%;border-radius:12px;display:block;margin-bottom:3px;outline:2.5px solid var(--spark);outline-offset:3px}
+/* tarjetas */
+.rejilla{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.mini{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.mini .tel{width:100%;max-width:190px;align-self:center}
+.mini h3{font-family:Fraunces,Georgia,serif;font-size:19px;font-weight:600}
+.mini p{font-size:15px;color:#4a3a2e}
+.aviso{background:var(--spark-soft);border:1px solid #e9c3b3;border-radius:20px;padding:20px 22px;margin-top:14px}
+.aviso h2{font-family:Fraunces,Georgia,serif;font-size:21px;margin-bottom:8px}
+.aviso ul{padding-left:20px;color:#4a3a2e}
+.aviso li+li{margin-top:6px}
+.pie{text-align:center;color:var(--muted);font-size:14px;padding:30px 16px 50px}
+.pie a{font-weight:600}
+.boton{display:inline-block;margin-top:12px;background:var(--ink);color:#fff;text-decoration:none;font-weight:600;border-radius:99px;padding:12px 22px}
+@media (max-width:620px){
+  .paso{grid-template-columns:1fr;padding:18px}
+  .paso .tel{width:190px}
+  .rejilla{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){.saf .marca::after,.anadir .top .ok::after{animation:none}}
+</style>
+</head>
+<body>
+<header class="cab">
+  <img src="../icon-192.png" alt="Icono de Cuaderna">
+  <h1>Cuaderna en tu iPhone</h1>
+  <p class="sub">Instálala desde Safari y tendrás su icono en la pantalla de inicio, como cualquier otra app.</p>
+  <span class="tiempo">⏱ 1 minuto · sin App Store</span>
+</header>
+
+<main>
+  <div class="parte"><span>Parte 1</span> Instalar</div>
+
+  <section class="paso">
+    <div>
+      <div class="num">1</div>
+      <h2>Abre la web en Safari</h2>
+      <p>Abre <b>Safari</b> (la brújula azul) y escribe:</p>
+      <p><kbd>cuaderna.astillerosoftware.es</kbd></p>
+      <p class="ojo">Tiene que ser Safari: desde Chrome o desde el enlace de WhatsApp no aparece la opción de instalar. Si te llegó por WhatsApp, mantén pulsado el enlace y elige «Abrir en Safari».</p>
+    </div>
+    <div class="tel"><div class="pant"><div class="saf">
+      <div class="web"><img src="../icon-192.png" alt=""></div>
+      <div class="barra">
+        <div class="url">🔒 cuaderna.astillerosoftware.es</div>
+        <div class="iconos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M8 7l4-4 4 4M5 11v9h14v-9"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v17l-7-4-7 4z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="11" height="11" rx="2"/><rect x="9" y="9" width="11" height="11" rx="2"/></svg>
+        </div>
+      </div>
+    </div></div></div>
+  </section>
+
+  <section class="paso">
+    <div>
+      <div class="num">2</div>
+      <h2>Pulsa el botón Compartir</h2>
+      <p>Es el <b>cuadrado con una flecha hacia arriba</b>, en la barra de abajo (en algunos iPhone está arriba, junto a la dirección).</p>
+    </div>
+    <div class="tel"><div class="pant"><div class="saf">
+      <div class="web"><img src="../icon-192.png" alt=""></div>
+      <div class="barra">
+        <div class="url">🔒 cuaderna.astillerosoftware.es</div>
+        <div class="iconos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+          <span class="marca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3M8 7l4-4 4 4M5 11v9h14v-9"/></svg></span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v17l-7-4-7 4z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="11" height="11" rx="2"/><rect x="9" y="9" width="11" height="11" rx="2"/></svg>
+        </div>
+      </div>
+    </div></div></div>
+  </section>
+
+  <section class="paso">
+    <div>
+      <div class="num">3</div>
+      <h2>«Añadir a pantalla de inicio»</h2>
+      <p>Desliza el menú hacia arriba hasta encontrar <b>Añadir a pantalla de inicio</b> y púlsalo.</p>
+      <p class="ojo">Si no lo ves, baja del todo y pulsa «Editar acciones» para añadirlo.</p>
+    </div>
+    <div class="tel"><div class="pant"><div class="saf">
+      <div class="web"><img src="../icon-192.png" alt=""></div>
+      <div class="hoja">
+        <div class="asa"></div>
+        <div class="fila">Copiar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/></svg></div>
+        <div class="fila">Añadir a favoritos <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></div>
+        <div class="fila sel"><b>Añadir a pantalla de inicio</b> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></svg></div>
+        <div class="fila">Buscar en la página <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/></svg></div>
+      </div>
+    </div></div></div>
+  </section>
+
+  <section class="paso">
+    <div>
+      <div class="num">4</div>
+      <h2>Pulsa «Añadir»</h2>
+      <p>Arriba a la derecha. Deja el nombre <b>Cuaderna</b> tal cual.</p>
+    </div>
+    <div class="tel"><div class="pant"><div class="anadir">
+      <div class="top"><span>Cancelar</span><b>Añadir a inicio</b><span class="ok">Añadir</span></div>
+      <div class="ficha"><img src="../icon-192.png" alt=""><div><b>Cuaderna</b><small>cuaderna.astillerosoftware.es</small></div></div>
+    </div></div></div>
+  </section>
+
+  <section class="paso">
+    <div>
+      <div class="num">5</div>
+      <h2>Ábrela siempre desde el icono</h2>
+      <p>Ya tienes <b>Cuaderna</b> en la pantalla de inicio. Ábrela desde ahí, no desde Safari: así se ve a pantalla completa y recuerda tu sesión.</p>
+    </div>
+    <div class="tel"><div class="pant"><div class="inicio">
+      <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      <div class="app"><img src="../icon-192.png" alt="">Cuaderna</div>
+      <i></i><i></i><i></i><i></i>
+    </div></div></div>
+  </section>
+
+  <section class="paso">
+    <div>
+      <div class="num">6</div>
+      <h2>Entra con tu cuenta</h2>
+      <p>Pulsa <b>Continuar con Google</b> o <b>Continuar con Microsoft</b>. Tus notas se guardan en tu propio Google Drive u OneDrive, y las verás también en el ordenador.</p>
+      <p>Cuando te pregunte, <b>permite el micrófono</b> para poder dictar.</p>
+      <p class="ojo">¿Solo quieres echar un vistazo? «Probar sin cuenta» funciona, pero las notas se quedan solo en ese iPhone. Luego puedes pasarte a una cuenta con «Conectar cuenta».</p>
+    </div>
+    <div class="tel"><div class="pant"><img src="login.jpg" alt="Pantalla de entrada de Cuaderna"></div></div>
+  </section>
+
+  <div class="parte"><span>Parte 2</span> Lo básico</div>
+
+  <div class="rejilla">
+    <article class="mini">
+      <div class="tel"><div class="pant"><img src="anotar.jpg" alt="Pantalla Anotar"></div></div>
+      <h3>Anotar</h3>
+      <p>Pulsa el <b>micrófono rojo</b> y dilo tal cual: «llamar a Carmen el jueves a las diez». Cuaderna entiende la fecha, la hora y la persona. También puedes escribir, hacer una foto o dibujar.</p>
+    </article>
+    <article class="mini">
+      <div class="tel"><div class="pant"><img src="hoy.jpg" alt="Pantalla Hoy"></div></div>
+      <h3>Hoy</h3>
+      <p>Lo vencido, lo de hoy y lo de los próximos días. Toca el círculo de la izquierda para marcar algo como hecho.</p>
+    </article>
+    <article class="mini">
+      <div class="tel"><div class="pant"><img src="editor.jpg" alt="Nota con lista compartida"></div></div>
+      <h3>Pasar una nota</h3>
+      <p>Abre una nota, pulsa <b>Compartir › Pasar a otra persona</b> y envíala por WhatsApp. Verás cuándo la abre, cuántos puntos lleva y cuándo la termina.</p>
+    </article>
+    <article class="mini">
+      <div class="tel"><div class="pant"><img src="notas.jpg" alt="Pantalla Cuaderno"></div></div>
+      <h3>Cuaderno</h3>
+      <p>Todas tus notas, con buscador. Pulsa <b>Pregúntale a tus notas</b> y escribe, por ejemplo, «¿qué tengo esta semana?».</p>
+    </article>
+  </div>
+
+  <section class="aviso">
+    <h2>Bueno es saberlo en iPhone</h2>
+    <ul>
+      <li><b>Los avisos a la hora suenan con la app abierta.</b> Apple no deja a las apps web avisar en segundo plano como en Android. Echa un vistazo a <b>Hoy</b> por la mañana; con cuenta de Microsoft, tus recordatorios también pueden ir a tu calendario de Outlook.</li>
+      <li>El <b>widget</b>, el <b>aviso al colgar una llamada</b> y el <b>modo coche</b> son solo de la app de Android.</li>
+      <li>Todo lo demás funciona igual: dictado, fotos, listas, libretas, compartir y la inteligencia artificial.</li>
+      <li>Si algo no carga, cierra Cuaderna del todo (desliza hacia arriba) y vuelve a abrirla desde el icono.</li>
+    </ul>
+  </section>
+
+  <div class="pie">
+    <a class="boton" href="https://cuaderna.astillerosoftware.es/">Abrir Cuaderna</a>
+    <p style="margin-top:18px">¿Dudas o ideas? Escríbenos a <a href="mailto:hola@astillerosoftware.es">hola@astillerosoftware.es</a> o desde la app, en Ayuda › Sugerencias y mejoras.</p>
+    <p style="margin-top:6px">Cuaderna, una app de <a href="https://astillerosoftware.es">Astillero Software</a></p>
+  </div>
+</main>
+</body>
+</html>
