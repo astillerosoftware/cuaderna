@@ -6420,7 +6420,7 @@ function pintarAyuda(){
   }
   const vuelta = await volverDeLogin();
   if (lsGet("chispa.tras") === "onenote" && (vuelta === "onenote" || vuelta === "ok")){ localStorage.removeItem("chispa.tras"); setTimeout(() => { ver("ajustes"); abrirOneNote(); }, 1800); }
-  else if (vuelta && lsGet("chispa.tras") === "onenote"){ localStorage.removeItem("chispa.tras"); lsSet("chispa.permNotas", false);   // sin el permiso, que no se pida en cada renovación setTimeout(() => toast("No se pudo conectar con OneNote: " + vuelta, "alerta", 6000), 1500); }
+  else if (vuelta && lsGet("chispa.tras") === "onenote"){ localStorage.removeItem("chispa.tras"); lsSet("chispa.permNotas", false); /* sin el permiso, que no se pida en cada renovación */ setTimeout(() => toast("No se pudo conectar con OneNote: " + vuelta, "alerta", 6000), 1500); }
   const vueltaCorreo = q.get("correo");
   if (!vuelta && (q.has("t") || q.has("accion") || q.has("correo") || q.has("asignacion") || q.has("hecho"))) history.replaceState(null, "", REDIRECT);
   if (vueltaCorreo) setTimeout(() => { ver("ajustes"); setTimeout(() => $("#kCorreo")?.scrollIntoView({block: "center"}), 400);
