@@ -376,3 +376,15 @@ app.timer("limpiarEstados", {
     context.log(`limpiarEstados: ${borrados} borrados`);
   }
 });
+
+// Mantener despierto: en el plan de consumo, Azure apaga el servidor tras unos 20 minutos sin uso
+// y la primera petición tarda mucho en despertarlo. Un toque cada 10 minutos de 6:00 a 24:00 (hora de España)
+// lo evita; de paso deja abiertas las tablas y descargadas las claves para comprobar las sesiones.
+// Son unas 3.300 ejecuciones al mes, muy por debajo del millón gratuito de Azure Functions.
+app.timer("despierto", {
+  schedule: "0 */10 5-22 * * *",   // UTC: 5:00–22:59 ≈ 6:00–23:59 en invierno y 7:00–00:59 en verano
+  handler: async () => {
+    await Promise.all(["usuarios", "sugerencias", "estadisticas", "estados"].map(n => tabla(n).catch(() => null)));
+    await Promise.all([clavesMS().catch(() => null), clavesGoogle().catch(() => null)]);
+  }
+});
