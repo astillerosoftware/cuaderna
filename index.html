@@ -834,6 +834,7 @@ html.lz-on,html.lz-on body{overflow:hidden}
 .tb-tit{font-size:13px;color:var(--muted);margin-bottom:8px}
 .tb-rej{display:grid;gap:3px}.tb-rej i{aspect-ratio:1;border:1px solid var(--line);border-radius:3px;background:var(--bg);cursor:pointer}.tb-rej i.on{background:var(--spark-soft);border-color:var(--spark)}
 .tb-pie{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;font-size:13px}.tb-pie #tbTam{font-weight:600;width:100%}.tb-pie label{display:flex;align-items:center;gap:5px;color:var(--muted)}.tb-pie input{width:52px;padding:5px 6px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit}.tb-pie .btn{margin-left:auto}
+a.firma-side,a.firma-login{color:var(--faint)}a.autoria{color:var(--muted)}.firma-enl{text-decoration:none;cursor:pointer;transition:color .15s}.firma-enl:hover{color:var(--spark-text)}.firma-ir{margin-left:4px;opacity:0;transition:opacity .15s}.firma-enl:hover .firma-ir{opacity:1}a.autoria{display:flex}
 </style>
 </head>
 <body>
@@ -865,7 +866,7 @@ html.lz-on,html.lz-on body{overflow:hidden}
   </div>
     <p class="lg-legal">Cuaderna solo accede a su propia carpeta. <a href="privacidad.html" target="_blank" rel="noopener">Privacidad</a></p>
   </div>
-  <div class="firma-login"><img src="astillero.svg" alt="">Una app de Astillero</div>
+  <a class="firma-login firma-enl" href="https://astillerosoftware.es/?utm_source=cuaderna" target="_blank" rel="noopener"><img src="astillero.svg" alt="">Una app de Astillero</a>
 </section>
 
 <section id="espera" class="oculto">
@@ -883,7 +884,7 @@ html.lz-on,html.lz-on body{overflow:hidden}
   <aside id="side">
     <div class="logo"><img src="icon-192.png" alt="">Cuaderna</div>
     <nav class="side-nav" id="sideNav"></nav>
-    <div class="pie-side"><button class="sync" id="syncSide"></button><div class="firma-side"><img src="astillero.svg" alt="">una app de Astillero</div></div>
+    <div class="pie-side"><button class="sync" id="syncSide"></button><a class="firma-side firma-enl" href="https://astillerosoftware.es/?utm_source=cuaderna" target="_blank" rel="noopener"><img src="astillero.svg" alt="">una app de Astillero<span class="firma-ir" aria-hidden="true">↗</span></a></div>
   </aside>
 
   <div id="main">
@@ -1265,7 +1266,7 @@ html.lz-on,html.lz-on body{overflow:hidden}
 <script src="servidor.js"></script>
 <script>
 "use strict";
-const VERSION = "0.40.0";
+const VERSION = "0.40.1";
 let avisoVersion = false;
 /* ================= Iconos ================= */
 const ICONOS = {
@@ -5964,7 +5965,7 @@ function pintarAjustes(){
       ${modoLocal() ? `<div class="ajuste">${ic("alerta")}<div class="lbl">Sin cuenta<small>Tus notas están solo en este dispositivo: si borras la app o pierdes el móvil, se pierden. Conecta tu cuenta de Google o de Microsoft para tener copia en tu Google Drive o tu OneDrive (se sube todo lo que ya tienes).</small></div><button class="btn" id="kConectar">Conectar</button></div>`
       : `<div class="ajuste">${ic("user")}<div class="lbl">${esc(lsGet("chispa.usuario") || (esGoogle() ? "Cuenta de Google" : "Cuenta de Microsoft"))}<small>${esGoogle() ? "Tus datos están en tu Google Drive, en la carpeta Cuaderna" : "Tus datos están en tu OneDrive, en la carpeta Aplicaciones"}</small></div><button class="btn sec" id="kSalir">${ic("salir")}Salir</button></div>`}
     </div></div>
-    <div class="autoria"><img class="marca" src="astillero.svg" alt="Astillero"><div>Cuaderna ${VERSION}${esApp() ? ` · app Android ${esc(infoApp?.version || "")}` : ""}<small>Una app de Astillero</small></div></div>`;
+    <a class="autoria firma-enl" href="https://astillerosoftware.es/?utm_source=cuaderna" target="_blank" rel="noopener"><img class="marca" src="astillero.svg" alt="Astillero"><div>Cuaderna ${VERSION}${esApp() ? ` · app Android ${esc(infoApp?.version || "")}` : ""}<small>Una app de Astillero · astillerosoftware.es</small></div></a>`;
   pintarTelefono(); pintarCorreo(); pintarCorreoWeb(); pintarCalendario(); pintarSuenos();
   $("#kResAct").value = c.resumenActivo === false ? "0" : "1"; $("#kIaAuto").value = c.ia?.auto === false || c.iaAuto === false ? "0" : "1";
   $("#kAmb").value = disp.ambito || "trabajo"; $("#kTrans").value = disp.trans === false ? "0" : "1"; $("#kUbi").value = disp.ubi ? "1" : "0"; $("#kTema").value = disp.tema || "auto"; $("#kAyudas").value = ayudasOn() ? "1" : "0"; $("#kAyudas").onchange = e => { lsSet("chispa.ayudas", e.target.value === "1"); toast(e.target.value === "1" ? "Ayudas activadas" : "Ayudas desactivadas"); };
@@ -6022,6 +6023,7 @@ function pintarAjustes(){
 
 // ---------- ayudas contextuales: al pasar el ratón (ordenador) o manteniendo pulsado (móvil) ----------
 const AYUDAS = {
+  ".firma-enl": ["Astillero Software", "Visita la web de quien hace Cuaderna: diseño web, apps y software a medida."],
   '#eFormato [data-fmt="deshacer"]': ["Deshacer", "Quita el último cambio de la descripción."],
   '#eFormato [data-fmt="rehacer"]': ["Rehacer", "Vuelve a poner el cambio que acabas de deshacer."],
   '#eFormato [data-fmt="b"]': ["Negrita", "Resalta en negrita el texto seleccionado.", "Ctrl+B"],
