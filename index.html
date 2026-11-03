@@ -1302,7 +1302,7 @@ a.firma-side,a.firma-login{color:var(--faint)}a.autoria{color:var(--muted)}.firm
 <script src="servidor.js"></script>
 <script>
 "use strict";
-const VERSION = "0.48.0";
+const VERSION = "0.48.1";
 let avisoVersion = false;
 /* ================= Iconos ================= */
 const ICONOS = {
@@ -3568,17 +3568,13 @@ function pintarCorreosAdm(){
     <label class="ce-l"><small>Asunto</small><input id="ceAsunto" value="${esc(asunto)}"></label>
     <label class="ce-l"><small>Texto (puedes retocarlo antes de copiarlo)</small><textarea id="ceCuerpo" rows="16">${esc(cuerpo)}</textarea></label>
     ${/\[[A-ZÁÉÍÓÚÑ]/.test(cuerpo) ? `<div class="adm-aviso">${ic("alerta")}<span>Completa lo que está entre corchetes antes de enviarlo.</span></div>` : ""}
-    <div class="ce-bot"><button class="btn sec" data-cc="ceDest">Copiar destinatarios</button><button class="btn sec" data-cc="ceAsunto">Copiar asunto</button><button class="btn" data-cc="ceCuerpo">Copiar texto</button><button class="btn sec" id="ceAbrir">Abrir en mi correo</button></div>
+    <div class="ce-bot"><button class="btn sec" data-cc="ceDest">Copiar destinatarios</button><button class="btn sec" data-cc="ceAsunto">Copiar asunto</button><button class="btn" data-cc="ceCuerpo">Copiar texto</button><a class="btn sec" href="https://webmail.dondominio.com/" target="_blank" rel="noopener">Abrir el webmail</a></div>
     <p class="hi-ayuda">${enGrupo ? "A grupos, mejor en tandas de 8 a 10 direcciones y probándolo antes enviándotelo a ti." : "Consejo: envíatelo primero a ti para ver cómo queda."}</p></div>`;
   const guardar = () => lsSet("chispa.correoAdm", correoAdm);
   $("#ceK").onchange = e => { correoAdm.k = e.target.value; if (!PLANTILLAS_CORREO[correoAdm.k].grupo && correoAdm.para === "todos") correoAdm.para = "otra"; guardar(); pintarCorreosAdm(); };
   $("#cePara").onchange = e => { correoAdm.para = e.target.value; guardar(); pintarCorreosAdm(); };
   for (const [id, k] of [["ceNom", "nombre"], ["ceMail", "email"], ["ceSug", "sugerencia"]]) if ($("#" + id)) $("#" + id).onchange = e => { correoAdm[k] = e.target.value.trim(); guardar(); pintarCorreosAdm(); };
   caja.querySelectorAll("[data-cc]").forEach(b => b.onclick = async () => { const t = $("#" + b.dataset.cc).value; try { await navigator.clipboard.writeText(t); } catch(e){ const el = $("#" + b.dataset.cc); el.select(); document.execCommand("copy"); } toast(b.textContent.replace("Copiar", "Copiado:").toLowerCase().replace("copiado:", "Copiado:"), "check", 1800); });
-  $("#ceAbrir").onclick = () => {
-    const d = $("#ceDest").value, q = new URLSearchParams({subject: $("#ceAsunto").value, body: $("#ceCuerpo").value}).toString().replace(/\+/g, "%20");
-    location.href = enGrupo ? `mailto:admin@astillerosoftware.es?bcc=${encodeURIComponent(d)}&${q}` : `mailto:${encodeURIComponent(d)}?${q}`;
-  };
 }
 // Lo último que se vio se pinta al momento (si el servidor está dormido, despertarlo tarda) y luego se actualiza
 function dibujarAdmin({usuarios, sugerencias, est}, viejo){
