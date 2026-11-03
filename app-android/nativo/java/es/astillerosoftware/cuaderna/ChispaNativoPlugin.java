@@ -393,6 +393,7 @@ public class ChispaNativoPlugin extends Plugin {
         if (call.hasOption("activo")) e.putBoolean(Suenos.P_ACTIVO, Boolean.TRUE.equals(call.getBoolean("activo")));
         if (call.hasOption("minutos")) e.putInt(Suenos.P_MINUTOS, Math.max(0, Math.min(120, call.getInt("minutos", 15))));
         if (call.hasOption("respaldo")) e.putString(Suenos.P_RESPALDO, call.getString("respaldo", ""));
+        if (call.hasOption("soloFija")) e.putBoolean(Suenos.P_SOLO_FIJA, Boolean.TRUE.equals(call.getBoolean("soloFija")));
         e.commit();
         Suenos.programar(getContext());
         JSObject r = new JSObject();
@@ -401,6 +402,9 @@ public class ChispaNativoPlugin extends Plugin {
         r.put("respaldo", p.getString(Suenos.P_RESPALDO, "07:30"));
         r.put("proximo", p.getLong(Suenos.P_PROXIMO, 0));
         r.put("despertador", p.getLong(Suenos.P_DESPERTADOR, 0));
+        r.put("soloFija", p.getBoolean(Suenos.P_SOLO_FIJA, false));
+        r.put("saltadas", p.getInt(Suenos.P_SALTADAS, 0));
+        r.put("reglas", 2);   // la web sabe que esta app ya distingue el despertador de otras alarmas
         call.resolve(r);
     }
 
