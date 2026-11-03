@@ -149,7 +149,8 @@ async function contar(u, campo, cantidad){
 const rutas = {
   async "POST registro"(request, yo){
     const u = await usuarioDe(yo);
-    return {estado: u.estado, admin: esAdmin(yo.email), ia: hayIA(), voz: hayVoz()};
+    // Cuaderna Plus: PLUS_EXIGIDO=1 en la Function App activa el cobro; mientras no, todo el mundo tiene las funciones Plus
+    return {estado: u.estado, admin: esAdmin(yo.email), ia: hayIA(), voz: hayVoz(), plan: esAdmin(yo.email) ? "plus" : (u.plan === "plus" ? "plus" : "basico"), plusExigido: process.env.PLUS_EXIGIDO === "1"};
   },
 
   async "POST ia"(request, yo){
@@ -240,7 +241,7 @@ const rutas = {
   async "GET admin/usuarios"(request, yo){
     soloAdmin(yo);
     const t = await tabla("usuarios"), lista = [];
-    for await (const u of t.listEntities()) lista.push({id: u.rowKey, email: u.email, nombre: u.nombre, estado: u.estado, creado: u.creado, ultimo: u.ultimo, iaHoy: u.dia === hoy() ? u.iaHoy || 0 : 0, iaTotal: u.iaTotal || 0, vozMinTotal: Math.round((u.vozSegTotal || 0) / 60)});
+    for await (const u of t.listEntities()) lista.push({id: u.rowKey, email: u.email, nombre: u.nombre, estado: u.estado, plan: u.plan === "plus" ? "plus" : "basico", creado: u.creado, ultimo: u.ultimo, iaHoy: u.dia === hoy() ? u.iaHoy || 0 : 0, iaTotal: u.iaTotal || 0, vozMinTotal: Math.round((u.vozSegTotal || 0) / 60)});
     lista.sort((a, b) => (a.estado === "pendiente" ? 0 : 1) - (b.estado === "pendiente" ? 0 : 1) || String(b.creado).localeCompare(a.creado));
     return {usuarios: lista};
   },
@@ -252,6 +253,15 @@ const rutas = {
     if (!u) return [{error: "No existe"}, 404];
     if (esAdmin(u.email)) return [{error: "No puedes cambiar el acceso de un administrador"}, 400];
     await t.updateEntity({partitionKey: "u", rowKey: u.rowKey, estado: e.estado, cambiado: new Date().toISOString()}, "Merge");
+    return {ok: true};
+  },
+  async "POST admin/plan"(request, yo){
+    soloAdmin(yo);
+    const e = await request.json();
+    if (!["plus", "basico"].includes(e.plan)) return [{error: "Plan no válido"}, 400];
+    const t = await tabla("usuarios"); const u = await leer(t, "u", String(e.id));
+    if (!u) return [{error: "No existe"}, 404];
+    await t.updateEntity({partitionKey: "u", rowKey: u.rowKey, plan: e.plan, planCambiado: new Date().toISOString()}, "Merge");
     return {ok: true};
   },
   async "GET admin/sugerencias"(request, yo){
@@ -270,7 +280,7 @@ const rutas = {
 };
 // ---------- estadísticas anónimas: solo contadores por día y evento, sin datos de nadie ----------
 const EVENTOS = new Set(["app_nueva", "app_dia", "sin_cuenta", "cuenta_conectada", "pasada_wa", "pasada_correo", "nota_abierta", "nota_hecha", "nota_guardar",
-  "invita_probar", "invita_video", "bienvenida", "bienvenida_instalar", "visita_astillero"]);
+  "invita_probar", "invita_video", "bienvenida", "bienvenida_instalar", "visita_astillero", "plus_ver", "plus_interes"]);
 async function sumarEvento(ev){
   const t = await tabla("estadisticas"), dia = hoy();
   for (let i = 0; i < 5; i++){
