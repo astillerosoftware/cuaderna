@@ -172,9 +172,17 @@ const rutas = {
     if (!hayIA()) return [{error: "La IA no está configurada en el servidor"}, 503];
     if (u.dia === hoy() && (u.iaHoy || 0) >= limites(u, yo).ia) return [{error: "Has llegado al límite de IA de hoy", limite: "ia", plan: planDe(u, yo)}, 429];
     const bruto = await request.text();
-    if (bruto.length > 120000) return [{error: "Demasiado texto para la IA de una vez"}, 413];
+    // Las fotos (tarjetas, documentos escaneados) van dentro como imágenes: se limita el total y, aparte, el texto y el número de imágenes
+    if (bruto.length > 12 * 1024 * 1024) return [{error: "Demasiado contenido para la IA de una vez"}, 413];
     let e; try { e = JSON.parse(bruto); } catch(err){ return [{error: "Petición no válida"}, 400]; }
     if (!Array.isArray(e.messages)) return [{error: "Petición no válida"}, 400];
+    let letras = 0, imagenes = 0;
+    for (const m of e.messages){
+      const partes = typeof m?.content === "string" ? [{type: "text", text: m.content}] : Array.isArray(m?.content) ? m.content : [];
+      for (const pt of partes){ if (pt?.type === "image_url") imagenes++; else letras += String(pt?.text || "").length; }
+    }
+    if (letras > 400000) return [{error: "Demasiado texto para la IA de una vez"}, 413];
+    if (imagenes > 12) return [{error: "Demasiadas imágenes para la IA de una vez"}, 413];
     await contar(u, "ia", 1);   // se descuenta antes de llamar, para que muchas peticiones a la vez no se salten el límite
     let base = process.env.AOAI_ENDPOINT.trim(); try { base = new URL(base).origin; } catch(err){}
     const url = `${base}/openai/deployments/${encodeURIComponent(process.env.AOAI_DESPLIEGUE || "gpt-4.1-mini")}/chat/completions?api-version=2024-10-21`;
