@@ -6,6 +6,7 @@
 // - Cuenta, de forma anónima (solo totales por día), cómo se difunde Cuaderna: notas pasadas, abiertas, instalaciones…
 // Ajustes de la Function App: ADMIN_EMAIL, AOAI_ENDPOINT, AOAI_CLAVE, AOAI_DESPLIEGUE,
 // SPEECH_CLAVE, SPEECH_REGION, ORIGENES (opcional), MAX_IA_DIA (opcional), MAX_VOZ_MIN_DIA (opcional),
+// PLUS_EXIGIDO (1 = cobrar Plus), LIMITE_IA_FUNDADOR / LIMITE_VOZ_FUNDADOR / LIMITE_IA_BASICO / LIMITE_VOZ_BASICO (opcionales, por día),
 // GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET (para entrar con Google: el secreto solo vive aquí).
 const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
@@ -136,6 +137,16 @@ async function usuarioDe(yo){
   }
   return u;
 }
+// Planes: «basico» (gratis), «plus» (de pago) y «fundador» (quienes probaron Cuaderna: todo gratis de por vida, con IA y voz limitadas al día).
+// Mientras PLUS_EXIGIDO no sea 1, todo el mundo tiene los límites generales.
+const PLANES = ["basico", "plus", "fundador"];
+const planDe = (u, yo) => esAdmin(yo.email) ? "plus" : PLANES.includes(u.plan) ? u.plan : "basico";
+function limites(u, yo){
+  const plan = planDe(u, yo);
+  if (process.env.PLUS_EXIGIDO !== "1" || plan === "plus") return {ia: MAX_IA, voz: MAX_VOZ};
+  if (plan === "fundador") return {ia: +process.env.LIMITE_IA_FUNDADOR || 30, voz: +process.env.LIMITE_VOZ_FUNDADOR || 15};
+  return {ia: +process.env.LIMITE_IA_BASICO || 10, voz: +process.env.LIMITE_VOZ_BASICO || 5};
+}
 async function contar(u, campo, cantidad){
   const t = await tabla("usuarios");
   const dia = hoy(); const c = {partitionKey: "u", rowKey: u.rowKey};
@@ -150,14 +161,16 @@ const rutas = {
   async "POST registro"(request, yo){
     const u = await usuarioDe(yo);
     // Cuaderna Plus: PLUS_EXIGIDO=1 en la Function App activa el cobro; mientras no, todo el mundo tiene las funciones Plus
-    return {estado: u.estado, admin: esAdmin(yo.email), ia: hayIA(), voz: hayVoz(), plan: esAdmin(yo.email) ? "plus" : (u.plan === "plus" ? "plus" : "basico"), plusExigido: process.env.PLUS_EXIGIDO === "1"};
+    const lim = limites(u, yo), esHoy = u.dia === hoy();
+    return {estado: u.estado, admin: esAdmin(yo.email), ia: hayIA(), voz: hayVoz(), plan: planDe(u, yo), plusExigido: process.env.PLUS_EXIGIDO === "1",
+      uso: {ia: esHoy ? u.iaHoy || 0 : 0, iaMax: lim.ia, vozMin: Math.round((esHoy ? u.vozSegHoy || 0 : 0) / 60), vozMax: lim.voz}};
   },
 
   async "POST ia"(request, yo){
     const u = await usuarioDe(yo);
     if (u.estado !== "autorizado") return [{error: "Tu acceso aún no está autorizado"}, 403];
     if (!hayIA()) return [{error: "La IA no está configurada en el servidor"}, 503];
-    if (u.dia === hoy() && (u.iaHoy || 0) >= MAX_IA) return [{error: "Has llegado al límite de IA de hoy"}, 429];
+    if (u.dia === hoy() && (u.iaHoy || 0) >= limites(u, yo).ia) return [{error: "Has llegado al límite de IA de hoy", limite: "ia", plan: planDe(u, yo)}, 429];
     const bruto = await request.text();
     if (bruto.length > 120000) return [{error: "Demasiado texto para la IA de una vez"}, 413];
     let e; try { e = JSON.parse(bruto); } catch(err){ return [{error: "Petición no válida"}, 400]; }
@@ -176,7 +189,7 @@ const rutas = {
     const u = await usuarioDe(yo);
     if (u.estado !== "autorizado") return [{error: "Tu acceso aún no está autorizado"}, 403];
     if (!hayVoz()) return [{error: "La voz no está configurada en el servidor"}, 503];
-    if (u.dia === hoy() && (u.vozSegHoy || 0) >= MAX_VOZ * 60) return [{error: "Has llegado al límite de voz de hoy"}, 429];
+    if (u.dia === hoy() && (u.vozSegHoy || 0) >= limites(u, yo).voz * 60) return [{error: "Has llegado al límite de voz de hoy", limite: "voz", plan: planDe(u, yo)}, 429];
     const audio = Buffer.from(await request.arrayBuffer());
     if (audio.length > 8 * 1024 * 1024) return [{error: "Audio demasiado largo"}, 413];
     const url = `https://${process.env.SPEECH_REGION}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=es-ES&format=simple`;
@@ -241,7 +254,7 @@ const rutas = {
   async "GET admin/usuarios"(request, yo){
     soloAdmin(yo);
     const t = await tabla("usuarios"), lista = [];
-    for await (const u of t.listEntities()) lista.push({id: u.rowKey, email: u.email, nombre: u.nombre, estado: u.estado, plan: u.plan === "plus" ? "plus" : "basico", creado: u.creado, ultimo: u.ultimo, iaHoy: u.dia === hoy() ? u.iaHoy || 0 : 0, iaTotal: u.iaTotal || 0, vozMinTotal: Math.round((u.vozSegTotal || 0) / 60)});
+    for await (const u of t.listEntities()) lista.push({id: u.rowKey, email: u.email, nombre: u.nombre, estado: u.estado, plan: PLANES.includes(u.plan) ? u.plan : "basico", creado: u.creado, ultimo: u.ultimo, iaHoy: u.dia === hoy() ? u.iaHoy || 0 : 0, iaTotal: u.iaTotal || 0, vozMinTotal: Math.round((u.vozSegTotal || 0) / 60)});
     lista.sort((a, b) => (a.estado === "pendiente" ? 0 : 1) - (b.estado === "pendiente" ? 0 : 1) || String(b.creado).localeCompare(a.creado));
     return {usuarios: lista};
   },
@@ -258,7 +271,7 @@ const rutas = {
   async "POST admin/plan"(request, yo){
     soloAdmin(yo);
     const e = await request.json();
-    if (!["plus", "basico"].includes(e.plan)) return [{error: "Plan no válido"}, 400];
+    if (!PLANES.includes(e.plan)) return [{error: "Plan no válido"}, 400];
     const t = await tabla("usuarios"); const u = await leer(t, "u", String(e.id));
     if (!u) return [{error: "No existe"}, 404];
     await t.updateEntity({partitionKey: "u", rowKey: u.rowKey, plan: e.plan, planCambiado: new Date().toISOString()}, "Merge");
