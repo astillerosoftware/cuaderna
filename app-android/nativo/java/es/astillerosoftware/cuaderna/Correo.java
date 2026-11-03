@@ -301,7 +301,12 @@ final class Correo {
             String tipo = n.optString("tipo", "");
             if (!tipo.isEmpty() && !"nota".equals(tipo)) meta.add(tipo.substring(0, 1).toUpperCase(ES) + tipo.substring(1));
             h.append("<div style=\"padding:11px 14px;border-top:").append(i == 1 ? "0" : "1px solid #EEF1F6").append("\">")
-             .append("<div style=\"font-weight:600\">").append(esc(t)).append("</div>");
+             .append("<div style=\"font-weight:600\">");
+            String id = n.optString("id", "");
+            // cada nota lleva su enlace directo: abre Cuaderna (la app, si está instalada) con esa nota
+            if (id.matches("[A-Za-z0-9_-]{4,60}")) h.append("<a href=\"").append(WEB).append("?nota=").append(id).append("\" style=\"color:#2B1D14;text-decoration:none\">").append(esc(t)).append(" <span style=\"color:#A8322D\">›</span></a>");
+            else h.append(esc(t));
+            h.append("</div>");
             if (!x.isEmpty() && !x.equals(t)) h.append("<div style=\"color:#4A5670;font-size:14px;margin-top:2px\">").append(esc(x)).append("</div>");
             JSONArray items = n.optJSONArray("lp");
             if (items != null && items.length() > 0) {
