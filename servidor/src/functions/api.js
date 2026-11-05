@@ -87,8 +87,20 @@ async function clavesGoogle(forzar){
 }
 const b64 = s => Buffer.from(s.replace(/-/g, "+").replace(/_/g, "/"), "base64");
 class NoAutorizado extends Error {}
+// Llave del portal interno de Astillero (portal.astillerosoftware.es): le deja usar SOLO las rutas admin/*.
+// Se configura en Azure como PORTAL_TOKEN (32 caracteres o más); sin ella, el portal no tiene acceso.
+const PORTAL_TOKEN = (process.env.PORTAL_TOKEN || "").trim();
+function esPortal(h){
+  if (PORTAL_TOKEN.length < 32 || !h.startsWith("Portal ")) return false;
+  const a = crypto.createHash("sha256").update(h.slice(7).trim()).digest(), b = crypto.createHash("sha256").update(PORTAL_TOKEN).digest();
+  return crypto.timingSafeEqual(a, b);
+}
 async function quienEs(request){
   const h = request.headers.get("authorization") || "";
+  if (h.startsWith("Portal ")){
+    if (!esPortal(h)) throw new NoAutorizado("Llave del portal no válida");
+    return { id: "portal", email: "", nombre: "Portal Astillero", portal: true };
+  }
   const tok = h.startsWith("Bearer ") ? h.slice(7).trim() : "";
   const partes = tok.split(".");
   if (partes.length !== 3) throw new NoAutorizado("Falta la identificación");
@@ -333,7 +345,7 @@ rutas["GET admin/estadisticas"] = async (request, yo) => {
   for await (const x of u.listEntities()){ usuarios.total++; usuarios[x.estado] = (usuarios[x.estado] || 0) + 1; }
   return {dias, total, usuarios};
 };
-function soloAdmin(yo){ if (!esAdmin(yo.email)) throw new NoAutorizado("Solo el administrador"); }
+function soloAdmin(yo){ if (!yo.portal && !esAdmin(yo.email)) throw new NoAutorizado("Solo el administrador"); }
 
 app.http("api", {
   methods: ["GET", "POST", "OPTIONS"], authLevel: "anonymous", route: "{*ruta}",
@@ -422,6 +434,7 @@ app.http("api", {
     if (!f) return json(request, {error: "No existe"}, 404);
     try {
       const yo = await quienEs(request);
+      if (yo.portal && !ruta.startsWith("admin/")) throw new NoAutorizado("La llave del portal solo sirve para la administración");
       const r = await f(request, yo);
       if (Array.isArray(r)) return json(request, r[0], r[1]);
       if (r && r.crudo !== undefined) return {status: r.status, headers: {...cors(request), "Content-Type": "application/json", ...(r.extra || {})}, body: r.crudo};
