@@ -1,0 +1,5 @@
+/* Tipografías alojadas en Cuaderna (sin pedir nada a Google: no se envía la IP de nadie a terceros). Licencia SIL OFL (ver OFL-*.txt). */
+@font-face{font-family:"Fraunces";src:url("/fuentes/fraunces.woff") format("woff");font-weight:400 700;font-style:normal;font-display:swap}
+@font-face{font-family:"Fraunces";src:url("/fuentes/fraunces-italic.woff") format("woff");font-weight:400 700;font-style:italic;font-display:swap}
+@font-face{font-family:"Figtree";src:url("/fuentes/figtree.woff") format("woff");font-weight:300 900;font-style:normal;font-display:swap}
+@font-face{font-family:"Figtree";src:url("/fuentes/figtree-italic.woff") format("woff");font-weight:300 900;font-style:italic;font-display:swap}

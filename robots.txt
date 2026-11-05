@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /servidor/
+Disallow: /app-android/
+
+Sitemap: https://cuaderna.astillerosoftware.es/sitemap.xml
