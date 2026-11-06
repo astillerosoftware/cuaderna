@@ -135,6 +135,18 @@ function cors(request){
 const json = (request, cuerpo, status = 200, extra = {}) => ({status, headers: {...cors(request), "Content-Type": "application/json", ...extra}, body: JSON.stringify(cuerpo)});
 const hoy = () => new Date().toISOString().slice(0, 10);
 
+// mensajes del equipo que aún no han llegado a este usuario (solo los activos y que van para él)
+const paraMi = (m, u) => !m.para || m.para === "todos" || m.para.split(",").includes(String(u.email || "").toLowerCase());
+async function mensajesPara(u){
+  try {
+    const tm = await tabla("mensajes"), te = await tabla("entregas"), l = [];
+    for await (const m of tm.listEntities()){
+      if (m.activo === false || !paraMi(m, u) || await leer(te, m.rowKey, u.rowKey)) continue;
+      l.push({id: m.rowKey, titulo: m.titulo, texto: m.texto, ambito: m.ambito || "personal", creado: m.creado});
+    }
+    return l.sort((a, b) => a.id.localeCompare(b.id)).slice(0, 5);
+  } catch(e){ return []; }
+}
 async function usuarioDe(yo){
   const t = await tabla("usuarios");
   let u = await leer(t, "u", yo.id);
@@ -175,7 +187,63 @@ const rutas = {
     // Cuaderna Plus: PLUS_EXIGIDO=1 en la Function App activa el cobro; mientras no, todo el mundo tiene las funciones Plus
     const lim = limites(u, yo), esHoy = u.dia === hoy();
     return {estado: u.estado, admin: esAdmin(yo.email), ia: hayIA(), voz: hayVoz(), plan: planDe(u, yo), plusExigido: process.env.PLUS_EXIGIDO === "1",
-      uso: {ia: esHoy ? u.iaHoy || 0 : 0, iaMax: lim.ia, vozMin: Math.round((esHoy ? u.vozSegHoy || 0 : 0) / 60), vozMax: lim.voz}};
+      uso: {ia: esHoy ? u.iaHoy || 0 : 0, iaMax: lim.ia, vozMin: Math.round((esHoy ? u.vozSegHoy || 0 : 0) / 60), vozMax: lim.voz},
+      mensajes: u.estado === "autorizado" ? await mensajesPara(u) : []};
+  },
+  // la app avisa de que el mensaje ya es una nota en su Cuaderna («recibida»), de cuándo la abre («leida») y de cuándo la marca como hecha («hecha»)
+  async "POST mensaje/estado"(request, yo){
+    let e = {}; try { e = JSON.parse((await request.text()).slice(0, 600)); } catch(err){}
+    const id = String(e.id || "");
+    if (!/^[0-9a-z]{10,40}$/.test(id) || !["recibida", "leida", "hecha"].includes(e.e)) return [{error: "No válido"}, 400];
+    const u = await usuarioDe(yo), m = await leer(await tabla("mensajes"), "m", id);
+    if (!m || !paraMi(m, u)) return [{error: "No existe"}, 404];
+    const t = await tabla("entregas"), prev = await leer(t, id, u.rowKey) || {}, ahora = new Date().toISOString();
+    const ent = {partitionKey: id, rowKey: u.rowKey, email: u.email || "", nombre: u.nombre || "", recibida: prev.recibida || ahora};
+    if (e.e !== "recibida") ent.leida = prev.leida || ahora;
+    if (e.e === "hecha") ent.hecha = prev.hecha || ahora;
+    await t.upsertEntity(ent, "Merge");
+    return {ok: true};
+  },
+
+  // ---------- mensajes del equipo: llegan como una nota a la Cuaderna de cada usuario ----------
+  async "GET admin/mensajes"(request, yo){
+    soloAdmin(yo);
+    const tm = await tabla("mensajes"), te = await tabla("entregas"), tu = await tabla("usuarios"), usuarios = [];
+    for await (const x of tu.listEntities()) if (x.estado === "autorizado") usuarios.push(x);
+    const lista = [];
+    for await (const m of tm.listEntities()){
+      const entregas = [];
+      for await (const x of te.listEntities({queryOptions: {filter: `PartitionKey eq '${m.rowKey}'`}})) entregas.push({id: x.rowKey, email: x.email, nombre: x.nombre, recibida: x.recibida || null, leida: x.leida || null, hecha: x.hecha || null});
+      const destino = usuarios.filter(u => paraMi(m, u));
+      const pendientes = destino.filter(u => !entregas.some(x => x.id === u.rowKey)).map(u => ({id: u.rowKey, email: u.email, nombre: u.nombre, ultimo: u.ultimo || null}));
+      lista.push({id: m.rowKey, titulo: m.titulo, texto: m.texto, ambito: m.ambito || "personal", para: m.para || "todos", activo: m.activo !== false, creado: m.creado,
+        destinatarios: destino.length, recibidas: entregas.length, leidas: entregas.filter(x => x.leida).length, hechas: entregas.filter(x => x.hecha).length, entregas, pendientes});
+    }
+    lista.sort((a, b) => b.id.localeCompare(a.id));
+    return {mensajes: lista};
+  },
+  // crear: {titulo, texto, ambito?, para?}  ·  pausar o reanudar: {id, activo}  ·  borrar: {id, borrar: true}
+  // «para» es "todos" o una lista de correos separados por comas
+  async "POST admin/mensaje"(request, yo){
+    soloAdmin(yo);
+    const e = await request.json(), t = await tabla("mensajes");
+    if (e.id){
+      const id = String(e.id); if (!await leer(t, "m", id)) return [{error: "No existe"}, 404];
+      if (e.borrar){ await t.deleteEntity("m", id); return {ok: true}; }
+      await t.updateEntity({partitionKey: "m", rowKey: id, activo: !!e.activo}, "Merge");
+      return {ok: true};
+    }
+    const titulo = String(e.titulo || "").trim().slice(0, 140), texto = String(e.texto || "").trim().slice(0, 6000);
+    if (!titulo || !texto) return [{error: "Faltan el título o el texto"}, 400];
+    let para = String(e.para || "todos").trim().toLowerCase();
+    if (para !== "todos"){
+      const l = para.split(/[\s,;]+/).filter(x => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(x));
+      if (!l.length) return [{error: "Destinatarios no válidos"}, 400];
+      para = l.join(",");
+    }
+    const id = new Date().toISOString().replace(/[-:.TZ]/g, "") + crypto.randomBytes(3).toString("hex");
+    await t.createEntity({partitionKey: "m", rowKey: id, titulo, texto, ambito: e.ambito === "trabajo" ? "trabajo" : "personal", para, activo: true, creado: new Date().toISOString()});
+    return {ok: true, id};
   },
 
   async "POST ia"(request, yo){
