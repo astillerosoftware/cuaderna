@@ -396,6 +396,8 @@ app.http("api", {
       let e = {}; try { e = JSON.parse((await request.text()).slice(0, 8000)); } catch(err){}
       const nombre = String(e.nombre || "").trim().slice(0, 120), email = String(e.email || "").trim().slice(0, 200), mensaje = String(e.mensaje || "").trim().slice(0, 3000);
       if (e.web) return json(request, {ok: true});   // campo trampa para robots
+      // comprobaciones automáticas (despliegues, pruebas): direcciones de dominios reservados que no pueden existir. Se contesta «ok» pero no se guarda
+      if (/@(.+\.)?(example\.(com|org|net)|test|invalid|localhost)$/i.test(String(e.email || "").trim())) return json(request, {ok: true, prueba: true});
       if (nombre.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || mensaje.length < 20) return json(request, {error: "Faltan datos"}, 400);
       if (frenar(request)) return json(request, {error: "Demasiados mensajes seguidos. Prueba en unos minutos."}, 429);
       const empresa = String(e.empresa || "").trim().slice(0, 120), tel = String(e.tel || "").trim().slice(0, 40);
