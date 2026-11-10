@@ -1,7 +1,8 @@
 name: App Android
 
 # Compila la app de Cuaderna cada vez que cambia algo en app-android/
-# y la publica en «Releases» para descargarla desde el móvil.
+# (ya no se publica en «Releases»: la app se reparte solo por Google Play, en prueba).
+# El APK queda en Artifacts para pruebas internas.
 # También deja el paquete .aab para subirlo a Google Play (en Artifacts).
 on:
   push:
@@ -106,13 +107,3 @@ jobs:
         with:
           name: Cuaderna-${{ github.run_number }}
           path: app-android/Cuaderna.apk
-
-      - name: Publicar en Releases
-        if: env.PRUEBA != '1'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "android-${{ github.run_number }}" Cuaderna.apk \
-            --title "Cuaderna para Android 1.0.${{ github.run_number }}" \
-            --notes "Descarga Cuaderna.apk desde el móvil e instálala encima de la anterior." \
-            --latest

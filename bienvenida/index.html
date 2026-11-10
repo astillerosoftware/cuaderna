@@ -57,6 +57,11 @@ section h2{font-size:30px;margin:14px 0 18px}
 .pasos li::before{content:counter(paso);flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--lacre);color:var(--crema);font:700 19px "Fraunces",Georgia,serif;border:3px solid var(--tinta)}
 .pasos li div{padding-top:7px}
 .pasos b{font-weight:700}
+.prueba{background:var(--papel);border:3px solid var(--tinta);border-radius:18px;padding:16px 16px 14px;box-shadow:4px 4px 0 var(--tinta);margin-top:22px;display:grid;gap:6px}
+.prueba .sello{justify-self:start;background:var(--mostaza);color:#2B1D14;border:2px solid var(--tinta);border-radius:999px;padding:2px 10px;font:700 12px "Figtree";letter-spacing:.1em;text-transform:uppercase}
+.prueba b{font:700 18px/1.25 "Fraunces",Georgia,serif}
+.prueba small{color:var(--suave);font-size:14.5px;line-height:1.45}
+.correo-txt{text-align:center;color:var(--suave);font-size:14px;margin:12px 0 0}
 .pasos small{display:block;color:var(--suave);font-size:14px;margin-top:2px}
 .panel[hidden]{display:none}
 
@@ -113,13 +118,18 @@ footer b{font-family:"Fraunces",Georgia,serif;color:var(--tinta)}
     </div>
 
     <div class="panel" id="p-android">
-      <a class="boton" href="https://github.com/astillerosoftware/cuaderna/releases/latest/download/Cuaderna.apk"><svg class="i" viewBox="0 0 24 24"><path d="M12 4v13M6 11l6 6 6-6M5 20.5h14"/></svg>Descargar Cuaderna</a>
+      <div class="prueba"><span class="sello">En prueba</span>
+        <b>La app de Android está en fase de prueba en Google Play</b>
+        <small>Para probarla, mándanos el correo de la cuenta de Google que usas en el móvil (tu Gmail). Te damos acceso y te llega el enlace para instalarla desde Google Play.</small></div>
+      <a class="boton" id="pedirPrueba" href="mailto:hola@astillerosoftware.es?subject=Quiero%20probar%20Cuaderna%20en%20Android&amp;body=Hola%2C%20quiero%20probar%20Cuaderna.%20Mi%20correo%20de%20Google%20(Gmail)%20es%3A%20"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg>Pedir acceso por correo</a>
+      <p class="correo-txt">O escríbenos a <b>hola@astillerosoftware.es</b></p>
       <ol class="pasos">
-        <li><div><b>Abre el archivo descargado</b><small>Si te lo pide, permite «instalar apps desconocidas».</small></div></li>
-        <li><div><b>Si sale Play Protect</b>, pulsa «Más detalles» › «Instalar de todas formas»<small>Sale porque la app no viene de Play Store.</small></div></li>
+        <li><div><b>Mándanos tu correo de Google</b><small>El de la cuenta con la que entras en Google Play.</small></div></li>
+        <li><div><b>Te llega la invitación</b><small>Ábrela en el móvil, acepta ser probador e instala Cuaderna desde Google Play.</small></div></li>
         <li><div><b>Entra con Google o con Microsoft</b><small>Y acepta el micrófono y las notificaciones. La primera vez, un recorrido de un minuto te enseña lo principal.</small></div></li>
         <li><div><b>Pon el widget</b> en tu pantalla de inicio<small>Para grabar con un solo toque.</small></div></li>
       </ol>
+      <a class="boton sec" href="https://cuaderna.astillerosoftware.es/"><svg class="i" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Mientras, úsala en el navegador</a>
     </div>
     <div class="panel" id="p-iphone" hidden>
       <a class="boton" href="https://cuaderna.astillerosoftware.es/"><svg class="i" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Abrir Cuaderna en Safari</a>
@@ -150,7 +160,7 @@ footer b{font-family:"Fraunces",Georgia,serif;color:var(--tinta)}
     <details><summary>¿Puedo usarla sin cuenta?</summary><p>Sí: en la entrada pulsa «Probar sin cuenta». Tus notas se guardan solo en ese dispositivo, así que si borras la app o pierdes el móvil, se pierden. Cuando quieras, conecta tu cuenta de Google o de Microsoft en Más › Ajustes y todo se sube a tu nube. Compartir con otros y las versiones necesitan la cuenta; el calendario y el correo, la de Microsoft.</p></details>
     <details><summary>¿Puedo traer mis notas de Evernote?</summary><p>Sí. Exporta tus libretas desde Evernote como archivo .enex y en Cuaderna ve a Más › Ajustes › Tus datos › Importar. Llegan con sus fotos, archivos y etiquetas.</p></details>
     <details><summary>Hay muchas opciones, ¿cómo las aprendo?</summary><p>La primera vez que entras, un recorrido de un minuto te enseña lo principal; puedes repetirlo en Ayuda › Ver el recorrido. Y si dudas qué hace un botón, pasa el ratón por encima o, en el móvil, mantenlo pulsado: aparece una explicación.</p></details>
-    <details><summary>¿Cómo la actualizo?</summary><p>La app te avisa cuando hay versión nueva: la descargas e instalas encima. No pierdes nada.</p></details>
+    <details><summary>¿Cómo la actualizo?</summary><p>En Android se actualiza desde Google Play, como cualquier otra app. Las mejoras de Cuaderna te llegan solas al abrirla. No pierdes nada.</p></details>
     <details><summary>Tengo una idea o algo no va</summary><p>Dentro de la app, en Ayuda, pulsa «Sugerencias y mejoras».</p></details>
   </section>
 
@@ -162,7 +172,7 @@ const tabs = [...document.querySelectorAll("[data-p]")];
 function elegir(p){ tabs.forEach(t => t.setAttribute("aria-selected", t.dataset.p === p)); ["android", "iphone", "pc"].forEach(x => document.getElementById("p-" + x).hidden = x !== p); }
 tabs.forEach(t => t.onclick = () => elegir(t.dataset.p));
 try { if (!sessionStorage.getItem("cuaderna.visto")){ sessionStorage.setItem("cuaderna.visto", "1"); window.cuadernaEvento?.("bienvenida"); } } catch(e){}
-document.querySelectorAll('a[href$=".apk"]').forEach(a => a.addEventListener("click", () => window.cuadernaEvento?.("bienvenida_instalar")));
+document.getElementById("pedirPrueba").addEventListener("click", () => window.cuadernaEvento?.("bienvenida_pedir_prueba"));
 const ua = navigator.userAgent;
 elegir(/android/i.test(ua) ? "android" : /iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1) ? "iphone" : /mobi/i.test(ua) ? "android" : "pc");
 </script>
