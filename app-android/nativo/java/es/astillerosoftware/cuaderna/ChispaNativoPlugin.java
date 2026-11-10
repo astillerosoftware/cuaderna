@@ -158,6 +158,15 @@ public class ChispaNativoPlugin extends Plugin {
             r.put("codigo", 0);
         }
         r.put("android", Build.VERSION.SDK_INT);
+        // Quién la instaló: «com.android.vending» si viene de Google Play; vacío si se instaló a mano (APK)
+        String instalador = "";
+        try {
+            android.content.pm.PackageManager pm = getContext().getPackageManager();
+            String paquete = getContext().getPackageName();
+            String x = Build.VERSION.SDK_INT >= 30 ? pm.getInstallSourceInfo(paquete).getInstallingPackageName() : pm.getInstallerPackageName(paquete);
+            if (x != null) instalador = x;
+        } catch (Exception e) { }
+        r.put("instalador", instalador);
         call.resolve(r);
     }
 
