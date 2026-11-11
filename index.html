@@ -532,6 +532,13 @@ details.e-mas{border-top:1px solid var(--line);padding-top:4px}details.e-mas>sum
 .ec-lista svg{width:22px;height:22px;color:var(--spark-deep)}
 .toast.ver{opacity:1}.toast.arriba.ver{transform:translate(-50%,0)}
 .toast.con-accion{pointer-events:auto}
+/* aviso discreto: píldora compacta arriba, solo el botón recibe toques */
+.toast.discreto{padding:6px 8px 6px 6px;border-radius:999px;font-size:14px;gap:8px;max-width:min(420px,calc(100vw - 24px));box-shadow:0 10px 26px -12px rgba(0,0,0,.5)}
+.toast.discreto > svg{width:26px;height:26px;padding:6px}
+.toast.discreto span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toast.discreto.con-accion{pointer-events:none}.toast.discreto .deshacer{pointer-events:auto;padding:6px 12px;font-size:13.5px;border-radius:999px}
+.toast.discreto:not(.con-accion){padding-right:14px}
+@media (min-width:900px) and (min-height:560px){ .toast.arriba{left:calc(50% + 120px)} }
 .toast{width:max-content;max-width:min(480px,calc(100vw - 32px))}
 .toast span{min-width:0}
 .toast .deshacer{flex:none;white-space:nowrap;margin-left:2px;padding:8px 14px;border-radius:12px;background:var(--spark);color:#FBF3E4;font-weight:700;font-size:14px}
@@ -1350,6 +1357,6 @@ a.firma-side,a.firma-login{color:var(--faint)}a.autoria{color:var(--muted)}.firm
 
 <script src="arranque.js"></script>
 <script src="servidor.js"></script>
-<script src="app.js?v=0.54.1"></script>
+<script src="app.js?v=0.54.2"></script>
 </body>
 </html>
