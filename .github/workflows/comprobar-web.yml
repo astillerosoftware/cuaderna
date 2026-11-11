@@ -1,0 +1,23 @@
+# Comprueba desde fuera la seguridad de las webs con Mozilla Observatory y revisa sus cabeceras.
+# Se lanza a mano (Actions › Comprobar web) y cada día 1 de mes.
+name: Comprobar web
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 6 1 * *"
+jobs:
+  observatory:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sitio: [cuaderna.astillerosoftware.es, astillerosoftware.es]
+    steps:
+      - name: Mozilla Observatory
+        run: |
+          r=$(curl -sS -X POST "https://observatory-api.mdn.mozilla.net/api/v2/scan?host=${{ matrix.sitio }}")
+          echo "$r" | jq '{nota: .grade, puntos: .score, pruebas_superadas: .tests_passed, pruebas_falladas: .tests_failed, informe: .details_url}'
+          echo "### ${{ matrix.sitio }}: nota $(echo "$r" | jq -r .grade) ($(echo "$r" | jq -r .score)/100)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Cabeceras de seguridad
+        run: |
+          curl -sSI "https://${{ matrix.sitio }}/" | grep -iE '^(strict-transport-security|content-security-policy|x-content-type-options|x-frame-options|referrer-policy|permissions-policy|cross-origin-opener-policy|server):' || true
