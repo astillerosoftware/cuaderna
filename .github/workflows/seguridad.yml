@@ -1,0 +1,61 @@
+# Seguridad automática: en cada cambio y cada lunes
+#  · CodeQL analiza el código (web, servidor y Android) en busca de fallos de seguridad
+#  · Gitleaks busca claves o contraseñas que se hayan colado en el repositorio
+#  · npm audit avisa de librerías del servidor con fallos conocidos
+# Los resultados aparecen en GitHub › Security › Code scanning (y el trabajo falla si encuentra algo grave).
+name: Seguridad
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+jobs:
+  codeql:
+    name: CodeQL (${{ matrix.lenguaje }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lenguaje: [javascript-typescript, java-kotlin]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.lenguaje }}
+          queries: security-extended
+          build-mode: none
+          config: |
+            paths-ignore:
+              - lib
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/lenguaje:${{ matrix.lenguaje }}"
+  secretos:
+    name: Claves filtradas (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Buscar claves en todo el historial
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks detect --source . --redact --verbose --exit-code 1
+  dependencias:
+    name: Librerías del servidor (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Auditar
+        working-directory: servidor
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm audit --omit=dev --audit-level=high

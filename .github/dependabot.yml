@@ -1,0 +1,14 @@
+# Dependabot: revisa cada semana si hay versiones nuevas (sobre todo de seguridad) y abre una propuesta de cambio.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/servidor"
+    schedule: { interval: "weekly", day: "monday", time: "07:00", timezone: "Europe/Madrid" }
+    open-pull-requests-limit: 5
+  - package-ecosystem: "npm"
+    directory: "/app-android"
+    schedule: { interval: "weekly", day: "monday", time: "07:00", timezone: "Europe/Madrid" }
+    open-pull-requests-limit: 5
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule: { interval: "monthly" }
