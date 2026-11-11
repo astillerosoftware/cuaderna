@@ -96,14 +96,14 @@ jobs:
 
       - name: Guardar el AAB de Google Play como artefacto
         if: env.PRUEBA != '1'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Cuaderna-play-${{ github.run_number }}
           path: app-android/Cuaderna-play.aab
           retention-days: 30
 
       - name: Guardar el APK como artefacto
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Cuaderna-${{ github.run_number }}
           path: app-android/Cuaderna.apk
