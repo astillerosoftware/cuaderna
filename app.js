@@ -1,0 +1,6403 @@
+// Cuaderna · Astillero Software. Código de la app (antes iba dentro de index.html).
+// Al publicar una versión: cambia VERSION aquí, el «?v=» de app.js en index.html y CACHE en sw.js.
+"use strict";
+const VERSION = "0.54.1";
+let avisoVersion = false;
+/* ================= Iconos ================= */
+const ICONOS = {
+  spark: '<path d="M12 3.5c.7 4.3 2.7 6.3 7 7-4.3.7-6.3 2.7-7 7-.7-4.3-2.7-6.3-7-7 4.3-.7 6.3-2.7 7-7z"/><path d="M19 3v3M17.5 4.5h3"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+  lista: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="18" r="1.2"/>',
+  ajustes: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/>',
+  grafico: '<path d="M4 20V11M10 20V5M16 20v-6M3 20h18"/>',
+  ayuda: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.3 2.4c-.6.3-.9.8-.9 1.4v.6M12 17h.01"/>',
+  mic: '<rect x="9" y="3" width="6" height="11.5" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
+  stop: '<rect x="7" y="7" width="10" height="10" rx="2.5"/>',
+  camara: '<path d="M3.5 8.5A2 2 0 0 1 5.5 6.5h2l1.6-2.2h5.8l1.6 2.2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.8" r="3.6"/>',
+  ancla: '<circle cx="12" cy="5" r="2.2"/><path d="M12 7.2V21M8 11h8M4 13.5a8 8 0 0 0 16 0"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  x: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+  borrar: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12.2a1.8 1.8 0 0 0 1.8 1.8h6.4a1.8 1.8 0 0 0 1.8-1.8L18 7M9 7V4.5h6V7"/>',
+  limpiar: '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4v4.5H8"/>',
+  pluma: '<path d="M14.5 5.5l4 4M4 20l1-4.5L16 4.5a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L8.5 19z"/>',
+  cal: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  user: '<circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/>',
+  doc: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
+  web: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>',
+  plantilla: '<rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  sinFormato: '<path d="M6 5h12M12 5l-2.2 8M4 20 20 4"/><path d="M9 19h4"/>',
+  clip: '<path d="M20 11.5 12 19.5a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L9.7 17.2a1.6 1.6 0 0 1-2.3-2.3L15 7.3"/>',
+  libro: '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v16H6.5A1.5 1.5 0 0 0 5 20.5zM5 20.5A1.5 1.5 0 0 0 6.5 22H19"/><path d="M9 7.5h6"/>',
+  negrita: '<path d="M7 4.5h6a3.5 3.5 0 0 1 0 7H7zM7 11.5h7a3.75 3.75 0 0 1 0 7.5H7z"/>',
+  cursiva: '<path d="M10 4.5h8M6 19.5h8M14 4.5l-4 15"/>',
+  encabezado: '<path d="M5 5v14M14 5v14M5 12h9M17.5 10.5 20 9v10"/>',
+  encabezado2: '<path d="M5 5v14M14 5v14M5 12h9M17 11.5a2 2 0 0 1 4 .3c0 1.2-1 2-4 4.7V19h4"/>',
+  numeros: '<path d="M10 6h10M10 12h10M10 18h10M4 5l1.5-1V9M3.5 15.5a1.5 1.5 0 1 1 2.2 1.3L3.5 19.5h3"/>',
+  enlace: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  tabla: '<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M3.5 9.5h17M3.5 14.5h17M10 4.5v15"/>',
+  tag: '<path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1.4 1.4 0 0 1 0 2l-6.2 6.2a1.4 1.4 0 0 1-2 0z"/><circle cx="8" cy="8" r="1.4"/>',
+  idea: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z"/>',
+  campana: '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 21a2 2 0 0 0 4 0"/>',
+  luna: '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/>',
+  imagen: '<rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 16l-5-5L6 19.5"/>',
+  pin: '<path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/>',
+  play: '<path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/>',
+  pausa: '<path d="M8.5 5.5v13M15.5 5.5v13" stroke-width="3"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4 7.5l8 6 8-6"/>',
+  nube: '<path d="M7 18.5a4.5 4.5 0 0 1-.7-8.9A6 6 0 0 1 17.8 9a4.3 4.3 0 0 1-.3 9.5z"/>',
+  nubeok: '<path d="M7 18.5a4.5 4.5 0 0 1-.7-8.9A6 6 0 0 1 17.8 9a4.3 4.3 0 0 1-.3 9.5z"/><path d="M9.5 13.5l2 2 3.5-3.5"/>',
+  sinred: '<path d="M7 18.5a4.5 4.5 0 0 1-.7-8.9M9 6.3A6 6 0 0 1 17.8 9a4.3 4.3 0 0 1 1.8 7.6M3 3l18 18"/>',
+  sync: '<path d="M20 11a8 8 0 0 0-14.5-4M4 4v3.5h3.5M4 13a8 8 0 0 0 14.5 4M20 20v-3.5h-3.5"/>',
+  alerta: '<path d="M12 3.5 21.5 20h-19z"/><path d="M12 10v4.5M12 17.2h.01"/>',
+  buscar: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
+  maletin: '<rect x="3" y="7" width="18" height="13" rx="3"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18"/>',
+  casa: '<path d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"/><path d="M10 20.5v-5h4v5"/>',
+  movil: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
+  salir: '<path d="M14 4.5h4a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-4M10 16l-4-4 4-4M6 12h10"/>',
+  nota: '<path d="M6.5 3.5h7l4 4V19a1.5 1.5 0 0 1-1.5 1.5H6.5A1.5 1.5 0 0 1 5 19V5a1.5 1.5 0 0 1 1.5-1.5z"/><path d="M13.5 3.5v4h4M8.5 12h7M8.5 16h5"/>',
+  tarea: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 12.2l2.5 2.5 4.5-5"/>',
+  mas: '<path d="M12 5v14M5 12h14"/>',
+  teclado: '<rect x="2.5" y="6" width="19" height="12.5" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M6.5 13.5h.01M17.5 13.5h.01M9 14.5h6"/>',
+  agarre: '<circle cx="9" cy="6" r="1.4" fill="currentColor"/><circle cx="15" cy="6" r="1.4" fill="currentColor"/><circle cx="9" cy="12" r="1.4" fill="currentColor"/><circle cx="15" cy="12" r="1.4" fill="currentColor"/><circle cx="9" cy="18" r="1.4" fill="currentColor"/><circle cx="15" cy="18" r="1.4" fill="currentColor"/>',
+  subir: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+  escudo: '<path d="M12 3.2l7 2.6v5.5c0 4.6-3 8.1-7 9.5-4-1.4-7-4.9-7-9.5V5.8z"/><path d="M8.8 12.2l2.2 2.2 4.3-4.6"/>',
+  wa: '<path d="M4.2 19.8l1.1-3.9A8.2 8.2 0 1 1 8.4 18.9z"/><path d="M9.2 8.4c-.4 1.9 1.6 5 4.4 5.9.7.2 1.3-.2 1.7-.8l-1.4-1.1-.9.6c-.9-.4-1.9-1.4-2.3-2.3l.6-.9-1.1-1.4c-.4.1-.9.4-1 0z"/>',
+  tel: '<path d="M5 4h3.5l1.7 4.3-2.2 1.4a11 11 0 0 0 5.3 5.3l1.4-2.2L19 14.5V18a2 2 0 0 1-2.2 2A15.5 15.5 0 0 1 3 6.2 2 2 0 0 1 5 4z"/>',
+  coche: '<path d="M4 16.5V12l2-5.2A2 2 0 0 1 7.9 5.5h8.2a2 2 0 0 1 1.9 1.3L20 12v4.5M3.5 12h17M4 16.5h16"/><circle cx="7.5" cy="16.5" r="1.8"/><circle cx="16.5" cy="16.5" r="1.8"/>',
+  deshacer: '<path d="M4 9.5h10.5a5 5 0 0 1 0 10H11M4 9.5l4-4M4 9.5l4 4"/>',
+  compartir: '<path d="M12 15V3.5M7.5 8 12 3.5 16.5 8M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/>',
+  mano: '<path d="M8 12.5V5.8a1.4 1.4 0 0 1 2.8 0V11M10.8 10.5V4.4a1.4 1.4 0 0 1 2.8 0v6.1M13.6 10.6V6a1.4 1.4 0 0 1 2.8 0v7.5a6.5 6.5 0 0 1-6.5 6.5h-.4a6 6 0 0 1-4.7-2.3l-1.9-2.5a1.4 1.4 0 0 1 2.1-1.8L8 15.2"/>',
+  rotu: '<path d="M14.5 4.5l5 5-7.2 7.2H7.3v-5zM7.3 16.7 4.5 19.5h5.3"/>',
+  flecha: '<path d="M5 19 18.5 5.5M10 5h9v9"/>',
+  rect: '<rect x="4" y="6" width="16" height="12" rx="2"/>',
+  elipse: '<ellipse cx="12" cy="12" rx="8.5" ry="6.5"/>',
+  texto: '<path d="M5 7V5h14v2M12 5v14M9.5 19h5"/>',
+  ampliar: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  ajustar: '<path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/><rect x="8.5" y="8.5" width="7" height="7" rx="1.2"/>',
+  pegar: '<rect x="6" y="4.5" width="12" height="16" rx="2"/><path d="M9.5 4.5V3h5v1.5M9 10h6M9 14h6"/>',
+  estrella: '<path d="M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/>',
+  bandeja: '<path d="M4 13.5 6.4 6a1.5 1.5 0 0 1 1.4-1h8.4a1.5 1.5 0 0 1 1.4 1L20 13.5V18a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18zM4 13.5h4.5a3.5 3.5 0 0 0 7 0H20"/>',
+  archivo: '<rect x="3.5" y="4.5" width="17" height="4.5" rx="1.2"/><path d="M5 9v9a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18V9M10 13h4"/>',
+  carpeta: '<path d="M3.5 7.5A1.5 1.5 0 0 1 5 6h4l2 2.2h8A1.5 1.5 0 0 1 20.5 9.7V17.5A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5z"/>',
+  atras: '<path d="M14.5 5.5 8 12l6.5 6.5"/>',
+  adelante: '<path d="M9.5 5.5 16 12l-6.5 6.5"/>',
+  alarma: '<circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 2M4.5 4.5l3 2.5M19.5 4.5l-3 2.5"/>',
+  herramienta: '<path d="M14.5 5.5a4 4 0 0 0 4.9 4.9l-8.6 8.6a2 2 0 0 1-2.8-2.8l8.6-8.6a4 4 0 0 0-2.1-2.1z"/><path d="M15 4l1.5 2.5L19 8"/>',
+  avion: '<path d="M10.5 13.5 4 11l1.5-1.5 7 1 4-4c1-1 2.7-1.2 3.3-.6s.4 2.3-.6 3.3l-4 4 1 7L15 21.5l-2.5-6.5"/><path d="M8 16.5l-2.5 2.5"/>',
+  olla: '<path d="M4 10h16v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M2.5 10h19M9 6.5c0-1 .8-1.5 0-3M13 6.5c0-1 .8-1.5 0-3M17 6.5c0-1 .8-1.5 0-3"/>',
+  carrito: '<path d="M3 4h2.5l2.2 10.5h10.6L20.5 7H6.4"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>',
+  euro: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5a4.5 4.5 0 1 0 0 7M7 10.5h6M7 13.5h6"/>',
+  salud: '<path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/><path d="M12 10.5v5M9.5 13h5"/>',
+  pesa: '<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
+  birrete: '<path d="M2.5 9 12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c0 1.5 2.5 3 5.5 3s5.5-1.5 5.5-3V11M21.5 9v5"/>',
+  grupo: '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.5 14.3c3 0 5 1.8 5 4.2"/>',
+  huella: '<ellipse cx="12" cy="16" rx="4" ry="3.5"/><circle cx="6" cy="10.5" r="1.8"/><circle cx="18" cy="10.5" r="1.8"/><circle cx="9.3" cy="6.3" r="1.8"/><circle cx="14.7" cy="6.3" r="1.8"/>',
+  hoja: '<path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14z"/><path d="M5 19c3-4 6-7 10-9"/>',
+  musica: '<path d="M9 18V5.5l10-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+  regalo: '<rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5V20h14v-7.5M12 8.5V20M12 8.5C10 4 6.5 5 7.5 7.2 8.2 8.5 12 8.5 12 8.5zM12 8.5c2-4.5 5.5-3.5 4.5-1.3-.7 1.3-4.5 1.3-4.5 1.3z"/>',
+  copa: '<path d="M8 3.5h8l-.5 5a3.5 3.5 0 0 1-7 0z"/><path d="M12 12v6.5M8.5 20.5h7"/>',
+  tarjetaId: '<rect x="3" y="5.5" width="18" height="13" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M5.5 16c.5-1.5 1.7-2.3 3-2.3s2.5.8 3 2.3M14 10h4M14 13h3"/>',
+  claqueta: '<rect x="3.5" y="9" width="17" height="11" rx="1.5"/><path d="m3.5 9 16-4.5.6 2.4M8 7.7l2.4 3M13.5 6.2l2.4 3"/>',
+  pantalla: '<rect x="3" y="4.5" width="18" height="12" rx="1.5"/><path d="M8.5 20h7M12 16.5V20M9 9.5l-2 1.5 2 1.5M15 9.5l2 1.5-2 1.5"/>',
+  rayo: '<path d="M13 2.5 5 13.5h6l-1 8 8-11h-6z"/>',
+  edificio: '<path d="M4 20.5V8l6-3.5v16M10 20.5V3.5h10v17M2.5 20.5h19M13 7.5h1.5M16.5 7.5H18M13 11h1.5M16.5 11H18M13 14.5h1.5M16.5 14.5H18M6.5 11h1M6.5 14.5h1"/>',
+  candado: '<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/>',
+  escoba: '<path d="M14.5 3.5 11 10M7.5 10.5h7l1.5 3-1 7h-8l-1-7z"/><path d="M9.5 14v6M12.5 14v6"/>',
+  puntos: '<circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/>',
+  girarIzq: '<path d="M4 4v5h5"/><path d="M4.6 14a8 8 0 1 0 1.9-8.2L4 9"/>',
+  girarDer: '<path d="M20 4v5h-5"/><path d="M19.4 14a8 8 0 1 1-1.9-8.2L20 9"/>',
+  recortar: '<path d="M6.5 2.5v13.8a1.2 1.2 0 0 0 1.2 1.2h13.8M2.5 6.5h13.8a1.2 1.2 0 0 1 1.2 1.2v13.8"/>',
+  abajo: '<path d="M6 9.5l6 6 6-6"/>',
+  rehacer: '<path d="M20 9.5H9.5a5 5 0 0 0 0 10H13M20 9.5l-4-4M20 9.5l-4 4"/>',
+  goma: '<path d="M8.5 20H20M4.6 14.6l8.8-8.8a2 2 0 0 1 2.8 0l2.5 2.5a2 2 0 0 1 0 2.8L11 19.4a2 2 0 0 1-1.4.6H8.3a2 2 0 0 1-1.4-.6l-2.3-2.3a2 2 0 0 1 0-2.5zM9 10l5 5"/>'
+};
+const ic = (n, cls = "") => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONOS[n] || ""}</svg>`;
+
+/* ================= Conexión con Microsoft ================= */
+const CLIENT_ID = "3dc57230-4cdb-4e60-bb83-2def7cd5441f";
+const AUTH = "https://login.microsoftonline.com/consumers/oauth2/v2.0";
+const SCOPES = "openid profile offline_access Files.ReadWrite.AppFolder";
+// Servidor de Cuaderna (Azure Functions): acceso autorizado, IA y voz sin repartir claves, y sugerencias. Vacío = sin servidor.
+const API = "";
+const REDIRECT = location.origin + location.pathname.replace(/index\.html$/, "");
+const GRAPH = "https://graph.microsoft.com/v1.0/me/drive/special/approot";
+const DRIVE = "https://graph.microsoft.com/v1.0/me/drive";
+/* ================= Conexión con Google (Google Drive) ================= */
+// El identificador del cliente de Google es público (va en servidor.js); el canje del código y la renovación los hace el servidor, que guarda el secreto.
+const G_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
+const G_SCOPES = "openid email profile https://www.googleapis.com/auth/drive.file";
+const GD = "https://www.googleapis.com/drive/v3", GDU = "https://www.googleapis.com/upload/drive/v3";
+const G_CARPETA = "application/vnd.google-apps.folder";
+const googleId = () => String(window.CUADERNA_GOOGLE || "").trim();
+const proveedor = () => lsGet("chispa.proveedor") || "ms";
+const esGoogle = () => proveedor() === "google";
+const nube = () => esGoogle() ? "Google Drive" : "OneDrive";
+
+/* ================= Utilidades ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm = s => String(s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const pad = n => String(n).padStart(2, "0");
+const isoDia = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const hoyISO = () => isoDia(new Date());
+const masDias = n => { const d = new Date(); d.setDate(d.getDate() + n); return isoDia(d); };
+const hora = iso => { const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const aFecha = iso => new Date(iso.length === 10 ? iso + "T12:00" : iso);
+const fechaCorta = iso => aFecha(iso).toLocaleDateString("es-ES", {weekday: "short", day: "numeric", month: "short"}).replace(/\./g, "");
+const fechaLarga = iso => aFecha(iso).toLocaleDateString("es-ES", {weekday: "long", day: "numeric", month: "long"});
+function fechaRelativa(iso){
+  const h = hoyISO(); if (iso === h) return "Hoy"; if (iso === masDias(1)) return "Mañana"; if (iso === masDias(-1)) return "Ayer";
+  return fechaCorta(iso);
+}
+const capital = s => s.charAt(0).toUpperCase() + s.slice(1);
+function toast(t, icono = "check", ms = 2600, deshacer = null, etiqueta = "Deshacer"){
+  const el = $("#toast"); el.innerHTML = ic(icono) + `<span>${esc(t)}</span>` + (deshacer ? `<button class="deshacer">${esc(etiqueta)}</button>` : "");
+  el.classList.toggle("arriba", !!document.querySelector(".hoja.on, #cam:not(.oculto)"));
+  el.classList.toggle("con-accion", !!deshacer); el.classList.add("ver"); clearTimeout(toast.t);
+  if (deshacer) el.querySelector(".deshacer").onclick = () => { el.classList.remove("ver", "con-accion"); deshacer(); };
+  toast.t = setTimeout(() => el.classList.remove("ver", "con-accion"), deshacer ? Math.max(ms, 5500) : ms);
+}
+function vibrar(ms = 60){ try { navigator.vibrate && navigator.vibrate(ms); } catch(e){} }
+function nuevoId(d){ return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}-${Math.random().toString(36).slice(2,6)}`; }
+const lsGet = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+const b64url = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+const aleatorio = n => b64url(crypto.getRandomValues(new Uint8Array(n)));
+
+/* ================= Almacén local ================= */
+const idb = {
+  _p: null,
+  abrir(){ return this._p ||= new Promise((ok, ko) => { const r = indexedDB.open("chispa3", 1);
+    r.onupgradeneeded = () => { const d = r.result; d.createObjectStore("notas", {keyPath: "id"}); d.createObjectStore("blobs"); d.createObjectStore("kv"); };
+    r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); }); },
+  async op(store, modo, fn){ const d = await this.abrir(); return new Promise((ok, ko) => { const t = d.transaction(store, modo); const r = fn(t.objectStore(store)); t.oncomplete = () => ok(r && r.result); t.onerror = () => ko(t.error); }); },
+  todas(){ return this.op("notas", "readonly", s => s.getAll()); },
+  poner(n){ return this.op("notas", "readwrite", s => s.put(n)); },
+  quitar(id){ return this.op("notas", "readwrite", s => s.delete(id)); },
+  blob(k){ return this.op("blobs", "readonly", s => s.get(k)); },
+  ponerBlob(k, v){ return this.op("blobs", "readwrite", s => s.put(v, k)); },
+  quitarBlob(k){ return this.op("blobs", "readwrite", s => s.delete(k)); }
+};
+
+/* ================= Inicio de sesión (OAuth con PKCE) ================= */
+let token = lsGet("chispa.token");
+let necesitaLogin = false;
+// Modo sin cuenta: las notas viven solo en este dispositivo (IndexedDB) hasta que se conecta una cuenta de Microsoft
+const modoLocal = () => !token && !!lsGet("chispa.local");
+const errLocal = () => Object.assign(new Error("Para esto hace falta conectar una cuenta (Más › Ajustes)"), {login: true, local: true});
+function abrirLocal(){
+  const u = lsGet("chispa.ultExport");
+  $("#lcExp").textContent = u ? `Última copia exportada: ${fechaLarga(new Date(u))}.` : "Aún no has exportado ninguna copia.";
+  abrirHoja("#hLocal");
+}
+// ¿Se puede entrar con Google? (hace falta su identificador y el servidor, que guarda el secreto)
+const hayGoogle = () => !!(googleId() && apiBase());
+const conMS = () => !!token && !esGoogle();   // correo y calendario de Outlook: solo con cuenta de Microsoft
+function conectarCuenta(){ if (!hayGoogle()) return irALogin(false, "ms"); cerrarHojas(); setTimeout(() => abrirHoja("#hCuenta"), 50); }
+$("#lcConectar").onclick = conectarCuenta;
+$("#ccMs").onclick = () => irALogin(false, "ms");
+$("#ccG").onclick = () => irALogin(false, "google");
+$("#lcExportar").onclick = () => { cerrarHojas(); exportarTodo(); };
+// Al conectar una cuenta tras usarla sin ella: la configuración se une con la de OneDrive (si ya había) en vez de pisarla
+function fusionarConfig(rem, loc){
+  const vacio = v => v === undefined || v === null || v === "" || (Array.isArray(v) && !v.length);
+  const unir = (a, b) => { const out = [...a], ver = new Set(a.map(x => typeof x === "object" ? (x.id || JSON.stringify(x)) : norm(String(x))));
+    for (const x of b){ const k = typeof x === "object" ? (x.id || JSON.stringify(x)) : norm(String(x)); if (!ver.has(k)){ ver.add(k); out.push(x); } } return out; };
+  const r = {...loc};
+  for (const k in rem){
+    const a = rem[k], b = loc[k];
+    if (Array.isArray(a) && Array.isArray(b)) r[k] = unir(a, b);
+    else if (a && b && typeof a === "object" && typeof b === "object" && !Array.isArray(a)) r[k] = fusionarConfig(a, b);
+    else if (!vacio(a)) r[k] = a;
+  }
+  return r;
+}
+const scopes = () => SCOPES + (lsGet("chispa.permCorreo") ? " Mail.Send" : "") + (lsGet("chispa.permCal") ? " Calendars.ReadWrite" : "") + (lsGet("chispa.permNotas") ? " Notes.Read" : "");
+async function irALogin(silencioso = false, prov = null){
+  prov = prov || (token || lsGet("chispa.proveedor") ? proveedor() : "ms");
+  const verifier = aleatorio(48), state = aleatorio(16);
+  const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
+  if (prov === "google"){
+    // en la app de Android, Google no deja entrar dentro de la app: se abre el navegador y una página puente devuelve el código
+    const redirect = esApp() ? REDIRECT + "google.html" : REDIRECT;
+    lsSet("chispa.pkce", {verifier, state, silencioso, prov, redirect});
+    const p = new URLSearchParams({client_id: googleId(), response_type: "code", redirect_uri: redirect, scope: G_SCOPES, state,
+      code_challenge: challenge, code_challenge_method: "S256", access_type: "offline", include_granted_scopes: "true", prompt: silencioso ? "none" : "consent select_account"});
+    const u = lsGet("chispa.usuario"); if (u) p.set("login_hint", u);
+    const url = `${G_AUTH}?${p}`;
+    if (esApp()){ try { await nativo("ChispaNativo").abrirUrl({url}); return; } catch(e){} }
+    location.href = url; return;
+  }
+  lsSet("chispa.pkce", {verifier, state, silencioso, prov: "ms"});
+  const p = new URLSearchParams({ client_id: CLIENT_ID, response_type: "code", redirect_uri: REDIRECT, response_mode: "query",
+    scope: scopes(), state, code_challenge: challenge, code_challenge_method: "S256" });
+  if (silencioso){ p.set("prompt", "none"); const u = lsGet("chispa.usuario"); if (u) p.set("login_hint", u); }
+  else p.set("prompt", "select_account");   // que siempre pregunte con qué cuenta entrar (aunque el navegador ya tenga una abierta)
+  location.href = `${AUTH}/authorize?${p}`;
+}
+async function pedirToken(datos){
+  const r = await fetch(`${AUTH}/token`, { method: "POST", headers: {"Content-Type": "application/x-www-form-urlencoded"},
+    body: new URLSearchParams({client_id: CLIENT_ID, scope: scopes(), redirect_uri: REDIRECT, ...datos}) });
+  const j = await r.json();
+  if (!r.ok) throw Object.assign(new Error(j.error_description || j.error || "Error de inicio de sesión"), {codigo: j.error});
+  token = { access: j.access_token, refresh: j.refresh_token || token?.refresh, exp: Date.now() + (j.expires_in - 120) * 1000 };
+  lsSet("chispa.token", token);
+  if (j.id_token) lsSet("chispa.idt", j.id_token);
+  try { const idt = JSON.parse(decodeURIComponent(escape(atob(j.id_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")))));
+    if (idt.preferred_username) lsSet("chispa.usuario", idt.preferred_username); if (idt.name) lsSet("chispa.nombre", idt.name); } catch(e){}
+  necesitaLogin = false;
+  return token.access;
+}
+async function pedirTokenGoogle(datos){
+  if (!apiBase()) throw new Error("Para entrar con Google hace falta el servidor de Cuaderna");
+  const r = await fetch(`${apiBase()}/google/token`, {method: "POST", headers: {"Content-Type": "text/plain"}, body: JSON.stringify(datos)});
+  let j = {}; try { j = await r.json(); } catch(e){}
+  if (!r.ok || !j.access_token) throw Object.assign(new Error(j.error_description || j.error || "Error al entrar con Google"), {codigo: j.error === "invalid_grant" ? "invalid_grant" : j.error});
+  token = { access: j.access_token, refresh: j.refresh_token || token?.refresh, exp: Date.now() + ((j.expires_in || 3600) - 120) * 1000 };
+  lsSet("chispa.token", token); lsSet("chispa.proveedor", "google");
+  // Google deja desmarcar cada permiso al entrar: sin el de Drive, Cuaderna no puede guardar nada
+  if (j.scope && !/drive\.file/.test(j.scope)){ lsSet("chispa.gSinDrive", true); setTimeout(faltaPermisoDrive, 600); } else if (j.scope) localStorage.removeItem("chispa.gSinDrive");
+  if (j.id_token){ lsSet("chispa.idt", j.id_token);
+    try { const d = JSON.parse(decodeURIComponent(escape(atob(j.id_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))))); if (d.email) lsSet("chispa.usuario", d.email); if (d.name) lsSet("chispa.nombre", d.name); } catch(e){} }
+  necesitaLogin = false;
+  return token.access;
+}
+const renovarToken = datos => esGoogle() ? pedirTokenGoogle(datos) : pedirToken(datos);
+async function volverDeLogin(){
+  const q = new URLSearchParams(location.search);
+  if (!q.has("code") && !q.has("error")) return null;
+  const pk = lsGet("chispa.pkce"); localStorage.removeItem("chispa.pkce");
+  history.replaceState(null, "", REDIRECT);
+  if (!pk || pk.state !== q.get("state")) return "estado";   // solo se hace caso a una vuelta que empezó aquí
+  if (q.has("error")) return /^[a-z_]{1,40}$/.test(q.get("error")) ? q.get("error") : "error";
+  try {
+    if (pk.prov === "onenote"){ await pedirTokenOneNote(q.get("code"), pk.verifier); return "onenote"; }
+    if (pk.prov === "google"){
+      if (lsGet("chispa.proveedor") !== "google"){ lsSet("chispa.cuentaCambia", true); }
+      await pedirTokenGoogle({grant_type: "authorization_code", code: q.get("code"), code_verifier: pk.verifier, redirect_uri: pk.redirect});
+    } else {
+      if (lsGet("chispa.proveedor") === "google") lsSet("chispa.cuentaCambia", true);
+      await pedirToken({grant_type: "authorization_code", code: q.get("code"), code_verifier: pk.verifier}); lsSet("chispa.proveedor", "ms");
+    }
+    return "ok";
+  }
+  catch(e){ return e.message; }
+}
+async function accessToken(){
+  if (token?.access && Date.now() < token.exp) return token.access;
+  if (token?.refresh){
+    try { return await renovarToken({grant_type: "refresh_token", refresh_token: token.refresh}); }
+    catch(e){ if (e.codigo === "invalid_grant" || e.codigo === "interaction_required"){ token = null; lsSet("chispa.token", null); } else throw e; }
+  }
+  if (lsGet("chispa.local")) throw errLocal();
+  necesitaLogin = true;
+  throw Object.assign(new Error("Hay que volver a entrar"), {login: true});
+}
+
+/* ================= OneDrive ================= */
+async function graph(url, opts = {}, reintento = true, intento = 0){
+  let r;
+  try { r = await fetch(url, {...opts, headers: {...(opts.headers || {}), Authorization: "Bearer " + await accessToken()}}); }
+  catch(e){ if (e.login || intento >= 3) throw e; await esperar(2000 * (intento + 1)); return graph(url, opts, reintento, intento + 1); }   // corte de red: reintenta
+  if (r.status === 401 && reintento){ token.exp = 0; return graph(url, opts, false, intento); }
+  if ([429, 500, 502, 503, 504].includes(r.status) && intento < 5){   // OneDrive pide esperar: se respeta su tiempo
+    const s = +r.headers.get("Retry-After"); await esperar(s ? Math.min(60, s) * 1000 : 1500 * 2 ** intento); return graph(url, opts, reintento, intento + 1);
+  }
+  return r;
+}
+const esperar = ms => new Promise(ok => setTimeout(ok, ms));
+const carpetas = new Map();
+let raizId = null;
+async function errorDe(r, que){
+  let m = ""; try { const j = await r.json(); m = j.error?.message || j.error?.code || ""; } catch(e){}
+  if (r.status === 507 || /quota|insufficientStorage/i.test(m)) nubeLlena();
+  if (r.status === 403 && esGoogle() && /insufficient.*scope|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(m)){ faltaPermisoDrive(); return Object.assign(new Error("Falta el permiso de Google Drive: vuelve a entrar y marca la casilla"), {permiso: true}); }
+  return new Error(`${nube()} (${r.status}) ${que}${m ? ": " + m : ""}`);
+}
+// ----- Almacenamiento: las mismas funciones para OneDrive (Microsoft) y Google Drive -----
+// Un elemento de Google se presenta con la forma de los de OneDrive: {id, name, folder|file, eTag}
+const gItem = f => ({id: f.id, name: f.name, ...(f.mimeType === G_CARPETA ? {folder: {}} : {file: {}}), eTag: "v" + (f.version || f.modifiedTime || ""), size: +f.size || 0, _g: true});
+const G_CAMPOS = "id,name,mimeType,version,size,modifiedTime";
+const gQ = q => encodeURIComponent(q);
+const gNombre = n => n.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+async function gJson(url, opts, que){ const r = await graph(url, opts); if (!r.ok) throw await errorDe(r, que); return r.json(); }
+async function idRaiz(){
+  if (raizId) return raizId;
+  if (esGoogle()){
+    // carpeta «Cuaderna» en Mi unidad (Cuaderna solo ve lo que ella misma crea)
+    const c = lsGet("chispa.gRaiz");
+    const l = await gJson(`${GD}/files?q=${gQ(`name='Cuaderna' and mimeType='${G_CARPETA}' and 'root' in parents and trashed=false`)}&fields=files(${G_CAMPOS})&spaces=drive`, {}, "al abrir la carpeta de Cuaderna");
+    let f = (l.files || []).find(x => x.id === c) || (l.files || [])[0];
+    if (!f) f = await gJson(`${GD}/files?fields=${G_CAMPOS}`, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: "Cuaderna", mimeType: G_CARPETA, parents: ["root"]})}, "al crear la carpeta de Cuaderna");
+    lsSet("chispa.gRaiz", f.id); return raizId = f.id;
+  }
+  const r = await graph(GRAPH);
+  if (!r.ok) throw await errorDe(r, "al abrir la carpeta de Cuaderna");
+  return raizId = (await r.json()).id;
+}
+async function hijos(id){
+  const out = [];
+  if (esGoogle()){
+    let tok = "";
+    do {
+      const j = await gJson(`${GD}/files?q=${gQ(`'${id}' in parents and trashed=false`)}&fields=nextPageToken,files(${G_CAMPOS})&pageSize=1000&spaces=drive${tok ? "&pageToken=" + tok : ""}`, {}, "al leer una carpeta");
+      out.push(...(j.files || []).map(gItem)); tok = j.nextPageToken || "";
+    } while (tok);
+    return out;
+  }
+  let url = `${DRIVE}/items/${id}/children?$top=500`;
+  while (url){
+    const r = await graph(url);
+    if (!r.ok) throw await errorDe(r, "al leer una carpeta");
+    const j = await r.json(); out.push(...j.value); url = j["@odata.nextLink"];
+  }
+  return out;
+}
+const mismoNombre = (a, b) => a.toLowerCase() === b.toLowerCase();
+async function crearCarpeta(pid, nombre){
+  if (esGoogle()) return gItem(await gJson(`${GD}/files?fields=${G_CAMPOS}`, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({name: nombre, mimeType: G_CARPETA, parents: [pid]})}, "al crear la carpeta " + nombre));
+  const r = await graph(`${DRIVE}/items/${pid}/children`, {method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({name: nombre, folder: {}, "@microsoft.graph.conflictBehavior": "fail"})});
+  if (r.ok) return r.json();
+  if (r.status === 409) return null;
+  throw await errorDe(r, `al crear la carpeta ${nombre}`);
+}
+async function asegurarCarpeta(ruta, crear = true){
+  if (carpetas.has(ruta)) return carpetas.get(ruta);
+  const partes = ruta.split("/"), nombre = partes.pop(), padre = partes.join("/");
+  const pid = padre ? await asegurarCarpeta(padre, crear) : await idRaiz();
+  if (!pid) return null;
+  let it = (await hijos(pid)).find(x => x.folder && mismoNombre(x.name, nombre));
+  if (!it){
+    if (!crear) return null;
+    it = await crearCarpeta(pid, nombre) || (await hijos(pid)).find(x => x.folder && mismoNombre(x.name, nombre));
+  }
+  if (!it) throw new Error("No se pudo preparar la carpeta " + ruta);
+  carpetas.set(ruta, it.id); return it.id;
+}
+const separar = ruta => { const p = ruta.split("/"), nombre = p.pop(); return [p.join("/"), nombre]; };
+const gIds = new Map();   // ruta → id de Google, para no buscar cada vez
+async function gBuscar(pid, nombre, ruta){
+  if (gIds.has(ruta)) return gIds.get(ruta);
+  const j = await gJson(`${GD}/files?q=${gQ(`name='${gNombre(nombre)}' and '${pid}' in parents and trashed=false`)}&fields=files(${G_CAMPOS})&spaces=drive`, {}, "al buscar " + ruta);
+  const f = (j.files || []).find(x => x.mimeType !== G_CARPETA); if (f) gIds.set(ruta, f.id);
+  return f ? f.id : null;
+}
+async function subir(ruta, datos, tipo){
+  const [padre, nombre] = separar(ruta);
+  const pid = padre ? await asegurarCarpeta(padre) : await idRaiz();
+  if (esGoogle()){
+    tipo = tipo || "application/octet-stream";
+    let id = await gBuscar(pid, nombre, ruta), r;
+    if (id) r = await graph(`${GDU}/files/${id}?uploadType=media&fields=${G_CAMPOS}`, {method: "PATCH", headers: {"Content-Type": tipo}, body: datos});
+    if (!id || r.status === 404){
+      gIds.delete(ruta);
+      const lim = "cuaderna" + Math.random().toString(36).slice(2);
+      const cuerpo = new Blob([`--${lim}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({name: nombre, parents: [pid]})}\r\n--${lim}\r\nContent-Type: ${tipo}\r\n\r\n`, datos, `\r\n--${lim}--`]);
+      r = await graph(`${GDU}/files?uploadType=multipart&fields=${G_CAMPOS}`, {method: "POST", headers: {"Content-Type": `multipart/related; boundary=${lim}`}, body: cuerpo});
+    }
+    if (!r.ok) throw await errorDe(r, `al subir ${ruta}`);
+    const it = gItem(await r.json()); gIds.set(ruta, it.id); return it;
+  }
+  const r = await graph(`${DRIVE}/items/${pid}:/${encodeURIComponent(nombre)}:/content`, {method: "PUT", headers: {"Content-Type": tipo || "application/octet-stream"}, body: datos});
+  if (!r.ok) throw await errorDe(r, `al subir ${ruta}`);
+  return r.json();
+}
+async function listar(ruta){ const id = await asegurarCarpeta(ruta, false); return id ? hijos(id) : []; }
+async function itemDe(ruta){
+  const [padre, nombre] = separar(ruta);
+  const pid = padre ? await asegurarCarpeta(padre, false) : await idRaiz();
+  if (!pid) return null;
+  if (esGoogle()){
+    const id = await gBuscar(pid, nombre, ruta); if (!id) return null;
+    const r = await graph(`${GD}/files/${id}?fields=${G_CAMPOS},parents`);
+    if (r.status === 404){ gIds.delete(ruta); return null; }
+    if (!r.ok) throw await errorDe(r, `al buscar ${ruta}`);
+    const f = await r.json(); return {...gItem(f), _padre: (f.parents || [])[0]};
+  }
+  const r = await graph(`${DRIVE}/items/${pid}:/${encodeURIComponent(nombre)}`);
+  if (r.status === 404) return null;
+  if (!r.ok) throw await errorDe(r, `al buscar ${ruta}`);
+  return r.json();
+}
+// Descargar el contenido de un elemento (OneDrive da un enlace directo; Google pide la identificación)
+async function bajarItem(it){
+  const d = it._g ? await graph(`${GD}/files/${it.id}?alt=media`) : await fetch(it["@microsoft.graph.downloadUrl"]);
+  if (!d.ok) throw new Error("Descarga fallida");
+  return d;
+}
+async function descargarRuta(ruta){
+  const it = await itemDe(ruta);
+  if (!it) throw new Error("No encontrado: " + ruta);
+  return (await bajarItem(it)).blob();
+}
+async function aPapelera(ruta){
+  const it = await itemDe(ruta); if (!it) return;
+  const pap = await asegurarCarpeta("Papelera");
+  if (esGoogle()){
+    const r = await graph(`${GD}/files/${it.id}?addParents=${pap}&removeParents=${it._padre || ""}&fields=id`, {method: "PATCH", headers: {"Content-Type": "application/json"}, body: "{}"});
+    gIds.delete(ruta);
+    if (!r.ok && r.status !== 404) throw await errorDe(r, `al mover ${ruta} a la Papelera`);
+    return;
+  }
+  const r = await graph(`${DRIVE}/items/${it.id}?@microsoft.graph.conflictBehavior=rename`, {method: "PATCH", headers: {"Content-Type": "application/json"}, body: JSON.stringify({parentReference: {id: pap}})});
+  if (!r.ok && r.status !== 404) throw await errorDe(r, `al mover ${ruta} a la Papelera`);
+}
+// Versiones anteriores de un elemento: [{id, lastModifiedDateTime, item}] y su contenido
+async function versionesDe(it){
+  if (esGoogle()){
+    const j = await gJson(`${GD}/files/${it.id}/revisions?fields=revisions(id,modifiedTime)&pageSize=200`, {}, "al leer las versiones");
+    return (j.revisions || []).map(v => ({id: v.id, lastModifiedDateTime: v.modifiedTime, item: it.id}));
+  }
+  const r = await graph(`${DRIVE}/items/${it.id}/versions`); if (!r.ok) throw await errorDe(r, "al leer las versiones");
+  return ((await r.json()).value || []).map(v => ({...v, item: it.id}));
+}
+const urlVersion = v => esGoogle() ? `${GD}/files/${v.item}/revisions/${v.id}?alt=media` : `${DRIVE}/items/${v.item}/versions/${v.id}/content`;
+
+/* ================= Estado ================= */
+let notas = [];
+let config = { nocheDesde: "23:00", nocheHasta: "06:00", correoTrabajo: "", correoPersonal: "", contactos: {persona: [], asunto: [], cliente: [], proveedor: [], companero: []} };
+let disp = { terminal: "", ambito: "trabajo", trans: true, ubi: false };
+const esMovil = () => matchMedia("(max-width:899px), (max-height:559px)").matches;   // un móvil en horizontal sigue siendo un móvil
+
+/* ================= Sincronización ================= */
+let sincronizando = false, errorSync = "", ultimaSync = 0;
+function pintarEstado(){
+  const pend = notas.filter(n => n._pend || n._borrar).length + (lsGet("chispa.cfgPend") ? 1 : 0);
+  let cls = "ok", icono = "nubeok", txt = "Guardado", titulo = `Todo está en tu ${nube()}`;
+  if (modoLocal()){ cls = "pend"; icono = "alerta"; txt = "Conectar cuenta"; titulo = "Tus notas están solo en este dispositivo. Toca para conectar tu cuenta de Google o Microsoft"; }
+  else if (necesitaLogin){ cls = "err"; icono = "alerta"; txt = "Volver a entrar"; titulo = "La sesión ha caducado"; }
+  else if (sincronizando){ cls = ""; icono = "sync"; txt = subida.total > 1 ? `Subiendo ${Math.min(subida.hechas + 1, subida.total)} de ${subida.total}` : "Sincronizando"; titulo = subida.total > 1 ? "Subiendo fotos y audios a tu OneDrive. Puedes seguir usando Cuaderna" : titulo; }
+  else if (!navigator.onLine){ cls = "pend"; icono = "sinred"; txt = pend ? `${pend} sin subir` : "Sin conexión"; titulo = "Se subirá cuando vuelva la conexión"; }
+  else if (errorSync){ cls = "err"; icono = "alerta"; txt = "Error"; titulo = errorSync; }
+  else if (pend){ cls = "pend"; icono = "nube"; txt = `${pend} por subir`; }
+  document.querySelectorAll("[data-sync],#syncSide").forEach(el => {
+    el.className = "sync " + cls + (el.id === "syncSide" ? "" : " cab-sync");
+    el.title = titulo;
+    el.innerHTML = ic(icono, sincronizando ? "giro" : "") + (el.id === "syncSide" || esMovil() === false || cls !== "ok" ? `<span>${txt}</span>` : "");
+  });
+}
+document.addEventListener("click", e => {
+  if (!e.target.closest("[data-sync],#syncSide")) return;
+  if (modoLocal()) abrirLocal(); else if (necesitaLogin) irALogin(false); else { if (errorSync) toast(errorSync, "alerta", 6000); sincronizar(true, true); }
+});
+
+const subida = {hechas: 0, total: 0};
+async function purgarLocal(){
+  let hubo = false;
+  for (const n of notas.filter(x => x._borrar && Date.now() - (x._borrarEn || 0) > 7000)){
+    for (const r of [n.audio, ...(n.fotos || []), ...Object.values(n.lienzos || {}), ...(n.archivos || []).map(a => a.ruta), ...(n._subir || [])].filter(Boolean)){ try { await idb.quitarBlob(r); } catch(e){} cacheUrl.delete(r); }
+    await idb.quitar(n.id); notas = notas.filter(x => x !== n); hubo = true;
+  }
+  for (const n of notas.filter(x => (x._quitar || []).length && !x._borrar)){ for (const r of n._quitar){ try { await idb.quitarBlob(r); } catch(e){} cacheUrl.delete(r); } n._quitar = []; await idb.poner(n); }
+  if (hubo){ pintarBadges(); }
+  pintarEstado();
+}
+// bajar: true = mirar ya qué ha cambiado en OneDrive; "pronto" = si hace más de 2 min; por defecto, si hace más de 5 min.
+// Así, guardar una nota solo sube esa nota (antes se leía además la lista entera de notas de OneDrive cada vez).
+let ultimaBajada = 0;
+async function sincronizar(forzar = false, bajar = false){
+  if (!token){ if (modoLocal()) purgarLocal(); return; }
+  if (sincronizando || !navigator.onLine) return;
+  if (!forzar && Date.now() - ultimaSync < 15000) return;
+  const tocaBajar = bajar === true || Date.now() - ultimaBajada > (bajar === "pronto" ? 120000 : 300000);
+  const hayPend = notas.some(n => n._pend || n._borrar) || !!lsGet("chispa.cfgPend") || !!lsGet("chispa.migrar");
+  if (!tocaBajar && !hayPend) return;   // nada que subir ni que mirar: ni se despierta la red
+  sincronizando = true; subida.hechas = 0; subida.total = notas.filter(x => x._pend && !x._borrar).reduce((t, x) => t + (x._subir || []).length, 0); pintarEstado();
+  const fallos = [];
+  try {
+    for (const n of notas.filter(x => x._borrar && Date.now() - (x._borrarEn || 0) > 7000)){
+      try {
+        if (n._etag) for (const r of [`Notas/${n.id}.json`, n.audio, ...(n.fotos || []), ...Object.values(n.lienzos || {}), ...(n.archivos || []).map(a => a.ruta)].filter(Boolean)) await aPapelera(r);
+        if (n.evento?.id && calActivo()) await graph(`https://graph.microsoft.com/v1.0/me/events/${n.evento.id}`, {method: "DELETE"}).catch(() => {});
+        for (const r of n._subir || []) await idb.quitarBlob(r);
+        await idb.quitar(n.id); notas = notas.filter(x => x !== n);
+      } catch(e){ if (e.login) throw e; fallos.push(e.message); }
+    }
+    for (const n of notas.filter(x => x._pend && !x._borrar)){
+      try {
+        for (const r of [...(n._quitar || [])]){
+          try { await aPapelera(r); n._quitar = n._quitar.filter(x => x !== r); await idb.quitarBlob(r); cacheUrl.delete(r); }
+          catch(e){ if (e.login) throw e; fallos.push(e.message); }
+        }
+        if ((n._subir || []).length > 3 && !n._jsonSubido){   // con muchas fotos, la nota sube primero
+          try { const it0 = await subir(`Notas/${n.id}.json`, JSON.stringify(limpia(n), null, 2), "application/json"); n._etag = it0.eTag; n._jsonSubido = true; await idb.poner(n); }
+          catch(e){ if (e.login) throw e; }
+        }
+        const cola = [...(n._subir || [])];
+        const trabajador = async () => {
+          while (cola.length){
+            const r = cola.shift();
+            try { const b = await idb.blob(r); if (b && b.size) await subir(r, b, b.type); n._subir = n._subir.filter(x => x !== r); subida.hechas++; await idb.poner(n); pintarEstado(); }   // el avance queda guardado foto a foto
+            catch(e){ if (e.login) throw e; fallos.push(e.message); }
+          }
+        };
+        await Promise.all([trabajador(), trabajador(), trabajador()]);
+        delete n._jsonSubido;
+        const it = await subir(`Notas/${n.id}.json`, JSON.stringify(limpia(n), null, 2), "application/json");
+        n._etag = it.eTag; n._pend = (n._subir || []).length > 0 || (n._quitar || []).length > 0;
+        await idb.poner(n);
+      } catch(e){ if (e.login) throw e; fallos.push(e.message); }
+    }
+    if (lsGet("chispa.migrar")){
+      const c0 = (await listar("Configuracion")).find(x => x.name === "config.json");
+      if (c0){ try { config = fusionarConfig(await (await bajarItem(c0)).json(), config); lsSet("chispa.config", config); } catch(e){ throw new Error("No se pudo leer tu configuración de OneDrive"); } }
+      lsSet("chispa.cfgPend", true); localStorage.removeItem("chispa.migrar");
+    }
+    if (lsGet("chispa.cfgPend")){ const it = await subir("Configuracion/config.json", JSON.stringify(config, null, 2), "application/json"); lsSet("chispa.cfgEtag", it.eTag); lsSet("chispa.cfgPend", false); }
+    if (!tocaBajar){ ordenar(); errorSync = fallos[0] || ""; ultimaSync = Date.now(); return; }
+    ultimaBajada = Date.now();
+    const remotos = await listar("Notas"), vistos = new Set(), porBajar = [];
+    for (const it of remotos){
+      if (!it.file || !it.name.endsWith(".json")) continue;
+      const id = it.name.slice(0, -5); vistos.add(id);
+      const loc = notas.find(x => x.id === id);
+      if (!loc || (!loc._pend && loc._etag !== it.eTag)) porBajar.push(it);
+    }
+    for (let i = 0; i < porBajar.length; i += 6){
+      await Promise.all(porBajar.slice(i, i + 6).map(async it => {
+        try { const n = notaSegura(await (await bajarItem(it)).json(), it.name.slice(0, -5)); if (!n) return; n._etag = it.eTag; n._pend = false;
+          await idb.poner(n); const k = notas.findIndex(x => x.id === n.id); if (k >= 0) notas[k] = n; else notas.push(n); } catch(e){}
+      }));
+    }
+    let quitadas = 0;
+    for (const n of [...notas]) if (!n._pend && !n._borrar && n._etag && !vistos.has(n.id)){ await idb.quitar(n.id); notas = notas.filter(x => x !== n); quitadas++; }
+    const cfgIt = (await listar("Configuracion")).find(x => x.name === "config.json");
+    if (cfgIt && cfgIt.eTag !== lsGet("chispa.cfgEtag") && !lsGet("chispa.cfgPend")){
+      try { config = Object.assign(config, configSegura(await (await bajarItem(cfgIt)).json())); lsSet("chispa.config", config); lsSet("chispa.cfgEtag", cfgIt.eTag); } catch(e){}
+    }
+    ordenar(); errorSync = fallos[0] || ""; ultimaSync = Date.now();
+    if (!fallos.length) await subirAgenda().catch(e => console.warn("Agenda", e));
+    if (!fallos.length) setTimeout(resumenSiToca, 1500);
+    if (!fallos.length) setTimeout(sincronizarCalendario, 2500);
+    if (porBajar.length || quitadas) refrescar();
+  } catch(e){
+    errorSync = e.login ? "" : (e.message || "Error de sincronización");
+  } finally {
+    if (errorSync){ carpetas.clear(); raizId = null; }
+    sincronizando = false; pintarEstado(); pintarBadges(); programarAvisos();
+  }
+}
+// Agenda para el resumen diario por correo: lo pendiente y lo anotado en los últimos días (Configuracion/agenda.json)
+async function subirAgenda(){
+  const limite = Date.now() - 3 * 864e5;
+  const lista = deNotas().filter(n => !n.hecha || new Date(n.creada) > limite).map(n => {
+    const pl = partirLista(n.texto), p = partesNota(n), anclaVacia = !!n.ancla && !n.texto && !n.titulo;
+    return {id: n.id, t: anclaVacia ? "" : (p.titulo || p.vacio || ""), x: (p.desc || "").slice(0, 240), tipo: n.tipo || "nota", amb: n.ambito || "trabajo",
+      f: n.fecha || "", h: n.hora || "", quien: n.para?.nombre || "", cr: n.creada, ancla: anclaVacia, hecha: !!n.hecha,
+      lp: pl.items.filter(i => !i.hecho).map(i => i.texto).slice(0, 12)};
+  }).sort((a, b) => a.id.localeCompare(b.id));
+  const json = JSON.stringify({version: 1, notas: lista}), huella = json.length + ":" + [...json].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 0);
+  if (lsGet("chispa.agenda") === huella) return;
+  await subir("Configuracion/agenda.json", JSON.stringify({version: 1, actualizada: new Date().toISOString(), desde: disp.terminal, notas: lista}), "application/json");
+  lsSet("chispa.agenda", huella);
+}
+const limpia = n => { const o = {}; for (const k in n) if (!k.startsWith("_")) o[k] = n[k]; return o; };
+const ordenar = () => notas.sort((a, b) => b.creada.localeCompare(a.creada));
+async function guardarNotaLocal(n, nuevosAdjuntos = []){
+  n.actualizada = new Date().toISOString(); n._pend = true;
+  n._subir = [...new Set([...(n._subir || []), ...nuevosAdjuntos])];
+  await idb.poner(n);
+  const k = notas.findIndex(x => x.id === n.id); if (k >= 0) notas[k] = n; else notas.push(n);
+  ordenar(); pintarEstado(); pintarBadges(); setTimeout(() => sincronizar(true), 50); programarAvisos();
+  if (n.deEquipo && n.hecha && !n.deEquipo.hecha && apiBase()) api("mensaje/estado", {cuerpo: {id: n.deEquipo.id, e: "hecha"}}).then(() => { n.deEquipo.hecha = new Date().toISOString(); idb.poner(n); }).catch(() => {});
+  if (n.recibida && n.hecha && !n.recibida.avisada) setTimeout(() => avisarAsignante(n), 5000);   // margen para «Deshacer»
+}
+addEventListener("online", () => { pintarEstado(); sincronizar(true, "pronto"); });
+addEventListener("offline", pintarEstado);
+setInterval(() => { if (document.visibilityState === "visible") sincronizar(); }, 60000);   // sube lo pendiente; baja cambios cada 5 min
+
+/* ================= Adjuntos ================= */
+const cacheUrl = new Map();
+async function urlAdjunto(ruta){
+  if (cacheUrl.has(ruta)) return cacheUrl.get(ruta);
+  let b = await idb.blob(ruta);
+  if (!b){ b = await descargarRuta(ruta); await idb.ponerBlob(ruta, b); }
+  const u = URL.createObjectURL(b); cacheUrl.set(ruta, u); return u;
+}
+async function reducirFoto(f){
+  try {
+    const img = await createImageBitmap(f), max = 1800, k = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return (await new Promise(r => c.toBlob(r, "image/jpeg", 0.85))) || f;
+  } catch(e){ return f; }
+}
+
+/* ================= Tema y modo noche ================= */
+const minutos = h => { const [a, b] = (h || "0:0").split(":").map(Number); return a*60 + b; };
+function esNoche(d = new Date()){ const a = minutos(config.nocheDesde), b = minutos(config.nocheHasta), x = d.getHours()*60 + d.getMinutes(); return a <= b ? x >= a && x < b : x >= a || x < b; }
+function aplicarTema(){
+  const pref = disp.tema || "auto";
+  let tema = pref === "oscuro" ? "dark" : pref === "claro" ? "light" : (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  if (esNoche() && pref !== "claro") tema = esMovil() ? "noche" : "dark";
+  document.documentElement.dataset.theme = tema;
+  document.querySelector("meta[name=theme-color]").content = {noche: "#000000", dark: "#1E1510", light: "#F4ECDD"}[tema];
+}
+setInterval(() => { if (document.visibilityState === "visible") aplicarTema(); }, 60000);
+
+/* ================= Detección de fechas, tipo y nombres ================= */
+const DIAS = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+function detectarFecha(texto, base = new Date()){
+  const t = norm(texto), b = new Date(base.getFullYear(), base.getMonth(), base.getDate());
+  const mas = n => { const d = new Date(b); d.setDate(d.getDate() + n); return isoDia(d); };
+  if (/\bpasado manana\b/.test(t)) return mas(2);
+  if (/\bmanana\b/.test(t.replace(/\b(de|por) la manana\b/g, ""))) return mas(1);
+  if (/\bhoy\b|\besta tarde\b|\besta noche\b/.test(t)) return mas(0);
+  let m = t.match(/\b(?:en|dentro de)\s+(\d+|un|una|dos|tres|cuatro|cinco)\s+(dia|dias|semana|semanas)\b/);
+  if (m){ const num = {un:1,una:1,dos:2,tres:3,cuatro:4,cinco:5}[m[1]] ?? Number(m[1]); return mas(num * (m[2].startsWith("semana") ? 7 : 1)); }
+  if (/\b(la semana que viene|la proxima semana)\b/.test(t)){ const dd = (8 - b.getDay()) % 7 || 7; return mas(dd); }
+  m = t.match(/\b(\d{1,2})[\/\-.](\d{1,2})(?:[\/\-.](\d{2,4}))?\b/);
+  if (m){ let y = m[3] ? Number(m[3].length === 2 ? "20" + m[3] : m[3]) : b.getFullYear(); const d = new Date(y, Number(m[2]) - 1, Number(m[1])); if (!m[3] && d < b) d.setFullYear(y + 1); if (!isNaN(d)) return isoDia(d); }
+  m = t.match(/\b(?:el\s+)?(?:dia\s+)?(\d{1,2})\s+de\s+([a-z]+)\b/);
+  if (m && MESES.includes(m[2])){ const d = new Date(b.getFullYear(), MESES.indexOf(m[2]), Number(m[1])); if (d < b) d.setFullYear(d.getFullYear() + 1); return isoDia(d); }
+  m = t.match(/\bel\s+(lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b|\b(lunes|martes|miercoles|jueves|viernes|sabado|domingo)\s+que viene\b/);
+  if (m){ const obj = DIAS.indexOf(m[1] || m[2]); let dd = (obj - b.getDay() + 7) % 7; if (dd === 0) dd = 7; return mas(dd); }
+  m = t.match(/\bel\s+dia\s+(\d{1,2})\b/);
+  if (m){ const d = new Date(b.getFullYear(), b.getMonth(), Number(m[1])); if (d < b) d.setMonth(d.getMonth() + 1); return isoDia(d); }
+  return null;
+}
+function detectarHora(texto){
+  const t = norm(texto);
+  let m = t.match(/\ba las (\d{1,2})(?:[:.h](\d{2}))?( y media| y cuarto| menos cuarto)?(?: (?:de la|por la) (manana|tarde|noche))?\b/) || t.match(/\b(\d{1,2})[:.](\d{2}) ?h\b()()/);
+  if (!m) return null;
+  let h = Number(m[1]), mi = m[2] ? Number(m[2]) : 0;
+  if (m[3] === " y media") mi = 30; else if (m[3] === " y cuarto") mi = 15; else if (m[3] === " menos cuarto"){ h -= 1; mi = 45; }
+  if ((m[4] === "tarde" || m[4] === "noche") && h < 12) h += 12;
+  else if (!m[4] && h >= 1 && h <= 7) h += 12;            // «a las 5» en horario de trabajo = 17:00
+  if (h > 23 || mi > 59) return null;
+  return `${pad(h)}:${pad(mi)}`;
+}
+function sugerir(texto, base = new Date()){
+  const t = norm(texto), s = {};
+  s.fecha = detectarFecha(texto, base);
+  s.hora = detectarHora(texto);
+  if (s.hora && !s.fecha){ const ahora = `${pad(base.getHours())}:${pad(base.getMinutes())}`; s.fecha = s.hora > ahora ? isoDia(base) : (() => { const d = new Date(base); d.setDate(d.getDate() + 1); return isoDia(d); })(); }
+  for (const cat of LISTAS){
+    for (const nom of config.contactos?.[cat] || []){ const nn = norm(nom).trim(); if (nn.length > 2 && t.includes(nn)){ s.cat = cat; s.nombre = nom; break; } }
+    if (s.cat) break;
+  }
+  if (/^\s*idea\b|\bidea:|\bse me ocurre\b/.test(t)) s.tipo = "idea";
+  else if (s.fecha) s.tipo = "recordatorio";
+  else if (/^\s*(llamar|enviar|mandar|revisar|preparar|pedir|hablar|comprar|preguntar|hacer|confirmar|reclamar|buscar|pagar)\b/.test(t)) s.tipo = "tarea";
+  return s;
+}
+const TIPOS = {nota: ["Nota", "nota"], tarea: ["Tarea", "tarea"], idea: ["Idea", "idea"], recordatorio: ["Recordatorio", "campana"]};
+const CATS = [["persona", "Persona", "Personas"], ["asunto", "Asunto", "Asuntos"], ["cliente", "Cliente", "Clientes"], ["proveedor", "Proveedor", "Proveedores"], ["companero", "Compañero", "Compañeros"], ["personal", "Personal", "Personal"]];
+const CAT = Object.fromEntries(CATS.map(c => [c[0], c[1]]));
+const LISTAS = ["persona", "asunto", "cliente", "proveedor", "companero"];   // categorías con lista de nombres
+// Persona y Asunto siempre; las antiguas (cliente, proveedor…) solo si ya se usan
+function catsVisibles(){
+  const usadas = new Set(notas.map(n => n.para?.categoria).filter(Boolean));
+  return CATS.filter(([k]) => k === "persona" || k === "asunto" || (config.contactos?.[k] || []).length || usadas.has(k));
+}
+function pintarOpcionesCat(actual){
+  const l = catsVisibles(); if (actual && !l.some(c => c[0] === actual) && CAT[actual]) l.push(CATS.find(c => c[0] === actual));
+  $("#eCat").innerHTML = `<option value="">Sin indicar</option>` + l.map(([k, t]) => `<option value="${k}">${t}</option>`).join("");
+}
+
+/* ================= Anotar ================= */
+let borrador = null, tocado = false, anclaAbierta = null, ignorar = {}, usoNocturno = false;
+// cualquier toque o tecla cuenta como «he usado la app»: así no se crea el ancla nocturna al salir
+addEventListener("pointerdown", () => { usoNocturno = true; }, true); addEventListener("keydown", () => { usoNocturno = true; }, true);
+$("#cAmbito").innerHTML = `<button data-a="trabajo">${ic("maletin")}Trabajo</button><button data-a="personal">${ic("casa")}Personal</button>`;
+$("#bAncla").innerHTML = ic("ancla"); $("#bFoto").innerHTML = ic("camara"); $("#bMic").innerHTML = ic("mic");
+$("#bLimpiar").innerHTML = ic("borrar") + "Borrar"; $("#bGuardar").innerHTML = ic("check"); $("#icTeclado").outerHTML = ic("teclado");
+// Teclado: en el móvil abre el teclado; en el PC muestra u oculta la zona para escribir a mano
+function prepararTeclado(){
+  const papel = $("#papel"), b = $("#bTeclado");
+  if (esMovil()){ papel.classList.remove("sin-mano"); b.innerHTML = ic("teclado"); b.setAttribute("aria-label", "Escribir con el teclado"); b.title = "Escribir con el teclado"; b.classList.remove("on"); }
+  else { papel.classList.toggle("sin-mano", !disp.mano); b.innerHTML = ic("pluma"); b.setAttribute("aria-label", "Escribir a mano"); b.title = disp.mano ? "Ocultar la zona para escribir a mano" : "Escribir a mano"; b.classList.toggle("on", !!disp.mano);
+    $("#cTexto").placeholder = "Escribe aquí lo que tengas en la cabeza. Ctrl + Intro para guardar"; }
+}
+$("#bTeclado").onclick = () => {
+  if (esMovil()){ tocado = true; const t = $("#cTexto"); t.focus(); t.setSelectionRange(t.value.length, t.value.length); return; }
+  disp.mano = !disp.mano; lsSet("chispa.disp", disp); prepararTeclado(); requestAnimationFrame(ajustarLienzo); if (!disp.mano) $("#cTexto").focus();
+};
+$("#pista").innerHTML = ic("pluma") + "<span>O escribe aquí a mano, con el dedo</span>";
+$("#ondas").innerHTML = "<i></i>".repeat(36);
+$("#icBusca").innerHTML = ic("buscar");
+
+function nuevoBorrador(){
+  borrador = {audio: null, dur: "", transcripcion: "", fotos: [], trazo: false, lienzo: null}; ignorar = {};
+  $("#cTexto").value = ""; $("#cTitulo").value = ""; crecerTitulo($("#cTitulo")); autoAlto(); limpiarLienzo(); pintarAdjuntos(); pintarDetectado(); setAmbito(disp.ambito || "trabajo");
+  borrarCapturaGuardada();
+  tocado = false; anclaAbierta = esNoche() && esMovil() ? new Date() : null;
+}
+const vacio = () => !$("#cTexto").value.trim() && !$("#cTitulo").value.trim() && !borrador.audio && !borrador.fotos.length && !borrador.trazo && !borrador.lienzo && !rec;
+function setAmbito(a){ document.querySelectorAll("#cAmbito button").forEach(b => b.classList.toggle("on", b.dataset.a === a)); }
+const ambitoSel = () => document.querySelector("#cAmbito button.on")?.dataset.a || "trabajo";
+document.querySelectorAll("#cAmbito button").forEach(b => b.onclick = () => { tocado = true; setAmbito(b.dataset.a); });
+function autoAlto(){ const t = $("#cTexto"); if ($("#papel").classList.contains("sin-mano") && !esMovil()){ t.style.height = ""; return; } t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 220) + "px"; }
+$("#cTexto").addEventListener("keydown", continuarLista);
+// Campos cortos que crecen hacia abajo en vez de desplazarse a la izquierda; Intro confirma (no hace salto de línea)
+textareaCrece();
+function textareaCrece(){
+  const crecer = el => { if (/\n/.test(el.value)) el.value = el.value.replace(/\s*\n\s*/g, " "); el.style.height = "auto"; el.style.height = el.scrollHeight + 2 + "px"; };
+  document.addEventListener("input", e => { if (e.target.matches?.("textarea.crece")) crecer(e.target); });
+  document.addEventListener("keydown", e => {
+    const t = e.target; if (!t.matches?.("textarea[data-resolver]") || e.key !== "Enter") return;
+    e.preventDefault(); document.querySelector(`[data-ok="${t.dataset.resolver}"]`)?.click();
+  });
+}
+// Los títulos crecen hacia abajo al escribir (sin desplazarse a la izquierda); Intro pasa al texto
+function crecerTitulo(el){
+  if (!el) return; if (/\n/.test(el.value)) el.value = el.value.replace(/\s*\n\s*/g, " ");
+  el.style.height = "auto"; const h = el.scrollHeight;
+  el.style.height = h ? h + "px" : "";   // si aún no se ve (pantalla oculta), se deja su altura natural de una línea
+}
+for (const [t, sig] of [["#cTitulo", "#cTexto"], ["#eTitulo", "#eTexto"]]){
+  $(t).addEventListener("keydown", e => { if (e.key === "Enter" && !e.ctrlKey && !e.metaKey){ e.preventDefault(); (sig === "#eTexto" && modoRico ? $("#eRico") : $(sig)).focus(); } });
+  $(t).addEventListener("input", () => crecerTitulo($(t)));
+}
+$("#cTitulo").addEventListener("input", () => { tocado = true; pintarDetectado(); guardarCapturaPronto(); });
+$("#campo").addEventListener("click", e => { if (!e.target.closest("input,textarea,button")) $("#cTexto").focus(); });
+$("#cTexto").addEventListener("input", () => { tocado = true; autoAlto(); pintarDetectado(); guardarCapturaPronto(); pintarBorrar(); });
+$("#cTitulo").addEventListener("input", pintarBorrar);
+// La nota que se está escribiendo se guarda sola en el dispositivo y se recupera si la app se cierra
+let tCaptura = 0, nFotosGuardadas = 0;
+function guardarCapturaPronto(){ clearTimeout(tCaptura); tCaptura = setTimeout(guardarCapturaLocal, 600); }
+async function guardarCapturaLocal(){
+  if (!borrador) return;
+  if (vacio() && !trazos.length && !borrador.lienzo){ borrarCapturaGuardada(); return; }
+  try {
+    for (let i = 0; i < borrador.fotos.length; i++) await idb.ponerBlob(`borrador/foto-${i}`, borrador.fotos[i]);
+    for (let i = borrador.fotos.length; i < nFotosGuardadas; i++) await idb.quitarBlob(`borrador/foto-${i}`);
+    nFotosGuardadas = borrador.fotos.length;
+    if (borrador.audio) await idb.ponerBlob("borrador/audio", borrador.audio); else await idb.quitarBlob("borrador/audio");
+    if (borrador.lienzo) await idb.ponerBlob("borrador/lienzo", new Blob([JSON.stringify(docLimpio(borrador.lienzo))], {type: "application/json"})); else await idb.quitarBlob("borrador/lienzo");
+    lsSet("chispa.captura", {titulo: $("#cTitulo").value, texto: $("#cTexto").value, ambito: ambitoSel(), trazos: trazos.filter(t => !("id" in t)),
+      fotos: borrador.fotos.length, audio: !!borrador.audio, lienzo: !!borrador.lienzo, dur: borrador.dur, transcripcion: borrador.transcripcion, t: Date.now()});
+  } catch(e){}
+}
+function borrarCapturaGuardada(){
+  clearTimeout(tCaptura);
+  if (!lsGet("chispa.captura")) return;
+  const c = lsGet("chispa.captura"); lsSet("chispa.captura", null);
+  for (let i = 0; i < Math.max(c.fotos || 0, nFotosGuardadas); i++) idb.quitarBlob(`borrador/foto-${i}`).catch(() => {});
+  idb.quitarBlob("borrador/audio").catch(() => {}); idb.quitarBlob("borrador/lienzo").catch(() => {}); nFotosGuardadas = 0;
+}
+async function leerCapturaGuardada(){
+  const c = lsGet("chispa.captura"); if (!c) return null;
+  c.blobsFotos = []; for (let i = 0; i < (c.fotos || 0); i++){ const b = await idb.blob(`borrador/foto-${i}`).catch(() => null); if (b) c.blobsFotos.push(b); }
+  c.blobAudio = c.audio ? await idb.blob("borrador/audio").catch(() => null) : null;
+  if (c.lienzo) try { c.doc = JSON.parse(await (await idb.blob("borrador/lienzo")).text()); } catch(e){}
+  return c;
+}
+async function recuperarCaptura(c){
+  if (!c) return;
+  $("#cTitulo").value = c.titulo || ""; $("#cTexto").value = c.texto || ""; crecerTitulo($("#cTitulo")); autoAlto();
+  if (c.ambito) setAmbito(c.ambito);
+  borrador.fotos = c.blobsFotos || []; if (c.blobAudio){ borrador.audio = c.blobAudio; borrador.dur = c.dur || ""; borrador.transcripcion = c.transcripcion || ""; }
+  trazos = c.trazos || []; rehechos = []; if (c.doc) borrador.lienzo = c.doc; redibujar();
+  pintarAdjuntos(); pintarDetectado(); tocado = true;
+  await guardarCapturaLocal();
+  toast("Recuperado lo que estabas escribiendo", "deshacer", 4500);
+}
+function textoBorrador(){ return [$("#cTitulo").value, $("#cTexto").value, borrador?.transcripcion].filter(Boolean).join(" "); }
+function pintarDetectado(){
+  const s = sugerir(textoBorrador()), out = [];
+  if (s.fecha && !ignorar.fecha) out.push(`<span class="dchip">${ic("cal")}${capital(fechaRelativa(s.fecha))}${s.hora ? " a las " + s.hora : ""}<button class="q" data-ign="fecha" aria-label="Quitar">${ic("x")}</button></span>`);
+  if (s.nombre && !ignorar.nombre) out.push(`<span class="dchip">${ic("user")}${esc(s.nombre)}<button class="q" data-ign="nombre" aria-label="Quitar">${ic("x")}</button></span>`);
+  if (borrador?.sueno) out.unshift(`<span class="dchip">${ic("luna")}Sueños<button class="q" data-ign="sueno" aria-label="Quitar">${ic("x")}</button></span>`);
+  if (!(s.nombre && !ignorar.nombre) && borrador?.para?.nombre) out.push(`<span class="dchip">${ic("user")}${esc(borrador.para.nombre)}<button class="q" data-ign="para" aria-label="Quitar">${ic("x")}</button></span>`);
+  if (s.tipo && !ignorar.tipo) out.push(`<span class="dchip">${ic(TIPOS[s.tipo][1])}${TIPOS[s.tipo][0]}<button class="q" data-ign="tipo" aria-label="Quitar">${ic("x")}</button></span>`);
+  $("#detect").innerHTML = out.join("");
+}
+$("#detect").addEventListener("click", e => { const b = e.target.closest("[data-ign]"); if (b){ if (b.dataset.ign === "sueno") borrador.sueno = false; else if (b.dataset.ign === "para") borrador.para = null; else ignorar[b.dataset.ign] = true; pintarDetectado(); } });
+function pintarAdjuntos(){
+  const ex = $("#adj"); ex.innerHTML = "";
+  if (borrador.audio) ex.insertAdjacentHTML("beforeend", `<span class="aud">${ic("mic")}Audio ${borrador.dur}</span>`);
+  borrador.fotos.forEach((f, k) => { const i = document.createElement("img"); i.src = URL.createObjectURL(f); i.title = "Girar o recortar";
+    i.onclick = async () => { const nuevo = await editarImagen(f); if (nuevo){ borrador.fotos[k] = await reducirFoto(nuevo); pintarAdjuntos(); guardarCapturaPronto(); } };
+    ex.appendChild(i); });
+}
+// Escritura con el dedo
+const cv = $("#lienzo"), cx = cv.getContext("2d");
+function ajustarLienzo(){ const r = cv.getBoundingClientRect(), k = devicePixelRatio || 1; if (!r.width) return;
+  if (cv.width !== Math.round(r.width*k) || cv.height !== Math.round(r.height*k)){
+    const copia = borrador?.trazo ? cx.getImageData(0, 0, cv.width, cv.height) : null;
+    cv.width = Math.round(r.width*k); cv.height = Math.round(r.height*k); if (copia) cx.putImageData(copia, 0, 0); } }
+// Cada trazo se guarda aparte para poder deshacer, rehacer y borrar con goma
+const COLORES = {tinta: ["var(--text)", "#2B1D14"], azul: ["#3F63B0", "#3F63B0"], rojo: ["#D9483B", "#D9483B"], verde: ["#119C7C", "#119C7C"], ambar: ["#E0A21F", "#C98A0E"]};
+const GROSORES = {fino: 2.2, medio: 4.5, grueso: 9};
+let trazos = [], rehechos = [], pincel = Object.assign({color: "tinta", grosor: "medio", goma: false}, lsGet("chispa.pincel") || {});
+const colorDe = (k, exportar) => { const c = (COLORES[k] || COLORES.tinta)[exportar ? 1 : 0]; return c.startsWith("var(") ? getComputedStyle(document.documentElement).getPropertyValue(c.slice(4, -1)).trim() : c; };
+function pintarTrazo(g, t, k, exportar){
+  const pts = t.p; if (!pts.length) return;
+  g.save(); g.lineCap = g.lineJoin = "round";
+  g.globalCompositeOperation = t.goma ? "destination-out" : "source-over";
+  g.strokeStyle = g.fillStyle = t.goma ? "#000" : colorDe(t.c, exportar);
+  const ancho = (t.goma ? 22 : GROSORES[t.g] || 4.5) * k;
+  if (pts.length === 1){ g.beginPath(); g.arc(pts[0][0] * k, pts[0][1] * k, ancho / 2, 0, Math.PI * 2); g.fill(); g.restore(); return; }
+  // líneas suaves: curva por los puntos medios; con lápiz óptico, el grosor sigue la presión
+  for (let i = 1; i < pts.length; i++){
+    const [x0, y0] = i > 1 ? [(pts[i-2][0] + pts[i-1][0]) / 2, (pts[i-2][1] + pts[i-1][1]) / 2] : pts[0];
+    const [x1, y1] = [(pts[i-1][0] + pts[i][0]) / 2, (pts[i-1][1] + pts[i][1]) / 2];
+    g.lineWidth = ancho * (t.goma ? 1 : (0.55 + 0.9 * (pts[i][2] ?? 0.5)));
+    g.beginPath(); g.moveTo(x0 * k, y0 * k); g.quadraticCurveTo(pts[i-1][0] * k, pts[i-1][1] * k, x1 * k, y1 * k);
+    if (i === pts.length - 1) g.lineTo(pts[i][0] * k, pts[i][1] * k);
+    g.stroke();
+  }
+  g.restore();
+}
+function redibujar(){
+  cx.clearRect(0, 0, cv.width, cv.height);
+  if (borrador?.lienzo){   // ya hay un lienzo grande: aquí solo se ve en pequeño
+    borrador.trazo = true; previaLienzo(cv, borrador.lienzo); cargarImgsDoc(borrador.lienzo).then(() => { if (borrador?.lienzo) previaLienzo(cv, borrador.lienzo); });
+    $("#pista").innerHTML = `<span class="pista-lz">${ic("ampliar")}Toca para seguir en el lienzo</span>`; $("#pista").classList.remove("oculto"); $("#pista").classList.add("sobre");
+    pintarHerr(); return;
+  }
+  $("#pista").classList.remove("sobre"); if ($("#pista .pista-lz")) $("#pista").innerHTML = ic("pluma") + "<span>O escribe aquí a mano, con el dedo</span>";
+  const k = cv.width / (cv.getBoundingClientRect().width || 1);
+  for (const t of trazos) pintarTrazo(cx, t, k, false);
+  const hay = trazos.some(t => !t.goma);
+  if (borrador) borrador.trazo = hay;
+  $("#pista").classList.toggle("oculto", trazos.length > 0);
+  pintarHerr();
+}
+function pintarHerr(){
+  const conLz = !!borrador?.lienzo;
+  for (const id of ["#hDeshacer", "#hRehacer", "#hPincel", "#hGoma"]) $(id).classList.toggle("oculto", conLz);
+  document.querySelectorAll("#herr .hsep").forEach((x, i) => x.classList.toggle("oculto", conLz && i > 0));
+  $("#hDeshacer").disabled = !trazos.length; $("#hRehacer").disabled = !rehechos.length; $("#hBorrar").disabled = !trazos.length && !conLz;
+  $("#hGoma").classList.toggle("on", pincel.goma); $("#hPincel").classList.toggle("on", !pincel.goma);
+  const d = Math.round(Math.min(18, GROSORES[pincel.grosor] * 2.2 + 4));
+  $("#hPunto").style.cssText = `width:${d}px;height:${d}px;color:${colorDe(pincel.color)}`;
+}
+function limpiarLienzo(){ trazos = []; rehechos = []; redibujar(); }
+function ajustarLienzo(){ const r = cv.getBoundingClientRect(), k = devicePixelRatio || 1; if (!r.width) return;
+  if (cv.width !== Math.round(r.width*k) || cv.height !== Math.round(r.height*k)){ cv.width = Math.round(r.width*k); cv.height = Math.round(r.height*k); redibujar(); } }
+(() => {
+  let actual = null;
+  const p = e => { const r = cv.getBoundingClientRect(); return [+(e.clientX - r.left).toFixed(1), +(e.clientY - r.top).toFixed(1), e.pointerType === "pen" && e.pressure ? +e.pressure.toFixed(2) : 0.5]; };
+  cv.addEventListener("pointerdown", e => {
+    if (borrador?.lienzo){ abrirLienzoCaptura(); return; }
+    if (actual) return;   // un solo dedo a la vez
+    cerrarPinceles(); tocado = true; cv.setPointerCapture(e.pointerId);
+    actual = {c: pincel.color, g: pincel.grosor, goma: pincel.goma, p: [p(e)], id: e.pointerId}; trazos.push(actual); rehechos = []; redibujar();
+  });
+  cv.addEventListener("pointermove", e => {
+    if (!actual || e.pointerId !== actual.id) return;
+    for (const ev of e.getCoalescedEvents ? e.getCoalescedEvents() : [e]) actual.p.push(p(ev));
+    redibujar();
+  });
+  const fin = e => { if (actual && e.pointerId === actual.id){ delete actual.id; actual = null; redibujar(); guardarCapturaPronto(); } };
+  cv.addEventListener("pointerup", fin); cv.addEventListener("pointercancel", fin);
+})();
+// Herramientas
+$("#hAmpliar").innerHTML = ic("ampliar"); $("#hAmpliar").onclick = () => abrirLienzoCaptura();
+// La zona de puntos se pasa al lienzo grande (con lo ya dibujado) y vuelve como vista previa
+function abrirLienzoCaptura(){
+  cerrarPinceles();
+  const r = cv.getBoundingClientRect();
+  const d = borrador.lienzo || {v: 1, imgs: {}, objs: trazos.map(t => ({t: "trazo", modo: t.goma ? "goma" : "pincel", c: t.c, g: t.goma ? 22 : (GROSORES[t.g] || 4.5), p: t.p}))};
+  abrirLienzo(d, {titulo: "Lienzo", alListo: doc => {
+    borrador.lienzo = doc; trazos = []; rehechos = []; tocado = true; redibujar(); guardarCapturaPronto();
+  }});
+  if (!borrador.lienzo && !trazos.length){ LZ.vista = {s: 1, x: 0, y: 0}; lzRender(); }
+  else if (!borrador.lienzo){ const c = $("#lzCanvas").getBoundingClientRect(), s = Math.min(c.width / r.width, c.height / r.height, 2); LZ.vista = {s, x: (c.width - r.width * s) / 2, y: (c.height - r.height * s) / 2}; lzRender(); }
+}
+$("#hDeshacer").innerHTML = ic("deshacer"); $("#hRehacer").innerHTML = ic("rehacer"); $("#hGoma").innerHTML = ic("goma"); $("#hBorrar").innerHTML = ic("borrar");
+const guardarPincel = () => { lsSet("chispa.pincel", pincel); pintarHerr(); };
+$("#hDeshacer").onclick = () => { if (trazos.length){ rehechos.push(trazos.pop()); redibujar(); guardarCapturaPronto(); } };
+$("#hRehacer").onclick = () => { if (rehechos.length){ trazos.push(rehechos.pop()); redibujar(); guardarCapturaPronto(); } };
+$("#hBorrar").onclick = () => {
+  if (borrador?.lienzo){ const antes = borrador.lienzo; borrador.lienzo = null; redibujar(); guardarCapturaPronto();
+    toast("Lienzo borrado", "borrar", 5000, () => { borrador.lienzo = antes; redibujar(); guardarCapturaPronto(); }); return; }
+  if (!trazos.length) return; const antes = trazos; trazos = []; rehechos = []; redibujar(); guardarCapturaPronto();
+  toast("Dibujo borrado", "borrar", 5000, () => { trazos = antes; redibujar(); guardarCapturaPronto(); }); };
+$("#hGoma").onclick = () => { pincel.goma = !pincel.goma; cerrarPinceles(); guardarPincel(); };
+function cerrarPinceles(){ $("#pinceles").classList.add("oculto"); }
+function pintarPinceles(){
+  const col = colorDe(pincel.color);
+  $("#pGrosor").innerHTML = Object.entries(GROSORES).map(([k, w]) => `<button data-gr="${k}" class="${pincel.grosor === k ? "on" : ""}" aria-label="Trazo ${k}"><i class="muestra" style="width:${Math.round(w * 2.2 + 3)}px;height:${Math.round(w * 2.2 + 3)}px;background:${col}"></i></button>`).join("");
+  $("#pColor").innerHTML = Object.keys(COLORES).map(k => `<button data-co="${k}" class="${pincel.color === k ? "on" : ""}" aria-label="Color ${k}"><i class="muestra" style="width:22px;height:22px;background:${colorDe(k)}"></i></button>`).join("");
+  $("#pinceles").querySelectorAll("[data-gr]").forEach(b => b.onclick = () => { pincel.grosor = b.dataset.gr; pincel.goma = false; guardarPincel(); pintarPinceles(); });
+  $("#pinceles").querySelectorAll("[data-co]").forEach(b => b.onclick = () => { pincel.color = b.dataset.co; pincel.goma = false; guardarPincel(); pintarPinceles(); setTimeout(cerrarPinceles, 180); });
+}
+$("#hPincel").onclick = () => {
+  if (pincel.goma){ pincel.goma = false; guardarPincel(); return; }
+  const caja = $("#pinceles"); if (caja.classList.contains("oculto")){ pintarPinceles(); caja.classList.remove("oculto"); } else cerrarPinceles();
+};
+async function trazoComoImagen(){
+  const r = cv.getBoundingClientRect(), k = cv.width / (r.width || 1);
+  const t = document.createElement("canvas"); t.width = cv.width; t.height = cv.height; const tc = t.getContext("2d");
+  for (const x of trazos) pintarTrazo(tc, x, k, true);
+  const c = document.createElement("canvas"); c.width = cv.width; c.height = cv.height; const g = c.getContext("2d");
+  g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(t, 0, 0);
+  return new Promise(res => c.toBlob(res, "image/png"));
+}
+/* ================= Lienzo a pantalla completa ================= */
+// Documento: {v:1, objs:[...], imgs:{id: dataURL}}. Coordenadas «de mundo»; la vista (zoom y desplazamiento) no se guarda.
+// Las imágenes siempre quedan debajo; encima van trazos, formas y textos (la goma solo borra lo pintado, nunca la foto).
+const LZ = {abierto: false, doc: null, hist: [], reh: [], herr: "pincel", vista: {s: 1, x: 0, y: 0}, sel: null, alListo: null, cambios: false, raf: 0};
+const LZIMG = new Map();   // id → Image (caché compartida)
+const cssV = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const LZ_HERR = [["mover", "mano", "Mover y zoom"], ["pincel", "pluma", "Pincel"], ["rotu", "rotu", "Rotulador"], ["goma", "goma", "Goma"],
+  ["flecha", "flecha", "Flecha"], ["rect", "rect", "Rectángulo"], ["elipse", "elipse", "Círculo"], ["texto", "texto", "Texto"]];
+const LZ_ANCHO = {pincel: {fino: 2.2, medio: 4.5, grueso: 9}, rotu: {fino: 10, medio: 16, grueso: 26}, goma: {fino: 14, medio: 24, grueso: 42},
+  forma: {fino: 2.5, medio: 4, grueso: 7}, texto: {fino: 16, medio: 22, grueso: 32}};
+const docVacio = () => ({v: 1, objs: [], imgs: {}});
+const lzSinNada = d => !d || !d.objs.some(o => !(o.t === "trazo" && o.modo === "goma"));
+
+function cargarImgLz(id, src){
+  if (LZIMG.has(id)) return LZIMG.get(id).listo;
+  const im = new Image(); im.listo = new Promise(ok => { im.onload = () => { ok(); if (LZ.abierto) lzRender(); }; im.onerror = () => ok(); }); im.src = src;
+  LZIMG.set(id, im); return im.listo;
+}
+const cargarImgsDoc = d => Promise.all(Object.entries(d?.imgs || {}).map(([id, src]) => cargarImgLz(id, src)));
+
+// ---------- Dibujo
+function dibujarObj(k, o, exportar){
+  k.save(); k.lineCap = k.lineJoin = "round";
+  const col = colorDe(o.c, exportar);
+  k.strokeStyle = k.fillStyle = col; k.lineWidth = o.g;
+  if (o.t === "trazo"){
+    const p = o.p;
+    if (o.modo === "goma"){ k.globalCompositeOperation = "destination-out"; k.strokeStyle = k.fillStyle = "#000"; }
+    if (o.modo === "rotu") k.globalAlpha = .36;
+    if (p.length === 1){ k.beginPath(); k.arc(p[0][0], p[0][1], o.g / 2, 0, Math.PI * 2); k.fill(); }
+    else if (o.modo === "pincel" && p.some(q => q[2] !== 0.5)){
+      for (let i = 1; i < p.length; i++){
+        const [x0, y0] = i > 1 ? [(p[i-2][0] + p[i-1][0]) / 2, (p[i-2][1] + p[i-1][1]) / 2] : p[0], [x1, y1] = [(p[i-1][0] + p[i][0]) / 2, (p[i-1][1] + p[i][1]) / 2];
+        k.lineWidth = o.g * (0.55 + 0.9 * (p[i][2] ?? 0.5)); k.beginPath(); k.moveTo(x0, y0); k.quadraticCurveTo(p[i-1][0], p[i-1][1], x1, y1);
+        if (i === p.length - 1) k.lineTo(p[i][0], p[i][1]); k.stroke();
+      }
+    } else {
+      k.beginPath(); k.moveTo(p[0][0], p[0][1]);
+      for (let i = 1; i < p.length - 1; i++) k.quadraticCurveTo(p[i][0], p[i][1], (p[i][0] + p[i+1][0]) / 2, (p[i][1] + p[i+1][1]) / 2);
+      k.lineTo(p.at(-1)[0], p.at(-1)[1]); k.stroke();
+    }
+  } else if (o.t === "flecha"){
+    const ang = Math.atan2(o.y2 - o.y1, o.x2 - o.x1), L = Math.hypot(o.x2 - o.x1, o.y2 - o.y1), cab = Math.min(L * .45, Math.max(o.g * 4.2, 12));
+    k.beginPath(); k.moveTo(o.x1, o.y1); k.lineTo(o.x2 - Math.cos(ang) * cab * .6, o.y2 - Math.sin(ang) * cab * .6); k.stroke();
+    k.beginPath(); k.moveTo(o.x2, o.y2);
+    k.lineTo(o.x2 - cab * Math.cos(ang - .45), o.y2 - cab * Math.sin(ang - .45)); k.lineTo(o.x2 - cab * Math.cos(ang + .45), o.y2 - cab * Math.sin(ang + .45)); k.closePath(); k.fill();
+  } else if (o.t === "rect"){
+    const x = Math.min(o.x1, o.x2), y = Math.min(o.y1, o.y2), w = Math.abs(o.x2 - o.x1), h = Math.abs(o.y2 - o.y1), r = Math.min(o.g * 1.5, w / 2, h / 2);
+    k.beginPath(); k.roundRect ? k.roundRect(x, y, w, h, r) : k.rect(x, y, w, h); k.stroke();
+  } else if (o.t === "elipse"){
+    k.beginPath(); k.ellipse((o.x1 + o.x2) / 2, (o.y1 + o.y2) / 2, Math.abs(o.x2 - o.x1) / 2 || .1, Math.abs(o.y2 - o.y1) / 2 || .1, 0, 0, Math.PI * 2); k.stroke();
+  } else if (o.t === "texto"){
+    k.font = `600 ${o.tam}px Figtree, system-ui, sans-serif`; k.textBaseline = "top";
+    k.lineWidth = o.tam * .24; k.strokeStyle = exportar ? "rgba(255,255,255,.92)" : cssV("--surface");
+    String(o.s).split("\n").forEach((l, i) => { const y = o.y + i * o.tam * 1.25; k.strokeText(l, o.x, y); k.fillText(l, o.x, y); });
+  }
+  k.restore();
+}
+let capaLz = null;
+function dibujarDoc(g, d, exportar, mat){
+  const W = g.canvas.width, H = g.canvas.height;
+  g.save(); g.setTransform(...mat);
+  for (const o of d.objs) if (o.t === "img"){ const im = LZIMG.get(o.id); if (im?.complete && im.naturalWidth) g.drawImage(im, o.x, o.y, o.w, o.h); }
+  g.restore();
+  capaLz = capaLz || document.createElement("canvas"); if (capaLz.width !== W || capaLz.height !== H){ capaLz.width = W; capaLz.height = H; }
+  const k = capaLz.getContext("2d"); k.setTransform(1, 0, 0, 1, 0, 0); k.clearRect(0, 0, W, H); k.setTransform(...mat);
+  for (const o of d.objs) if (o.t !== "img") dibujarObj(k, o, exportar);
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(capaLz, 0, 0); g.restore();
+}
+const medirLz = document.createElement("canvas").getContext("2d");
+function cajaObj(o){
+  if (o.t === "img") return {x: o.x, y: o.y, w: o.w, h: o.h};
+  if (o.t === "trazo"){ let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity; for (const [x, y] of o.p){ a = Math.min(a, x); b = Math.min(b, y); c = Math.max(c, x); d = Math.max(d, y); }
+    const m = o.g / 2; return {x: a - m, y: b - m, w: c - a + o.g, h: d - b + o.g}; }
+  if (o.t === "texto"){ medirLz.font = `600 ${o.tam}px Figtree, system-ui, sans-serif`; const l = String(o.s).split("\n");
+    return {x: o.x, y: o.y, w: Math.max(...l.map(t => medirLz.measureText(t).width), o.tam), h: l.length * o.tam * 1.25}; }
+  const m = o.t === "flecha" ? o.g * 4.5 : o.g; return {x: Math.min(o.x1, o.x2) - m, y: Math.min(o.y1, o.y2) - m, w: Math.abs(o.x2 - o.x1) + 2 * m, h: Math.abs(o.y2 - o.y1) + 2 * m};
+}
+function cajaDoc(d){
+  let a = Infinity, b = Infinity, c = -Infinity, e = -Infinity;
+  for (const o of d.objs){ if (o.t === "trazo" && o.modo === "goma") continue; const r = cajaObj(o); a = Math.min(a, r.x); b = Math.min(b, r.y); c = Math.max(c, r.x + r.w); e = Math.max(e, r.y + r.h); }
+  return a === Infinity ? null : {x: a, y: b, w: c - a, h: e - b};
+}
+// Imagen final (para la nota, la miniatura y el PDF): solo la zona con contenido, sobre blanco
+async function exportarLienzo(d){
+  if (lzSinNada(d)) return null;
+  await cargarImgsDoc(d);
+  const r = cajaDoc(d), pad = 24, bw = r.w + 2 * pad, bh = r.h + 2 * pad, k = Math.min(2.5, 2000 / Math.max(bw, bh));
+  const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(bw * k)); c.height = Math.max(1, Math.round(bh * k));
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+  dibujarDoc(g, d, true, [k, 0, 0, k, (pad - r.x) * k, (pad - r.y) * k]);
+  const conFotos = d.objs.some(o => o.t === "img"), ext = conFotos ? "jpg" : "png";
+  const blob = await new Promise(ok => c.toBlob(ok, conFotos ? "image/jpeg" : "image/png", .9));
+  return {blob, ext};
+}
+function docLimpio(d){
+  const usadas = new Set(d.objs.filter(o => o.t === "img").map(o => o.id)), imgs = {};
+  for (const id of usadas) if (d.imgs[id]) imgs[id] = d.imgs[id];
+  return {v: 1, objs: d.objs, imgs};
+}
+// Vista previa dentro de otro lienzo (la zona de puntos de Anotar)
+function previaLienzo(canvas, d){
+  const g = canvas.getContext("2d"); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, canvas.width, canvas.height);
+  const r = cajaDoc(d); if (!r) return;
+  const pad = 14 * (devicePixelRatio || 1), k = Math.min((canvas.width - 2 * pad) / r.w, (canvas.height - 2 * pad) / r.h, 2 * (devicePixelRatio || 1));
+  dibujarDoc(g, d, false, [k, 0, 0, k, (canvas.width - r.w * k) / 2 - r.x * k, (canvas.height - r.h * k) / 2 - r.y * k]);
+}
+
+// ---------- Abrir y cerrar
+function abrirLienzo(doc, {alListo, titulo = "Lienzo", herr} = {}){
+  LZ.doc = doc ? JSON.parse(JSON.stringify(doc)) : docVacio(); LZ.doc.imgs = LZ.doc.imgs || {};
+  cargarImgsDoc(LZ.doc);
+  Object.assign(LZ, {hist: [], reh: [], sel: null, alListo, cambios: false, abierto: true});
+  LZ.herr = herr || (LZ.herr === "mover" ? "pincel" : LZ.herr);
+  $("#lzTit").textContent = titulo;
+  $("#lz").classList.remove("oculto"); document.documentElement.classList.add("lz-on");
+  cerrarMenusLz(); lzTam(); lzAjustar(); lzBarra();
+}
+async function lzTerminar(guardar){
+  if (!guardar && LZ.cambios && !confirm("¿Salir del lienzo sin guardar los cambios?")) return;
+  const d = docLimpio(LZ.doc), cb = LZ.alListo;
+  LZ.abierto = false; $("#lz").classList.add("oculto"); document.documentElement.classList.remove("lz-on"); cerrarMenusLz();
+  if (guardar && cb) await cb(lzSinNada(d) ? null : d);
+}
+function lzTam(){ const c = $("#lzCanvas"), r = c.getBoundingClientRect(), k = devicePixelRatio || 1; c.width = Math.round(r.width * k); c.height = Math.round(r.height * k); lzRender(); }
+function lzAjustar(){
+  const c = $("#lzCanvas").getBoundingClientRect(), r = cajaDoc(LZ.doc);
+  if (!r){ LZ.vista = {s: 1, x: 0, y: 0}; lzRender(); return; }
+  const pad = 28, s = Math.min((c.width - 2 * pad) / r.w, (c.height - 2 * pad) / r.h, 3);
+  LZ.vista = {s, x: (c.width - r.w * s) / 2 - r.x * s, y: (c.height - r.h * s) / 2 - r.y * s}; lzRender();
+}
+const lzRender = () => { if (!LZ.abierto) return; cancelAnimationFrame(LZ.raf); LZ.raf = requestAnimationFrame(lzPintar); };
+function lzPintar(){
+  const c = $("#lzCanvas"), g = c.getContext("2d"), d = devicePixelRatio || 1, v = LZ.vista;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = cssV("--bg"); g.fillRect(0, 0, c.width, c.height);
+  // puntos de fondo (cada 24 unidades), solo si no hay demasiados
+  const paso = 24 * v.s * d;
+  if (paso > 9){ g.fillStyle = cssV("--dots") || "#cfd6e2"; const ox = ((v.x * d) % paso + paso) % paso, oy = ((v.y * d) % paso + paso) % paso, t = 1.6 * d;
+    for (let x = ox; x < c.width; x += paso) for (let y = oy; y < c.height; y += paso) g.fillRect(x - t / 2, y - t / 2, t, t); }
+  dibujarDoc(g, LZ.doc, false, [d * v.s, 0, 0, d * v.s, d * v.x, d * v.y]);
+  // selección
+  const o = LZ.sel;
+  if (o && LZ.herr === "mover" && LZ.doc.objs.includes(o)){
+    const r = cajaObj(o), x = (r.x * v.s + v.x) * d, y = (r.y * v.s + v.y) * d, w = r.w * v.s * d, h = r.h * v.s * d;
+    g.save(); g.setLineDash([6 * d, 5 * d]); g.lineWidth = 1.6 * d; g.strokeStyle = "#3F63B0"; g.strokeRect(x - 4 * d, y - 4 * d, w + 8 * d, h + 8 * d); g.restore();
+    if (o.t === "img"){ g.fillStyle = "#3F63B0"; g.beginPath(); g.arc(x + w, y + h, 9 * d, 0, Math.PI * 2); g.fill(); g.fillStyle = "#fff"; g.beginPath(); g.arc(x + w, y + h, 4 * d, 0, Math.PI * 2); g.fill(); }
+  }
+  $("#lzSel").classList.toggle("oculto", !(o && LZ.herr === "mover"));
+}
+
+// ---------- Herramientas y menús
+function lzBarra(){
+  $("#lzHerr").innerHTML = LZ_HERR.map(([k, icono, t]) => `<button class="lz-h ${LZ.herr === k ? "on" : ""}" data-lzh="${k}" aria-label="${t}" title="${t}">${ic(icono)}</button>`).join("")
+    + `<span class="lz-sep"></span><button class="lz-h" id="lzPincelB" aria-label="Grosor y color" title="Grosor y color"><i class="punto" id="lzPunto"></i></button>`
+    + `<button class="lz-h" id="lzImgB" aria-label="Añadir imagen" title="Añadir imagen">${ic("imagen")}</button>`;
+  const dd = Math.round(Math.min(18, ({fino: 2.2, medio: 4.5, grueso: 9})[pincel.grosor] * 2.2 + 4));
+  $("#lzPunto").style.cssText = `width:${dd}px;height:${dd}px;color:${colorDe(pincel.color)}`;
+  $("#lzDeshacer").disabled = !LZ.hist.length; $("#lzRehacer").disabled = !LZ.reh.length;
+  $("#lzCanvas").dataset.herr = LZ.herr;
+}
+function cerrarMenusLz(){ ["#lzPinceles", "#lzImgMenu", "#lzTexto"].forEach(s => $(s).classList.add("oculto")); }
+$("#lzHerr").addEventListener("click", e => {
+  const b = e.target.closest("[data-lzh]");
+  if (b){ LZ.herr = b.dataset.lzh; if (LZ.herr !== "mover") LZ.sel = null; cerrarMenusLz(); lzBarra(); lzRender();
+    if (LZ.herr === "mover") toast("Arrastra para mover el lienzo o lo que toques. En las imágenes, la esquina azul cambia el tamaño", "mano", 4500);
+    if (LZ.herr === "texto") toast("Toca donde quieras poner el texto", "texto", 2500); return; }
+  if (e.target.closest("#lzPincelB")){ const p = $("#lzPinceles"), abierto = !p.classList.contains("oculto"); cerrarMenusLz(); if (!abierto){ pintarPincelesLz(); p.classList.remove("oculto"); } return; }
+  if (e.target.closest("#lzImgB")){ const m = $("#lzImgMenu"), abierto = !m.classList.contains("oculto"); cerrarMenusLz(); if (!abierto) m.classList.remove("oculto"); }
+});
+function pintarPincelesLz(){
+  const col = colorDe(pincel.color);
+  $("#lzGrosor").innerHTML = Object.entries({fino: 2.2, medio: 4.5, grueso: 9}).map(([k, w]) => `<button data-gr="${k}" class="${pincel.grosor === k ? "on" : ""}" aria-label="Grosor ${k}"><i class="muestra" style="width:${Math.round(w * 2.2 + 3)}px;height:${Math.round(w * 2.2 + 3)}px;background:${col}"></i></button>`).join("");
+  $("#lzColor").innerHTML = Object.keys(COLORES).map(k => `<button data-co="${k}" class="${pincel.color === k ? "on" : ""}" aria-label="Color ${k}"><i class="muestra" style="width:22px;height:22px;background:${colorDe(k)}"></i></button>`).join("");
+  $("#lzPinceles").querySelectorAll("[data-gr]").forEach(b => b.onclick = () => { pincel.grosor = b.dataset.gr; guardarPincel(); pintarPincelesLz(); lzBarra(); });
+  $("#lzPinceles").querySelectorAll("[data-co]").forEach(b => b.onclick = () => { pincel.color = b.dataset.co; guardarPincel();
+    if (LZ.sel && LZ.sel.t !== "img"){ lzFoto(); LZ.sel.c = pincel.color; lzRender(); }   // cambia el color de lo seleccionado
+    pintarPincelesLz(); lzBarra(); setTimeout(cerrarMenusLz, 180); });
+}
+function lzFoto(){ LZ.hist.push(JSON.stringify(LZ.doc.objs)); if (LZ.hist.length > 80) LZ.hist.shift(); LZ.reh = []; LZ.cambios = true; }
+function lzDeshacer(){ if (!LZ.hist.length) return; LZ.reh.push(JSON.stringify(LZ.doc.objs)); LZ.doc.objs = JSON.parse(LZ.hist.pop()); LZ.sel = null; LZ.cambios = true; lzBarra(); lzRender(); }
+function lzRehacer(){ if (!LZ.reh.length) return; LZ.hist.push(JSON.stringify(LZ.doc.objs)); LZ.doc.objs = JSON.parse(LZ.reh.pop()); LZ.sel = null; LZ.cambios = true; lzBarra(); lzRender(); }
+$("#lzCancelar").innerHTML = ic("x"); $("#lzDeshacer").innerHTML = ic("deshacer"); $("#lzRehacer").innerHTML = ic("rehacer"); $("#lzAjustar").innerHTML = ic("ajustar");
+$("#lzDeshacer").onclick = lzDeshacer; $("#lzRehacer").onclick = lzRehacer;
+$("#lzAjustar").onclick = lzAjustar;
+$("#lzCancelar").onclick = () => lzTerminar(false);
+$("#lzListo").onclick = () => lzTerminar(true);
+$("#lzQuitarSel").onclick = () => { if (!LZ.sel) return; lzFoto(); LZ.doc.objs = LZ.doc.objs.filter(o => o !== LZ.sel); LZ.sel = null; lzBarra(); lzRender(); };
+$("#lzDelante").onclick = () => { const o = LZ.sel; if (!o) return; lzFoto(); LZ.doc.objs = [...LZ.doc.objs.filter(x => x !== o), o]; lzRender(); };
+addEventListener("resize", () => { if (LZ.abierto) lzTam(); });
+
+// ---------- Gestos: un dedo usa la herramienta; dos dedos, zoom y desplazamiento; rueda del ratón, zoom
+const aMundo = p => ({x: (p.x - LZ.vista.x) / LZ.vista.s, y: (p.y - LZ.vista.y) / LZ.vista.s});
+function zoomEn(p, f){ const v = LZ.vista, s = Math.min(12, Math.max(.08, v.s * f)), w = aMundo(p); LZ.vista = {s, x: p.x - w.x * s, y: p.y - w.y * s}; lzRender(); }
+function tocaObj(w){
+  const tol = 12 / LZ.vista.s;
+  for (let i = LZ.doc.objs.length - 1; i >= 0; i--){
+    const o = LZ.doc.objs[i]; if (o.t === "trazo" && o.modo === "goma") continue;
+    const r = cajaObj(o); if (w.x < r.x - tol || w.x > r.x + r.w + tol || w.y < r.y - tol || w.y > r.y + r.h + tol) continue;
+    if (o.t === "trazo" && !o.p.some(([x, y]) => Math.hypot(x - w.x, y - w.y) < tol + o.g)) continue;
+    return o;
+  }
+  return null;
+}
+function moverObj(o, c, dx, dy){
+  if (o.t === "img" || o.t === "texto"){ o.x = c.x + dx; o.y = c.y + dy; }
+  else if (o.t === "trazo") o.p = c.p.map(q => [q[0] + dx, q[1] + dy, q[2]]);
+  else { o.x1 = c.x1 + dx; o.x2 = c.x2 + dx; o.y1 = c.y1 + dy; o.y2 = c.y2 + dy; }
+}
+(() => {
+  const c = $("#lzCanvas"), P = new Map(); let accion = null, gesto = null, espacio = false;
+  const pos = e => { const r = c.getBoundingClientRect(); return {x: e.clientX - r.left, y: e.clientY - r.top}; };
+  const empezarGesto = () => { const [a, b] = [...P.values()]; gesto = {d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, m0: {x: (a.x + b.x) / 2, y: (a.y + b.y) / 2}, v0: {...LZ.vista}}; };
+  c.addEventListener("pointerdown", e => {
+    c.setPointerCapture(e.pointerId); const p = pos(e); P.set(e.pointerId, p); cerrarMenusLz();
+    if (P.size === 2){
+      // el segundo dedo convierte el gesto en zoom: si se acababa de empezar un trazo, se descarta
+      if (accion?.obj && accion.nuevo && (accion.obj.p ? accion.obj.p.length < 10 : true)){ LZ.doc.objs = LZ.doc.objs.filter(o => o !== accion.obj); LZ.hist.pop(); }
+      accion = null; empezarGesto(); lzRender(); return;
+    }
+    if (P.size > 2) return;
+    const w = aMundo(p), v = LZ.vista, base = k => (LZ_ANCHO[k] || LZ_ANCHO.pincel)[pincel.grosor] / v.s;
+    if (e.button === 1 || e.button === 2 || espacio){ accion = {tipo: "pan", id: e.pointerId, p0: p, v0: {...v}}; return; }
+    const h = LZ.herr;
+    if (h === "mover"){
+      const o = tocaObj(w);
+      if (LZ.sel?.t === "img"){ const r = cajaObj(LZ.sel), sx = (r.x + r.w) * v.s + v.x, sy = (r.y + r.h) * v.s + v.y;
+        if (Math.hypot(p.x - sx, p.y - sy) < 26){ lzFoto(); accion = {tipo: "escala", id: e.pointerId, obj: LZ.sel, ratio: r.h / r.w}; return; } }
+      if (o){ LZ.sel = o; lzFoto(); accion = {tipo: "arrastre", id: e.pointerId, obj: o, w0: w, c: JSON.parse(JSON.stringify(o)), movido: false}; lzRender(); return; }
+      LZ.sel = null; accion = {tipo: "pan", id: e.pointerId, p0: p, v0: {...v}}; lzRender(); return;
+    }
+    if (h === "texto"){ const o = tocaObj(w); editarTextoLz(o?.t === "texto" ? o : null, w); return; }
+    lzFoto();
+    if (h === "pincel" || h === "rotu" || h === "goma"){
+      const obj = {t: "trazo", modo: h, c: pincel.color, g: base(h), p: [[w.x, w.y, e.pointerType === "pen" && e.pressure ? +e.pressure.toFixed(2) : 0.5]]};
+      LZ.doc.objs.push(obj); accion = {tipo: "dibujo", id: e.pointerId, obj, nuevo: true};
+    } else {
+      const obj = {t: h, c: pincel.color, g: base("forma"), x1: w.x, y1: w.y, x2: w.x, y2: w.y};
+      LZ.doc.objs.push(obj); accion = {tipo: "forma", id: e.pointerId, obj, nuevo: true};
+    }
+    lzRender();
+  });
+  c.addEventListener("pointermove", e => {
+    if (!P.has(e.pointerId)) return;
+    const p = pos(e); P.set(e.pointerId, p);
+    if (gesto && P.size >= 2){
+      const [a, b] = [...P.values()], d = Math.hypot(a.x - b.x, a.y - b.y) || 1, m = {x: (a.x + b.x) / 2, y: (a.y + b.y) / 2}, v0 = gesto.v0;
+      const s = Math.min(12, Math.max(.08, v0.s * d / gesto.d0)), w0 = {x: (gesto.m0.x - v0.x) / v0.s, y: (gesto.m0.y - v0.y) / v0.s};
+      LZ.vista = {s, x: m.x - w0.x * s, y: m.y - w0.y * s}; lzRender(); return;
+    }
+    if (!accion || accion.id !== e.pointerId) return;
+    if (accion.tipo === "pan"){ LZ.vista = {...accion.v0, x: accion.v0.x + p.x - accion.p0.x, y: accion.v0.y + p.y - accion.p0.y}; lzRender(); return; }
+    const w = aMundo(p);
+    if (accion.tipo === "dibujo"){
+      for (const ev of e.getCoalescedEvents ? e.getCoalescedEvents() : [e]){ const q = aMundo(pos(ev)); accion.obj.p.push([+q.x.toFixed(1), +q.y.toFixed(1), ev.pointerType === "pen" && ev.pressure ? +ev.pressure.toFixed(2) : 0.5]); }
+    } else if (accion.tipo === "forma"){ accion.obj.x2 = w.x; accion.obj.y2 = w.y; }
+    else if (accion.tipo === "arrastre"){ accion.movido = true; moverObj(accion.obj, accion.c, w.x - accion.w0.x, w.y - accion.w0.y); }
+    else if (accion.tipo === "escala"){ const o = accion.obj; o.w = Math.max(24 / LZ.vista.s, w.x - o.x); o.h = o.w * accion.ratio; }
+    lzRender();
+  });
+  const fin = e => {
+    P.delete(e.pointerId); if (P.size < 2) gesto = null;
+    if (!accion || accion.id !== e.pointerId) return;
+    const o = accion.obj;
+    if (accion.tipo === "forma" && Math.hypot(o.x2 - o.x1, o.y2 - o.y1) < 6 / LZ.vista.s){ LZ.doc.objs = LZ.doc.objs.filter(x => x !== o); LZ.hist.pop(); }
+    if (accion.tipo === "arrastre" && !accion.movido) LZ.hist.pop();
+    accion = null; lzBarra(); lzRender();
+  };
+  c.addEventListener("pointerup", fin); c.addEventListener("pointercancel", fin);
+  c.addEventListener("contextmenu", e => e.preventDefault());
+  c.addEventListener("wheel", e => { e.preventDefault(); zoomEn(pos(e), Math.exp(-e.deltaY * (e.ctrlKey ? .01 : .0015))); }, {passive: false});
+  addEventListener("keydown", e => {
+    if (!LZ.abierto || e.target.matches?.("input,textarea")) return;
+    if (e.key === " "){ espacio = true; c.style.cursor = "grab"; e.preventDefault(); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z"){ e.preventDefault(); e.shiftKey ? lzRehacer() : lzDeshacer(); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y"){ e.preventDefault(); lzRehacer(); }
+    if ((e.key === "Delete" || e.key === "Backspace") && LZ.sel){ e.preventDefault(); $("#lzQuitarSel").click(); }
+  });
+  addEventListener("keyup", e => { if (e.key === " "){ espacio = false; c.style.cursor = ""; } });
+})();
+
+// ---------- Texto
+let textoLz = null;
+function editarTextoLz(o, w){
+  textoLz = {o, w}; const p = $("#lzTexto");
+  $("#lzTextoIn").value = o ? o.s : ""; $("#lzTextoQuitar").classList.toggle("oculto", !o);
+  cerrarMenusLz(); p.classList.remove("oculto"); setTimeout(() => $("#lzTextoIn").focus(), 60);
+}
+$("#lzTextoOk").onclick = () => {
+  const v = $("#lzTextoIn").value.replace(/\s+$/, ""), t = textoLz; cerrarMenusLz(); if (!t) return;
+  if (t.o){ if (v === t.o.s) return; lzFoto(); if (v) t.o.s = v; else LZ.doc.objs = LZ.doc.objs.filter(x => x !== t.o); }
+  else if (v){ lzFoto(); LZ.doc.objs.push({t: "texto", s: v, x: t.w.x, y: t.w.y, tam: LZ_ANCHO.texto[pincel.grosor] / LZ.vista.s, c: pincel.color}); }
+  textoLz = null; lzBarra(); lzRender();
+};
+$("#lzTextoNo").onclick = () => { textoLz = null; cerrarMenusLz(); };
+$("#lzTextoQuitar").onclick = () => { const t = textoLz; cerrarMenusLz(); if (t?.o){ lzFoto(); LZ.doc.objs = LZ.doc.objs.filter(x => x !== t.o); } textoLz = null; lzBarra(); lzRender(); };
+$("#lzTextoIn").addEventListener("keydown", e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) $("#lzTextoOk").click(); });
+
+// ---------- Imágenes: cámara, galería o pegar; antes de ponerla se puede recortar
+$("#lzImgMenu").addEventListener("click", async e => {
+  const b = e.target.closest("[data-img]"); if (!b) return; cerrarMenusLz();
+  if (b.dataset.img === "camara") hacerFoto().then(f => { if (f) recortarImagen(f); });
+  else if (b.dataset.img === "galeria") $("#lzInGal").click();
+  else if (b.dataset.img === "pegar"){
+    try {
+      const items = await navigator.clipboard.read();
+      for (const it of items){ const t = it.types.find(x => x.startsWith("image/")); if (t){ recortarImagen(await it.getType(t)); return; } }
+      toast("No hay ninguna imagen copiada", "alerta");
+    } catch(x){ toast(esMovil() ? "No se puede leer lo copiado. Guarda la imagen y elígela desde la galería" : "Pulsa Ctrl + V para pegar la imagen", "alerta", 4500); }
+  }
+});
+for (const id of ["#lzInCam", "#lzInGal"]) $(id).onchange = () => { const f = $(id).files[0]; $(id).value = ""; if (f) recortarImagen(f); };
+document.addEventListener("paste", e => {
+  if (!LZ.abierto || e.target.matches?.("input,textarea")) return;
+  const it = [...(e.clipboardData?.items || [])].find(x => x.type.startsWith("image/"));
+  if (it){ e.preventDefault(); recortarImagen(it.getAsFile()); }
+});
+async function blobADataUrl(blob, max = 1600){
+  const bmp = await createImageBitmap(blob), k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+  return {src: c.toDataURL("image/jpeg", .86), w: c.width, h: c.height, canvas: c};
+}
+function ponerImagenLz({src, w, h}){
+  const id = "i" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); LZ.doc.imgs[id] = src; cargarImgLz(id, src);
+  const r = $("#lzCanvas").getBoundingClientRect(), v = LZ.vista, vw = r.width / v.s, vh = r.height / v.s;
+  const k = Math.min(vw * .8 / w, vh * .7 / h), ow = w * k, oh = h * k, cx = (r.width / 2 - v.x) / v.s, cy = (r.height / 2 - v.y) / v.s;
+  lzFoto(); const o = {t: "img", id, x: cx - ow / 2, y: cy - oh / 2, w: ow, h: oh}; LZ.doc.objs.push(o);
+  LZ.herr = "mover"; LZ.sel = o; lzBarra(); lzRender();
+  toast("Muévela o cambia su tamaño con la esquina azul. Luego elige el pincel para pintar encima", "imagen", 5000);
+}
+// Recorte: un rectángulo con esquinas que se arrastran
+async function recortarImagen(blob){
+  let im; try { im = await blobADataUrl(blob, 2400); } catch(e){ toast("No se pudo abrir la imagen", "alerta"); return; }
+  const panel = $("#lzRecorte"), c = $("#lzRecCanvas"); panel.classList.remove("oculto");
+  const k = devicePixelRatio || 1, R = () => c.getBoundingClientRect();
+  let caja = {x: 0, y: 0, w: im.w, h: im.h}, esc = 1, ox = 0, oy = 0, arr = null;
+  const tam = () => { const r = R(); c.width = r.width * k; c.height = r.height * k; esc = Math.min((r.width - 40) / im.w, (r.height - 40) / im.h); ox = (r.width - im.w * esc) / 2; oy = (r.height - im.h * esc) / 2; pinta(); };
+  const pinta = () => {
+    const g = c.getContext("2d"); g.setTransform(k, 0, 0, k, 0, 0); g.clearRect(0, 0, c.width, c.height);
+    g.drawImage(im.canvas, ox, oy, im.w * esc, im.h * esc);
+    const x = ox + caja.x * esc, y = oy + caja.y * esc, w = caja.w * esc, h = caja.h * esc;
+    g.fillStyle = "rgba(8,12,24,.55)"; g.beginPath(); g.rect(ox, oy, im.w * esc, im.h * esc); g.rect(x, y, w, h); g.fill("evenodd");
+    g.strokeStyle = "#fff"; g.lineWidth = 2; g.strokeRect(x, y, w, h);
+    g.fillStyle = "#D0614F"; for (const [a, b] of [[x, y], [x + w, y], [x, y + h], [x + w, y + h]]){ g.beginPath(); g.arc(a, b, 9, 0, Math.PI * 2); g.fill(); }
+  };
+  const aImg = e => { const r = R(); return {x: (e.clientX - r.left - ox) / esc, y: (e.clientY - r.top - oy) / esc}; };
+  c.onpointerdown = e => {
+    c.setPointerCapture(e.pointerId); const p = aImg(e), t = 28 / esc;
+    const esq = [["nw", caja.x, caja.y], ["ne", caja.x + caja.w, caja.y], ["sw", caja.x, caja.y + caja.h], ["se", caja.x + caja.w, caja.y + caja.h]].find(([, a, b]) => Math.hypot(p.x - a, p.y - b) < t);
+    arr = esq ? {tipo: esq[0], c0: {...caja}, p0: p} : (p.x > caja.x && p.x < caja.x + caja.w && p.y > caja.y && p.y < caja.y + caja.h) ? {tipo: "mover", c0: {...caja}, p0: p} : null;
+  };
+  c.onpointermove = e => {
+    if (!arr) return; const p = aImg(e), dx = p.x - arr.p0.x, dy = p.y - arr.p0.y, c0 = arr.c0, min = 20 / esc;
+    let {x, y, w, h} = c0;
+    if (arr.tipo === "mover"){ x = Math.min(Math.max(0, c0.x + dx), im.w - w); y = Math.min(Math.max(0, c0.y + dy), im.h - h); }
+    else {
+      if (arr.tipo.includes("w")){ x = Math.min(Math.max(0, c0.x + dx), c0.x + c0.w - min); w = c0.x + c0.w - x; }
+      if (arr.tipo.includes("e")) w = Math.min(Math.max(min, c0.w + dx), im.w - c0.x);
+      if (arr.tipo.includes("n")){ y = Math.min(Math.max(0, c0.y + dy), c0.y + c0.h - min); h = c0.y + c0.h - y; }
+      if (arr.tipo.includes("s")) h = Math.min(Math.max(min, c0.h + dy), im.h - c0.y);
+    }
+    caja = {x, y, w, h}; pinta();
+  };
+  c.onpointerup = c.onpointercancel = () => { arr = null; };
+  const terminar = usar => {
+    panel.classList.add("oculto"); removeEventListener("resize", tam);
+    if (!usar) return;
+    if (usar === "entera") return ponerImagenLz(im);
+    const o = document.createElement("canvas"); o.width = Math.round(caja.w); o.height = Math.round(caja.h);
+    o.getContext("2d").drawImage(im.canvas, caja.x, caja.y, caja.w, caja.h, 0, 0, o.width, o.height);
+    ponerImagenLz({src: o.toDataURL("image/jpeg", .86), w: o.width, h: o.height});
+  };
+  $("#lzRecNo").onclick = () => terminar(false); $("#lzRecEntera").onclick = () => terminar("entera"); $("#lzRecOk").onclick = () => terminar("recorte");
+  addEventListener("resize", tam); requestAnimationFrame(tam);
+}
+// Una foto de la nota como fondo para anotar encima
+async function docDesdeFoto(blob){
+  const im = await blobADataUrl(blob, 1800), id = "i" + Date.now().toString(36);
+  return {v: 1, objs: [{t: "img", id, x: 0, y: 0, w: im.w, h: im.h}], imgs: {[id]: im.src}};
+}
+
+$("#bLimpiar").onclick = () => { if (vacio() || confirm("¿Borrar esta nota sin guardarla y empezar otra?")){ if (rec){ descartarVoz = true; pararVoz(); } nuevoBorrador(); pintarBorrar(); } };
+// el botón «Borrar» solo aparece cuando hay algo escrito, dictado, dibujado o fotografiado
+function pintarBorrar(){ if (!borrador) return; const hay = !vacio(); $("#bLimpiar").classList.toggle("oculto", !hay); $("#campo").classList.toggle("con-borrar", hay); }
+setInterval(() => { if (document.visibilityState === "visible" && vista === "anotar") pintarBorrar(); }, 1500);
+for (const id of ["#cTexto", "#cTitulo"]) $(id)?.addEventListener("input", () => pintarBorrar());
+$("#bFoto").onclick = e => {
+  e.stopPropagation(); const m = $("#menuFoto"); if (!m.classList.contains("oculto")){ m.classList.add("oculto"); return; }
+  const r = $("#bFoto").getBoundingClientRect(); m.classList.remove("oculto"); const w = m.offsetWidth; m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + "px"; m.style.bottom = (innerHeight - r.top + 10) + "px";
+};
+document.addEventListener("click", e => { if (!e.target.closest("#menuFoto")) $("#menuFoto").classList.add("oculto"); });
+$("#menuFoto").onclick = e => { const b = e.target.closest("[data-mf]"); if (!b) return; $("#menuFoto").classList.add("oculto");
+  if (b.dataset.mf === "foto"){ tocado = true; hacerFoto().then(async f => { if (!f) return; borrador.fotos.push(await reducirFoto(f)); pintarAdjuntos(); guardarCapturaPronto(); }); }
+  else if (b.dataset.mf === "galeria"){ tocado = true; $("#inFoto").click(); }
+  else if (b.dataset.mf === "documento") abrirEscaner(null);
+  else abrirTarjeta(); };
+$("#inFoto").onchange = async () => { for (const f of $("#inFoto").files) borrador.fotos.push(await reducirFoto(f)); $("#inFoto").value = ""; pintarAdjuntos(); guardarCapturaPronto(); };
+
+// Voz: guarda el audio original, muestra el nivel en vivo y transcribe si el móvil puede
+let rec = null, sr = null, trozos = [], t0 = 0, alParar = null, actx = null, raf = 0, descartarVoz = false;
+async function empezarVoz(){
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    trozos = []; t0 = Date.now(); descartarVoz = false; rec = new MediaRecorder(stream);
+    rec.ondataavailable = e => e.data.size && trozos.push(e.data);
+    rec.onstop = () => { stream.getTracks().forEach(t => t.stop()); cancelAnimationFrame(raf); try { actx && actx.close(); } catch(e){} actx = null;
+      if (!descartarVoz){ borrador.audio = new Blob(trozos, {type: rec.mimeType || trozos[0]?.type || "audio/webm"}); setTimeout(guardarCapturaPronto, 300);
+        const s = Math.round((Date.now() - t0) / 1000); borrador.dur = `${Math.floor(s/60)}:${pad(s%60)}`; }
+      rec = null; $("#grab").classList.add("oculto"); pintarAdjuntos(); pintarDetectado();
+      if (alParar){ const f = alParar; alParar = null; f(); } };
+    rec.start(1000);
+    // nivel de voz en vivo
+    const ondas = [...document.querySelectorAll("#ondas i")], btn = $("#bMic");
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)(); const an = actx.createAnalyser(); an.fftSize = 512;
+      actx.createMediaStreamSource(stream).connect(an); const buf = new Uint8Array(an.fftSize); let k = 0;
+      const paso = () => { an.getByteTimeDomainData(buf); let s = 0; for (const v of buf){ const x = (v - 128) / 128; s += x * x; }
+        const lvl = Math.min(1, Math.sqrt(s / buf.length) * 4); btn.style.setProperty("--lvl", lvl.toFixed(2));
+        if (k++ % 3 === 0){ for (let i = 0; i < ondas.length - 1; i++) ondas[i].style.height = ondas[i+1].style.height || "6px"; ondas[ondas.length-1].style.height = (6 + lvl * 58) + "px"; }
+        const s2 = Math.floor((Date.now() - t0) / 1000); $("#tiempo").textContent = `${Math.floor(s2/60)}:${pad(s2%60)}`;
+        raf = requestAnimationFrame(paso); };
+      paso();
+    } catch(e){}
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    $("#vivo").textContent = esMovil() ? (voz() ? "Te escucho. El texto aparecerá al guardar." : "Te escucho. Se guarda el audio.") : "Te escucho…";
+    if (disp.trans !== false && SR && !esMovil()){ try { sr = new SR(); sr.lang = "es-ES"; sr.continuous = true; sr.interimResults = true;
+      sr.onresult = e => { let parcial = ""; for (let i = e.resultIndex; i < e.results.length; i++){ if (e.results[i].isFinal) borrador.transcripcion = (borrador.transcripcion + " " + e.results[i][0].transcript).trim(); else parcial += e.results[i][0].transcript; }
+        $("#vivo").textContent = (borrador.transcripcion + " " + parcial).trim() || "Te escucho…"; };
+      sr.onerror = () => {}; sr.start(); } catch(e){ sr = null; } }
+    $("#grab").classList.remove("oculto"); btn.classList.add("rec"); btn.innerHTML = ic("stop"); btn.setAttribute("aria-label", "Parar"); vibrar(40);
+  } catch(e){ rec = null; toast("No puedo usar el micrófono. Revisa el permiso del navegador.", "alerta", 4000); }
+}
+function pararVoz(){
+  try { sr && sr.stop(); } catch(e){} sr = null;
+  if (rec && rec.state !== "inactive") rec.stop();
+  const b = $("#bMic"); b.classList.remove("rec"); b.innerHTML = ic("mic"); b.style.setProperty("--lvl", 0); b.setAttribute("aria-label", "Grabar voz");
+}
+$("#bMic").onclick = () => { tocado = true; rec ? pararVoz() : empezarVoz(); };
+
+async function ubicacion(){
+  if (!disp.ubi || !navigator.geolocation) return null;
+  return new Promise(ok => navigator.geolocation.getCurrentPosition(p => ok({lat: +p.coords.latitude.toFixed(5), lon: +p.coords.longitude.toFixed(5)}), () => ok(null), {timeout: 4000, maximumAge: 120000}));
+}
+function notaBase(cuando){
+  return { id: nuevoId(cuando), creada: cuando.toISOString(), origen: esMovil() ? "movil" : "web", terminal: disp.terminal || (esMovil() ? "Móvil" : "PC"),
+    nocturna: esNoche(cuando), ancla: false, hecha: false, texto: "", tipo: "nota", ambito: ambitoSel(), para: {categoria: "", nombre: ""}, fecha: null, audio: null, fotos: [], ubicacion: null };
+}
+async function guardarCaptura(){
+  if (rec) await new Promise(r => { alParar = r; pararVoz(); });
+  if (vacio()){ toast("Escribe, dicta o dibuja algo primero", "pluma"); return; }
+  const ahora = new Date(), n = notaBase(ahora), carpeta = `${ahora.getFullYear()}/${pad(ahora.getMonth()+1)}`, adj = [];
+  n.texto = $("#cTexto").value.trim();
+  const tit = $("#cTitulo").value.trim(); if (tit) n.titulo = tit;
+  if (borrador.transcripcion){ n.transcripcion = borrador.transcripcion; if (!n.texto) n.texto = borrador.transcripcion; }
+  if (borrador.audio){ const t = borrador.audio.type || "", ext = t.includes("mp4") || t.includes("aac") ? "m4a" : t.includes("ogg") ? "ogg" : "webm";
+    n.audio = `Audios/${carpeta}/${n.id}.${ext}`; await idb.ponerBlob(n.audio, borrador.audio); adj.push(n.audio); }
+  let i = 1;
+  for (const f of borrador.fotos){ const r = `Fotos/${carpeta}/${n.id}-${i++}.jpg`; await idb.ponerBlob(r, f); n.fotos.push(r); adj.push(r); }
+  if (borrador.lienzo){
+    const ex = await exportarLienzo(borrador.lienzo);
+    if (ex){ const r = `Fotos/${carpeta}/${n.id}-trazo.${ex.ext}`, j = `Fotos/${carpeta}/${n.id}-trazo.json`;
+      await idb.ponerBlob(r, ex.blob); await idb.ponerBlob(j, new Blob([JSON.stringify(docLimpio(borrador.lienzo))], {type: "application/json"}));
+      n.fotos.push(r); n.lienzos = {[r]: j}; adj.push(r, j); }
+  } else if (borrador.trazo){ const r = `Fotos/${carpeta}/${n.id}-trazo.png`; await idb.ponerBlob(r, await trazoComoImagen()); n.fotos.push(r); adj.push(r); }
+  const s = sugerir(textoBorrador(), ahora);
+  if (s.fecha && !ignorar.fecha){ n.fecha = s.fecha; if (s.hora) n.hora = s.hora; }
+  if (s.tipo && !ignorar.tipo) n.tipo = s.tipo;
+  if (s.cat && !ignorar.nombre) n.para = {categoria: s.cat, nombre: s.nombre};
+  else if (borrador.para) n.para = borrador.para;
+  if (borrador.sueno) n.sueno = true;
+  n.ubicacion = await ubicacion();
+  if (n.audio && !n.transcripcion && voz()) n._transcribir = true;
+  if (iaAuto() && mereceIA(n)) n._ia = true;
+  if (n.hora) pedirPermisoAvisos();
+  await guardarNotaLocal(n, adj);
+  setTimeout(procesarTranscripciones, 800); setTimeout(procesarIA, 1500);
+  vibrar(80); toast(n.nocturna ? "Idea nocturna guardada" : "Guardada", n.nocturna ? "luna" : "check");
+  nuevoBorrador(); anclaAbierta = null;
+}
+$("#bGuardar").onclick = guardarCaptura;
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && vista === "anotar" && !$("#hEditar").classList.contains("on")) guardarCaptura();
+  if (e.key === "Escape"){ cerrarSegun(); }
+});
+
+// Ancla
+let anclaActual = null;
+async function guardarAncla(cuando = new Date(), preguntar = true){
+  const n = notaBase(cuando); n.ancla = true; n.ubicacion = await ubicacion();
+  await guardarNotaLocal(n); vibrar(80);
+  if (preguntar){ anclaActual = n; $("#aTitulo").innerHTML = ic("ancla") + `Ancla de las ${hora(n.creada)}`; $("#aPalabra").value = ""; abrirHoja("#hAncla"); setTimeout(() => $("#aPalabra").focus(), 280); }
+  return n;
+}
+$("#bAncla").onclick = () => { anclaAbierta = null; guardarAncla(); };
+$("#aSaltar").onclick = () => { cerrarHojas(); toast(`Ancla de las ${hora(anclaActual.creada)} guardada`, "ancla"); };
+$("#aOk").onclick = async () => {
+  const v = $("#aPalabra").value.trim(); cerrarHojas();
+  if (v && anclaActual){ anclaActual.texto = v; await guardarNotaLocal(anclaActual); }
+  toast(`Ancla de las ${hora(anclaActual.creada)}${v ? ": " + v : ""}`, "ancla");
+};
+$("#aPalabra").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); $("#aOk").click(); } });
+
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState === "hidden"){
+    // modo noche: si abriste Cuaderna y la cierras sin hacer nada, queda un ancla con la hora.
+    // No si has usado la app (mirar notas, recorrido…) ni si ya hay un ancla vacía de hace menos de 15 minutos.
+    const anclaVaciaReciente = deNotas().some(n => n.ancla && !n.texto && !n.titulo && Date.now() - new Date(n.creada) < 15 * 60000);
+    if (anclaAbierta && !tocado && !usoNocturno && vista === "anotar" && !rc && borrador && vacio() && !anclaVaciaReciente){ const a = anclaAbierta; anclaAbierta = null; await guardarAncla(a, false); }
+    anclaAbierta = null;
+  } else {
+    aplicarTema();
+    setTimeout(revisarCompartidas, 800);
+    usoNocturno = false; if (borrador && !tocado && vacio()) anclaAbierta = esNoche() && esMovil() ? new Date() : null;
+    sincronizar(false, "pronto"); if (vista !== "anotar") refrescar();
+  }
+});
+
+/* ================= Filas de nota ================= */
+const deNotas = () => notas.filter(n => !n._borrar);
+/* Listas: líneas que empiezan por [ ] o [x] */
+// vale [ ], [] (sin espacio, como lo escribe el teclado del móvil) y [x]
+const RX_ITEM = /^\s*(?:[-*•]\s*)?\[( |x|X)?\]\s?(.*)$/;
+function partirLista(t){
+  // desde la primera línea con [ ], todas las líneas siguientes son puntos de la lista
+  const intro = [], items = []; let enLista = false;
+  for (const l of String(t || "").split("\n")){
+    const m = l.match(RX_ITEM);
+    if (m){ enLista = true; items.push({hecho: (m[1] || "").toLowerCase() === "x", texto: m[2]}); }
+    else if (enLista){ if (l.trim()) items.push({hecho: false, texto: l.trim().replace(/^[-*•]\s+/, "")}); }
+    else intro.push(l);
+  }
+  return {intro: intro.join("\n").trim(), items};
+}
+// se guardan primero los pendientes y al final los hechos
+const ordenarItems = items => [...items.filter(i => !i.hecho), ...items.filter(i => i.hecho)];
+const unirLista = (intro, items) => [String(intro || "").trim(), ...ordenarItems(items).filter(i => i.texto.trim()).map(i => `[${i.hecho ? "x" : " "}] ${i.texto.trim()}`)].filter(Boolean).join("\n");
+// Al pulsar Intro en una línea de lista, la siguiente empieza por [ ]; en una línea vacía, se sale de la lista
+function continuarLista(e){
+  if (e.key !== "Enter" || e.shiftKey || e.ctrlKey || e.metaKey || e.isComposing) return;
+  const t = e.target, pos = t.selectionStart, v = t.value, ini = v.lastIndexOf("\n", pos - 1) + 1, m = v.slice(ini, pos).match(RX_ITEM);
+  if (!m) return;
+  e.preventDefault();
+  if (!m[2].trim()){ t.value = v.slice(0, ini) + v.slice(t.selectionEnd); t.selectionStart = t.selectionEnd = ini; }
+  else { const ins = "\n[ ] "; t.value = v.slice(0, pos) + ins + v.slice(t.selectionEnd); t.selectionStart = t.selectionEnd = pos + ins.length; }
+  t.dispatchEvent(new Event("input", {bubbles: true}));
+}
+async function alternarItem(n, idx){
+  const {intro, items} = partirLista(n.texto); if (!items[idx]) return;  // unirLista lo recoloca en «Hechas»
+  items[idx].hecho = !items[idx].hecho; n.texto = unirLista(intro, items); await guardarNotaLocal(n);
+  avisoListaCompleta(n, items);
+}
+function avisoListaCompleta(n, items){
+  if (items.length && items.every(i => i.hecho) && !n.hecha)
+    toast("Lista completa", "check", 7000, async () => { n.hecha = true; n.hechaEn = new Date().toISOString(); await guardarNotaLocal(n); refrescar(); if ($("#hEditar").classList.contains("on") && editando === n) abrirEdicion(n); }, "Marcar nota hecha");
+}
+// Título y descripción que se ven en los listados
+function partesNota(n){
+  const {intro, items} = partirLista(n.texto), lineas = planoMd(intro).split("\n").map(l => l.trim()).filter(Boolean);
+  if (n.ancla) return {titulo: `Ancla de las ${hora(n.creada)}${n.titulo || n.texto ? ": " + (n.titulo || n.texto) : ""}`, desc: ""};
+  if (n.titulo) return {titulo: n.titulo, desc: lineas.join(" ")};
+  if (lineas.length) return {titulo: lineas[0], desc: lineas.slice(1).join(" ")};
+  if (items.length) return {titulo: `Lista de ${items.length} ${items.length === 1 ? "punto" : "puntos"}`, desc: ""};
+  return {titulo: "", desc: "", vacio: n.audio ? "Nota de voz" : n.fotos?.length ? "Imagen" : "Nota vacía"};
+}
+function tituloDe(n){ const p = partesNota(n); return p.titulo ? esc(p.titulo) : `<span class="vacio">${p.vacio}</span>`; }
+const tituloPlano = n => { const p = partesNota(n); return p.titulo || p.vacio; };
+function fila(n, opts = {}){
+  const hoy = hoyISO(), venc = n.fecha && n.fecha < hoy && !n.hecha;
+  const mt = [];
+  if (n.fecha) mt.push(`<span class="fe ${venc ? "venc" : n.fecha === hoy ? "hoy" : ""}">${ic("cal")}${fechaRelativa(n.fecha)}${n.hora ? ", " + esc(n.hora) : ""}</span>`);
+  if (n.para?.nombre && !opts.sinPersona) mt.push(`<button class="persona-l" data-persona="${esc(n.para.nombre)}" title="Ver la ficha de ${esc(n.para.nombre)}">${ic("user")}${esc(n.para.nombre)}</button>`);
+  else if (n.para?.categoria) mt.push(`<span>${ic("user")}${esc(CAT[n.para.categoria])}</span>`);
+  const lista = partirLista(n.texto).items;
+  if (lista.length){ const h = lista.filter(i => i.hecho).length; mt.push(`<span class="prog ${h === lista.length ? "completa" : ""}">${ic("tarea")}${h} de ${lista.length}</span>`); }
+  if (n.asignada) mt.push(`<span class="asig ${n.asignada.estado === "hecha" ? "ok" : ""}" title="Se la pasaste">${ic(n.asignada.estado === "hecha" ? "check" : "flecha")}${esc(n.asignada.a?.n || n.asignada.a?.e || n.asignada.a?.tel || "")} · ${esc(estadoAsignada(n.asignada))}</span>`);
+  if (n.recibida) mt.push(`<span class="asig" title="Te la pasó">${ic(n.recibida.via === "wa" ? "wa" : "mail")}De ${esc(n.recibida.de?.n || n.recibida.de?.e || "")}</span>`);
+  for (const e of etiquetasDe(n).slice(0, 3)) mt.push(`<span class="etq-l">#${esc(e)}</span>`);
+  if (n.archivos?.length) mt.push(`<span>${ic("clip")}${n.archivos.length}</span>`);
+  if (n.web) mt.push(`<span>${ic("web")}${esc(n.web.dominio || "web")}</span>`);
+  if (n.tipo === "idea") mt.push(`<span>${ic("idea")}Idea</span>`);
+  if (DONDE[n.donde] && !n.hecha) mt.push(`<span class="donde-l">${ic(DONDE[n.donde][1])}${DONDE[n.donde][0]}</span>`);
+  if (n.algunDia && !n.fecha && !n.hecha) mt.push(`<span>${ic("nube")}Algún día</span>`);
+  if (n.esperando?.quien && !n.hecha){ const d = diasDesde(n.esperando.desde || n.creada); mt.push(`<span class="espera ${d >= ESPERA_AVISO ? "tarde" : ""}">${ic("alarma")}Esperando de ${esc(n.esperando.quien)} · ${haceDias(n.esperando.desde || n.creada)}</span>`); }
+  const cp = !opts.sinCarpeta && carpetaDe(n); if (cp) mt.push(`<span class="carp">${ic("carpeta")}${esc(cp.nombre)}</span>`);
+  if (n.archivada) mt.push(`<span>${ic("archivo")}Archivada</span>`);
+  if (n.audio) mt.push(`<span>${ic("mic")}</span>`);
+  if (n.fotos?.length > 1) mt.push(`<span>${ic("imagen")}${n.fotos.length}</span>`);
+  if (n.nocturna) mt.push(`<span>${ic("luna")}</span>`);
+  if (opts.hora) mt.unshift(`<span>${hora(n.creada)}</span>`);
+  if (n._transcribir) mt.push(`<span class="transcribiendo">${ic("mic")}Transcribiendo</span>`);
+  if (n._pend) mt.push(`<span class="nube" title="Pendiente de subir">${ic("nube")}</span>`);
+  return `<div class="desl"><div class="fondo"></div><div class="fila ${n.hecha ? "hecha" : ""}" data-abrir="${esc(n.id)}">
+    <button class="chk ${n.ambito === "personal" ? "personal" : ""}" data-hecha="${esc(n.id)}" aria-label="${n.hecha ? "Marcar pendiente" : "Marcar hecha"}">${ic("check")}</button>
+    <div class="ct"><div class="tt">${n.importante ? `<span class="estr" title="Importante">${ic("estrella")}</span>` : ""}${tituloDe(n)}</div>${(() => { const d = partesNota(n).desc; return d ? `<div class="desc">${esc(d)}</div>` : ""; })()}${lista.length && !n.hecha ? miniLista(n, lista) : ""}${mt.length ? `<div class="mt">${mt.join("")}</div>` : ""}
+      ${n.ancla && opts.resolver ? `<div class="resolver"><textarea class="crece" rows="1" placeholder="¿Qué era?" data-resolver="${esc(n.id)}" enterkeyhint="done"></textarea><button data-ok="${esc(n.id)}">Listo</button></div>` : ""}</div>
+    ${n.fotos?.length ? `<img class="mini" data-mini="${esc(n.fotos[0])}" alt="">` : ""}
+  </div></div>`;
+}
+function miniLista(n, items){
+  const pend = items.map((it, i) => ({...it, i})).filter(it => !it.hecho), ver = pend.slice(0, 3);
+  if (!ver.length) return "";
+  return `<div class="milista">${ver.map(it => `<button class="mi" data-item="${n.id}:${it.i}"><i></i><span>${esc(it.texto)}</span></button>`).join("")}${pend.length > 3 ? `<div class="mas-items">y ${pend.length - 3} más</div>` : ""}</div>`;
+}
+// Deslizar: a la derecha marca hecha, a la izquierda borra
+let ignorarClick = false;
+(() => {
+  let fila = null, fondo = null, x0 = 0, y0 = 0, dx = 0, activo = false;
+  document.addEventListener("pointerdown", e => {
+    if (e.pointerType !== "touch") return;
+    const f = e.target.closest(".desl .fila"); if (!f || e.target.closest("input,button")) return;
+    fila = f; fondo = f.previousElementSibling; x0 = e.clientX; y0 = e.clientY; dx = 0; activo = false; fila.classList.remove("volviendo");
+  }, {passive: true});
+  document.addEventListener("pointermove", e => {
+    if (!fila) return;
+    const mx = e.clientX - x0, my = e.clientY - y0;
+    if (!activo){ if (Math.abs(mx) > 12 && Math.abs(mx) > Math.abs(my) * 1.4){ activo = true; } else if (Math.abs(my) > 12){ fila = null; return; } else return; }
+    dx = mx; fila.style.transform = `translateX(${dx}px)`;
+    const n = notas.find(x => x.id === fila.dataset.abrir);
+    fondo.className = "fondo " + (dx > 0 ? "hecha" : "archiva");
+    fondo.innerHTML = dx > 0 ? ic(n?.hecha ? "deshacer" : "check") + (n?.hecha ? "Pendiente" : "Hecha") : (n && enArchivo(n) ? "Sacar del archivo" : "Archivar") + ic("archivo");
+    fondo.style.opacity = Math.min(1, Math.abs(dx) / 90);
+  }, {passive: true});
+  const fin = async () => {
+    if (!fila) return; const f = fila, fd = fondo, d = dx; fila = null;
+    if (!activo) return;
+    ignorarClick = true; setTimeout(() => ignorarClick = false, 350);
+    f.classList.add("volviendo"); f.style.transform = ""; fd.style.opacity = 0;
+    const n = notas.find(x => x.id === f.dataset.abrir); if (!n) return;
+    if (d > 90){ vibrar(30); await alternarHecha(n); }
+    else if (d < -90){ vibrar(30); await alternarArchivo(n); }
+  };
+  document.addEventListener("pointerup", fin); document.addEventListener("pointercancel", fin);
+})();
+async function alternarArchivo(n){
+  const antes = {archivada: n.archivada, hecha: n.hecha, hechaEn: n.hechaEn};
+  if (enArchivo(n)){ delete n.archivada; if (n.hecha && hechaHace(n) > DIAS_ARCHIVO * 864e5){ n.hecha = false; n.hechaEn = null; } }
+  else n.archivada = true;
+  await guardarNotaLocal(n); refrescar();
+  toast(n.archivada ? "Archivada" : "Fuera del archivo", "archivo", 4500, async () => { Object.assign(n, antes); if (!antes.archivada) delete n.archivada; await guardarNotaLocal(n); refrescar(); });
+}
+async function alternarHecha(n){
+  const marcar = v => { n.hecha = v; n.hechaEn = v ? new Date().toISOString() : null; };
+  marcar(!n.hecha); await guardarNotaLocal(n); refrescar();
+  toast(n.hecha ? "Hecha" : "Pendiente de nuevo", n.hecha ? "check" : "deshacer", 4000, async () => { marcar(!n.hecha); await guardarNotaLocal(n); refrescar(); });
+}
+function cargarMinis(cont){ cont.querySelectorAll("[data-mini]").forEach(img => urlAdjunto(img.dataset.mini).then(u => img.src = u).catch(() => {})); }
+$("#eEspera").addEventListener("input", () => pintarOpciones());
+document.addEventListener("click", async e => {
+  if (e.target.closest("[data-vaciar]")) return abrirVaciar();
+  const nota = id => notas.find(x => x.id === id);
+  const chk = e.target.closest("[data-hecha]");
+  if (chk){ e.stopPropagation(); const n = nota(chk.dataset.hecha); chk.classList.add("pop"); vibrar(30);
+    chk.closest(".fila")?.classList.toggle("hecha", !n.hecha); setTimeout(() => alternarHecha(n), 250); return; }
+  const mi = e.target.closest("[data-item]");
+  if (mi){ e.stopPropagation(); const [id, idx] = mi.dataset.item.split(":"); const n = nota(id); mi.classList.add("on"); vibrar(25);
+    setTimeout(async () => { await alternarItem(n, Number(idx)); refrescar(); }, 220); return; }
+  const ok = e.target.closest("[data-ok]");
+  if (ok){ e.stopPropagation(); const n = nota(ok.dataset.ok), v = document.querySelector(`[data-resolver="${ok.dataset.ok}"]`).value.trim(); if (!v) return;
+    n.texto = v; n.ancla = false; const s = sugerir(v, new Date(n.creada)); if (s.fecha){ n.fecha = s.fecha; if (s.hora) n.hora = s.hora; } if (s.tipo) n.tipo = s.tipo; if (s.cat) n.para = {categoria: s.cat, nombre: s.nombre};
+    await guardarNotaLocal(n); refrescar(); toast("Ancla resuelta"); return; }
+  if (e.target.closest(".resolver")) return;
+  const f = e.target.closest("[data-abrir]");
+  if (f && !ignorarClick) abrirEdicion(nota(f.dataset.abrir));
+});
+$("#visor").onclick = () => $("#visor").style.display = "none";
+function verImagen(src){ if (src){ $("#visor img").src = src; $("#visor").style.display = "flex"; } }
+
+/* ================= Hojas ================= */
+function abrirHoja(sel){ $("#velo").classList.add("on"); $(sel).classList.add("on"); if (!history.state?.hoja) try { history.pushState({hoja: true}, ""); } catch(e){} }
+function cerrarHojas(){ $("#velo").classList.remove("on"); document.querySelectorAll(".hoja.on").forEach(h => h.classList.remove("on")); pausarAudio();
+  if (history.state?.hoja){ quitandoEstado = true; history.back(); } }
+let quitandoEstado = false;
+addEventListener("popstate", () => {
+  if (quitandoEstado){ quitandoEstado = false; if (document.querySelector(".hoja.on")) try { history.pushState({hoja: true}, ""); } catch(e){} return; }
+  if (!$("#vers").classList.contains("oculto")) return;      // la pantalla de versiones gestiona su propio «atrás»
+  if (document.querySelector(".hoja.on")) cerrarSegun(true);      // «atrás» con una hoja abierta: se cierra la hoja (el editor guarda)
+});
+const cerrarSegun = desdeAtras => {
+  // una hoja abierta encima del editor (WhatsApp, Compartir, Pasar a otra persona…): se cierra solo esa y el editor sigue abierto
+  const encima = $("#hEditar").classList.contains("on") && [...document.querySelectorAll(".hoja.on")].find(h => h.id !== "hEditar");
+  if (encima){ encima.classList.remove("on"); if (desdeAtras === true) try { history.pushState({hoja: true}, ""); } catch(e){} return; }
+  return $("#hEditar").classList.contains("on") ? cerrarEditorGuardando() : cerrarHojas();
+};
+$("#velo").onclick = cerrarSegun;
+// Todas las ventanas que suben desde abajo tienen un botón visible para cerrar, además de deslizar o tocar fuera
+document.querySelectorAll(".hoja.mini").forEach(h => { if (h.querySelector(".wa-x")) return;
+  const b = document.createElement("button"); b.type = "button"; b.className = "wa-x hoja-x"; b.setAttribute("aria-label", "Cerrar"); b.title = "Cerrar"; b.innerHTML = ic("x");
+  b.onclick = () => cerrarSegun(); h.appendChild(b); });
+$("#evCancelar").onclick = () => cerrarSegun();
+document.querySelectorAll(".hoja .asa").forEach(a => a.onclick = cerrarSegun);
+
+/* ================= Editar ================= */
+let eItems = [], verHechos = false;
+$("#eAddLista").onclick = () => {
+  // «Convertir en lista»: cada línea de la descripción pasa a ser un punto (si ya era [ ], -, •, 1. o ☐/☑, se respeta)
+  const lineas = String($("#eTexto").value || "").split("\n").map(l => l.trim()).filter(Boolean);
+  if (lineas.length){
+    const nuevos = lineas.map(l => {
+      const m = l.match(RX_ITEM); if (m) return {hecho: (m[1] || "").toLowerCase() === "x", texto: m[2].trim()};
+      const hecho = /^[☑✓✔]/.test(l);
+      return {hecho, texto: l.replace(/\*\*/g, "").replace(/^#+\s*/, "").replace(/^(?:[-*•☐☑✓✔]|\d+[.)])\s*/, "").trim()};
+    }).filter(i => i.texto);
+    eItems = ordenarItems([...eItems, ...nuevos]); $("#eTexto").value = "";
+    if (modoRico) apuntarHistRico();
+    pintarListaEdicion(); toast(`${nuevos.length} ${nuevos.length === 1 ? "punto" : "puntos"} en la lista`, "tarea", 2200);
+    return;
+  }
+  $("#eSecLista").classList.remove("oculto"); pintarListaEdicion(true);
+};
+function pintarListaEdicion(foco = false){
+  const sec = $("#eSecLista");
+  sec.classList.toggle("oculto", !eItems.length && !foco);
+  $("#eAddLista").innerHTML = eItems.length || foco ? "" : ic("tarea") + "Convertir en lista";
+  const h = eItems.filter(i => i.hecho).length;
+  $("#eProg").textContent = eItems.length ? `${h} de ${eItems.length}` : "";
+  $("#eBarra").style.width = eItems.length ? (h / eItems.length * 100) + "%" : "0";
+  const filaItem = (it, i) => `<div class="eitem ${it.hecho ? "on" : ""}">${it.hecho ? "" : `<span class="mover" title="Arrastra para cambiar el orden" aria-hidden="true">${ic("agarre")}</span>`}<button class="ck" data-ei="${i}" aria-label="${it.hecho ? "Volver a pendiente" : "Marcar hecho"}">${ic("check")}</button><textarea rows="1" data-eit="${i}" aria-label="Punto ${i + 1}">${esc(it.texto)}</textarea><button class="ibtn" data-eix="${i}" aria-label="Quitar punto">${ic("x")}</button></div>`;
+  const pend = [], hechos = []; eItems.forEach((it, i) => (it.hecho ? hechos : pend).push(filaItem(it, i)));
+  $("#eLista").innerHTML = (pend.length ? pend.join("") : `<div class="todo-hecho">${ic("check")}Todo hecho</div>`)
+    + `<div class="eitem nuevo">${ic("mas")}<textarea id="eNuevoItem" class="crece" rows="1" placeholder="Añadir un punto y pulsar Intro" enterkeyhint="enter"></textarea></div>`;
+  $("#eHechos").innerHTML = hechos.length ? `<button class="hechos-tit" id="eVerHechos">${ic(verHechos ? "x" : "check")}<span>${verHechos ? "Ocultar hechos" : `Hechos (${hechos.length})`}</span></button>${verHechos ? `<div class="elista hechos">${hechos.join("")}</div>` : ""}` : "";
+  requestAnimationFrame(() => document.querySelectorAll("#eLista textarea,#eHechos textarea").forEach(crecer));
+  if (foco) setTimeout(() => $("#eNuevoItem")?.focus(), 50);
+}
+// Ordenar los puntos pendientes arrastrando el asa (dedo o ratón)
+async function guardarOrden(nuevo){
+  eItems = [...nuevo, ...eItems.filter(i => i.hecho)]; pintarListaEdicion();
+  editando.texto = unirLista($("#eTexto").value, eItems); await guardarNotaLocal(editando);
+}
+(() => {
+  let drag = null;
+  const lista = $("#eLista");
+  lista.addEventListener("pointerdown", e => {
+    const h = e.target.closest(".mover"); if (!h) return;
+    e.preventDefault(); const row = h.closest(".eitem");
+    drag = {row, y0: e.clientY, movido: false}; row.classList.add("arrastrando"); try { h.setPointerCapture(e.pointerId); } catch(err){} vibrar(20);
+  });
+  lista.addEventListener("pointermove", e => {
+    if (!drag) return;
+    const r = drag.row, filas = [...lista.querySelectorAll(".eitem:not(.nuevo):not(.on)")], i = filas.indexOf(r), prev = filas[i - 1], next = filas[i + 1];
+    if (next && e.clientY > next.getBoundingClientRect().top + next.offsetHeight / 2){ next.after(r); drag.y0 += next.offsetHeight; drag.movido = true; }
+    else if (prev && e.clientY < prev.getBoundingClientRect().top + prev.offsetHeight / 2){ prev.before(r); drag.y0 -= prev.offsetHeight; drag.movido = true; }
+    r.style.transform = `translateY(${e.clientY - drag.y0}px)`;
+  });
+  const soltar = async () => {
+    if (!drag) return; const {row, movido} = drag; drag = null;
+    row.classList.remove("arrastrando"); row.style.transform = "";
+    if (!movido) return;
+    const orden = [...lista.querySelectorAll(".eitem:not(.nuevo):not(.on) [data-ei]")].map(b => eItems[Number(b.dataset.ei)]);
+    await guardarOrden(orden); toast("Orden guardado", "check", 1200);
+  };
+  lista.addEventListener("pointerup", soltar); lista.addEventListener("pointercancel", soltar);
+  // con el teclado: Alt + flecha arriba/abajo mueve el punto
+  lista.addEventListener("keydown", async e => {
+    const i = e.target.dataset?.eit; if (i === undefined || !e.altKey || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+    e.preventDefault(); const pend = eItems.filter(x => !x.hecho), it = eItems[Number(i)], k = pend.indexOf(it), d = e.key === "ArrowUp" ? -1 : 1;
+    if (k < 0 || !pend[k + d]) return; [pend[k], pend[k + d]] = [pend[k + d], pend[k]];
+    await guardarOrden(pend); lista.querySelector(`[data-eit="${eItems.indexOf(it)}"]`)?.focus();
+  });
+})();
+function crecer(t){ t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }
+const clicLista = async e => {
+  const ck = e.target.closest("[data-ei]"), x = e.target.closest("[data-eix]");
+  if (ck){ const it = eItems[Number(ck.dataset.ei)]; it.hecho = !it.hecho; vibrar(25); eItems = ordenarItems(eItems); pintarListaEdicion();
+    if (it.hecho) toast("Pasado a hechos", "check", 1600);
+    // el tick se guarda al momento, sin esperar a «Guardar»
+    editando.texto = unirLista($("#eTexto").value, eItems); await guardarNotaLocal(editando); avisoListaCompleta(editando, eItems); }
+  if (x){ eItems.splice(Number(x.dataset.eix), 1); pintarListaEdicion(true); }
+};
+$("#eLista").addEventListener("click", clicLista);
+$("#eHechos").addEventListener("click", e => {
+  if (e.target.closest("#eVerHechos")){ verHechos = !verHechos; pintarListaEdicion(); return; }
+  const ck = e.target.closest("[data-ei]"), x = e.target.closest("[data-eix]");
+  if (ck || x) clicLista(e);
+});
+$("#eHechos").addEventListener("input", e => { const i = e.target.dataset.eit; if (i !== undefined){ eItems[Number(i)].texto = e.target.value.replace(/\n/g, " "); crecer(e.target); } });
+$("#eLista").addEventListener("input", e => { const i = e.target.dataset.eit; if (i !== undefined){ eItems[Number(i)].texto = e.target.value.replace(/\n/g, " "); crecer(e.target); } });
+$("#eLista").addEventListener("keydown", e => {
+  if (e.target.dataset.eit !== undefined && e.key === "Enter"){ e.preventDefault(); $("#eNuevoItem").focus(); return; }
+  if (e.target.id === "eNuevoItem" && e.key === "Enter"){ e.preventDefault(); const v = e.target.value.trim(); if (!v) return; eItems.push({hecho: false, texto: v}); eItems = ordenarItems(eItems); pintarListaEdicion(true); }
+});
+let editando = null, eAdj = null, eTipoSel = "nota", eAmbSel = "trabajo", audioEl = null, eDonde = "", eAlgun = false;
+document.querySelectorAll("[data-i]").forEach(s => s.outerHTML = ic(s.dataset.i));
+$("#eCerrar").innerHTML = ic("x"); $("#eBorrar").innerHTML = ic("borrar") + "<span>Borrar</span>"; $("#eAddFoto").innerHTML = ic("camara") + "Foto";
+$("#eAddFoto").onclick = e => {
+  e.stopPropagation(); const m = $("#menuFotoE"); if (!m.classList.contains("oculto")){ m.classList.add("oculto"); return; }
+  const r = $("#eAddFoto").getBoundingClientRect(); m.classList.remove("oculto"); const w = m.offsetWidth, h = m.offsetHeight; m.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.right - w)) + "px"; m.style.top = (r.bottom + 6 + h > innerHeight - 8 ? Math.max(8, r.top - h - 6) : r.bottom + 6) + "px"; m.style.bottom = "auto";
+};
+document.addEventListener("click", e => { if (!e.target.closest("#menuFotoE")) $("#menuFotoE").classList.add("oculto"); });
+$("#menuFotoE").onclick = e => { const b = e.target.closest("[data-mfe]"); if (!b) return; $("#menuFotoE").classList.add("oculto");
+  if (b.dataset.mfe === "foto") hacerFoto().then(async f => { if (!f) return; eAdj.nuevas.push(await reducirFoto(f)); pintarAdjEdicion(); guardarEdicionPronto(); });
+  else if (b.dataset.mfe === "documento") abrirEscaner("editor");
+  else $("#eInFoto").click(); };
+$("#eAddDibujo").innerHTML = ic("pluma") + "Dibujo"; $("#eAddDibujo").title = "Dibujar o anotar en un lienzo nuevo";
+$("#eAddDibujo").onclick = () => abrirLienzo(null, {titulo: "Dibujo nuevo", alListo: async doc => { if (doc) await lienzoAEdicion(doc); }});
+// Guarda el lienzo como imagen nueva de la nota (con su copia editable); «reemplaza» quita la versión anterior
+async function lienzoAEdicion(doc, reemplaza){
+  const ex = await exportarLienzo(doc); if (!ex) return;
+  const item = {png: ex.blob, ext: ex.ext, doc: docLimpio(doc)};
+  if (reemplaza?.nueva) eAdj.nuevas[eAdj.nuevas.indexOf(reemplaza.nueva)] = item;
+  else { if (reemplaza?.ruta){ eAdj.quitar.push(reemplaza.ruta); eAdj.fotos = eAdj.fotos.filter(x => x !== reemplaza.ruta); } eAdj.nuevas.push(item); }
+  pintarAdjEdicion(); guardarEdicionPronto(); toast("Dibujo añadido a la nota. Pulsa Guardar para conservarlo", "pluma", 4000);
+}
+async function anotarFoto({ruta, nueva}){
+  try {
+    let doc;
+    if (nueva) doc = nueva instanceof Blob ? await docDesdeFoto(nueva) : nueva.doc;
+    else if (eAdj.lienzos[ruta]){ const j = await idb.blob(eAdj.lienzos[ruta]) || await descargarRuta(eAdj.lienzos[ruta]); doc = JSON.parse(await j.text()); }
+    else doc = await docDesdeFoto(await idb.blob(ruta) || await descargarRuta(ruta));
+    const editable = nueva ? !(nueva instanceof Blob) : !!eAdj.lienzos[ruta];
+    abrirLienzo(doc, {titulo: editable ? "Editar dibujo" : "Anotar sobre la foto", herr: "pincel", alListo: async d => {
+      if (!d) return;
+      if (editable) await lienzoAEdicion(d, nueva ? {nueva} : {ruta});
+      else await lienzoAEdicion(d, nueva instanceof Blob ? null : null);   // la foto original se conserva
+    }});
+  } catch(e){ toast("No se pudo abrir la imagen" + (navigator.onLine ? "" : " sin conexión"), "alerta"); }
+}
+$("#eCerrar").onclick = () => {
+  if (hayCambiosEdicion() && !confirm("¿Salir sin guardar los cambios?")) return;
+  olvidarEdicion(); cerrarHojas();
+};
+function pintarOpciones(){
+  $("#eAmbito").innerHTML = ["trabajo", "personal"].map(a => `<button class="opc ${eAmbSel === a ? "on" : ""}" data-amb="${a}">${a === "trabajo" ? "Trabajo" : "Personal"}</button>`).join("");
+  $("#eTipo").innerHTML = Object.entries(TIPOS).map(([k, [t]]) => `<button class="opc ${eTipoSel === k ? "on" : ""}" data-tipo="${k}">${t}</button>`).join("");
+  const f = $("#eFecha").value, h = $("#eHora").value;
+  if (f) eAlgun = false;
+  $("#hEditar").querySelectorAll(".org").forEach(x => x.classList.toggle("oculto", !organizar()));
+  $("#eDonde").innerHTML = Object.entries(DONDE).map(([k, [t, i]]) => `<button class="opc ${eDonde === k ? "on" : ""}" data-donde="${k}" type="button">${ic(i)}${t}</button>`).join("");
+  $("#eAlgun").classList.toggle("on", eAlgun);
+  const esp = $("#eEspera").value.trim(), espPrev = editando?.esperando;
+  $("#eReclamar").classList.toggle("oculto", !esp);
+  $("#eEsperaRes").textContent = esp ? (espPrev?.quien === esp ? `Esperando ${haceDias(espPrev.desde)}. ` : "") + (espPrev?.quien === esp && diasDesde(espPrev.desde) >= ESPERA_AVISO ? "Ya sale en Hoy para que lo reclames." : "Saldrá en Hoy si pasan " + ESPERA_AVISO + " días sin novedad.") : "";
+  document.querySelectorAll("[data-f]").forEach(b => b.classList.toggle("on", !!f && f === masDias(Number(b.dataset.f))));
+  const enCal = !!editando?.evento;
+  $("#eFechaRes").innerHTML = f
+    ? `<div class="cuando">${esc(capital(fechaLarga(f)))}${h ? ", a las " + esc(h) : ""}${enCal ? "<small>Está en tu calendario de Outlook</small>" : ""}</div><button type="button" class="quitar-f" id="eQuitarF">${ic("x")}${enCal ? "Anular cita" : "Quitar fecha"}</button>`
+    : eAlgun ? `<div class="vacia">Algún día: no sale en Hoy. Está en Cuaderno › Algún día hasta que le pongas fecha.</div>`
+    : `<div class="vacia">Sin fecha. Elige un día o usa los atajos.</div>`;
+  if ($("#eQuitarF")) $("#eQuitarF").onclick = () => {
+    const antes = [$("#eFecha").value, $("#eHora").value]; $("#eFecha").value = ""; $("#eHora").value = ""; pintarOpciones();
+    toast(enCal ? "Cita anulada: se quitará del calendario al guardar" : "Fecha quitada", "cal", 5000, () => { [$("#eFecha").value, $("#eHora").value] = antes; pintarOpciones(); });
+  };
+}
+$("#hEditar").addEventListener("click", e => {
+  const a = e.target.closest("[data-amb]"), t = e.target.closest("[data-tipo]"), f = e.target.closest("[data-f]");
+  if (a){ eAmbSel = a.dataset.amb; pintarOpciones(); }
+  if (t){ eTipoSel = t.dataset.tipo; pintarOpciones(); }
+  if (f){ $("#eFecha").value = masDias(Number(f.dataset.f)); pintarOpciones(); }
+  const d = e.target.closest("[data-donde]"); if (d){ eDonde = eDonde === d.dataset.donde ? "" : d.dataset.donde; pintarOpciones(); }
+  if (e.target.closest("#eReclamar")){
+    $("#eFecha").value = hoyISO(); eDonde = "llamar"; eAlgun = false; pintarOpciones(); guardarEdicionPronto();
+    toast("Para hoy, como llamada pendiente", "tel", 3500); return;
+  }
+  if (e.target.closest("#eAlgun")){
+    eAlgun = !eAlgun;
+    if (eAlgun && $("#eFecha").value){ const antes = [$("#eFecha").value, $("#eHora").value]; $("#eFecha").value = ""; $("#eHora").value = ""; toast("Fecha quitada: queda para algún día", "cal", 5000, () => { [$("#eFecha").value, $("#eHora").value] = antes; pintarOpciones(); }); }
+    pintarOpciones();
+  }
+});
+$("#eFecha").addEventListener("input", pintarOpciones); $("#eHora").addEventListener("input", pintarOpciones);
+$("#eCat").addEventListener("change", () => { if ($("#eCat").value === "personal"){ eAmbSel = "personal"; pintarOpciones(); } });
+let firmaInicial = "", tEdicion = 0, eImp = false, eArch = false;
+function pintarCarpetaEdicion(sel){
+  $("#eCarpeta").innerHTML = `<option value="">Ninguno</option>${arbolLibretas().map(({c, nivel}) => `<option value="${esc(c.id)}">${esc(sangria(nivel) + c.nombre)}</option>`).join("")}<option value="+">＋ Nueva libreta…</option>`;
+  $("#eCarpeta").value = archivadores().some(c => c.id === sel) ? sel : "";
+}
+function pintarMarcasEdicion(){
+  $("#eImportante").innerHTML = ic("estrella"); $("#eImportante").classList.toggle("estrella-on", eImp); $("#eImportante").setAttribute("aria-pressed", eImp);
+  $("#eImportante").title = eImp ? "Quitar de importantes" : "Marcar como importante";
+  $("#eArchivar").innerHTML = ic("archivo") + (eArch ? "Archivada · sacar" : "Archivar"); $("#eArchivar").classList.toggle("on", eArch);
+}
+$("#eImportante").onclick = () => { eImp = !eImp; pintarMarcasEdicion(); guardarEdicionPronto(); };
+$("#eArchivar").onclick = () => { eArch = !eArch; pintarMarcasEdicion(); guardarEdicionPronto(); };
+$("#eCarpeta").onchange = async () => {
+  if ($("#eCarpeta").value !== "+") return;
+  const c = await nuevaCarpeta(); pintarCarpetaEdicion(c ? c.id : ""); guardarEdicionPronto();
+};
+function camposEditor(){
+  const nuevo = $("#eNuevoItem")?.value.trim(), items = nuevo ? [...eItems, {hecho: false, texto: nuevo}] : eItems;
+  return {texto: items.length ? unirLista($("#eTexto").value, items) : $("#eTexto").value.trim(), titulo: $("#eTitulo").value.trim(), tipo: eTipoSel, ambito: eAmbSel,
+    para: {categoria: $("#eCat").value, nombre: $("#eNombre").value.trim()}, fecha: $("#eFecha").value || null, hora: $("#eHora").value || null,
+    importante: eImp, archivada: eArch, carpeta: $("#eCarpeta").value.replace("+", ""), etiquetas: eEtq.join(","), donde: eDonde, algunDia: eAlgun, esperando: $("#eEspera").value.trim()};
+}
+const firmaEditor = () => JSON.stringify(camposEditor());
+const hayCambiosEdicion = () => !!editando && $("#hEditar").classList.contains("on") && (firmaEditor() !== firmaInicial || eAdj.nuevas.length > 0 || eAdj.quitar.length > 0 || (eAdj.nuevosArch || []).length > 0);
+// Copia de seguridad de los cambios mientras se edita (por si la app se cierra)
+function guardarEdicionPronto(){ clearTimeout(tEdicion); tEdicion = setTimeout(() => {
+  if (!editando) return;
+  if (firmaEditor() !== firmaInicial) lsSet("chispa.edicion", {id: editando.id, campos: camposEditor(), t: Date.now()});
+  else if (lsGet("chispa.edicion")?.id === editando.id) lsSet("chispa.edicion", null);
+}, 500); }
+["input", "change", "click"].forEach(ev => $("#hEditar").addEventListener(ev, () => { if (editando) guardarEdicionPronto(); }));
+function olvidarEdicion(){ clearTimeout(tEdicion); lsSet("chispa.edicion", null); }
+function avisarEdicionPendiente(){
+  const d = lsGet("chispa.edicion"), n = d && notas.find(x => x.id === d.id && !x._borrar);
+  if (!d) return; if (!n){ lsSet("chispa.edicion", null); return; }
+  toast(`Tenías cambios sin guardar en «${(d.campos.titulo || tituloPlano(n) || "una nota").slice(0, 40)}»`, "deshacer", 9000, () => { ver("notas"); abrirEdicion(n); }, "Abrir");
+}
+// Cerrar tocando fuera o el asa: se guardan los cambios. La X pregunta antes de descartarlos.
+async function cerrarEditorGuardando(){ if (hayCambiosEdicion()){ await guardarEdicion(); toast("Cambios guardados", "check"); } else { olvidarEdicion(); cerrarHojas(); } }
+function abrirEdicion(n, original){
+  if (!n) return;
+  mensajeLeido(n);
+  editando = n; eTipoSel = n.tipo || "nota"; eAmbSel = n.ambito || "trabajo"; eDonde = DONDE[n.donde] ? n.donde : ""; eAlgun = !!n.algunDia && !n.fecha; $("#eEspera").value = n.esperando?.quien || "";
+  eImp = !!n.importante; eArch = enArchivo(n); pintarCarpetaEdicion(n.carpeta || ""); pintarMarcasEdicion();
+  eAdj = {audio: n.audio || null, fotos: [...(n.fotos || [])], nuevas: [], quitar: [], lienzos: {...(n.lienzos || {})}, archivos: [...(n.archivos || [])], nuevosArch: []};
+  eEtq = [...(n.etiquetas || [])]; pintarEtqEdicion();
+  const pl = partirLista(n.texto); eItems = ordenarItems(pl.items.map(i => ({...i}))); verHechos = false;
+  $("#eTexto").value = pl.intro; pintarListaEdicion();
+  // Título: el propio, o (en notas antiguas de lista) la línea que lo hacía de título
+  let titulo = n.titulo || "";
+  if (!titulo && eItems.length && pl.intro && !pl.intro.includes("\n")){ titulo = pl.intro; $("#eTexto").value = ""; }
+  $("#eTitulo").value = n.ancla && !n.titulo ? "" : titulo; requestAnimationFrame(() => crecerTitulo($("#eTitulo"))); pintarEtqEdicion();
+  const conLista = eItems.length > 0;
+  ponerModoRico(tieneFormato($("#eTexto").value) || lsGet("chispa.formato") === true);
+  $("#eTexto").placeholder = conLista ? "Notas sobre la lista (opcional)" : "Escribe la nota"; $("#eRico").dataset.ph = $("#eTexto").placeholder; $("#eTexto").classList.toggle("corto", conLista && !$("#eTexto").value); $("#eTexto").rows = conLista && !$("#eTexto").value ? 1 : 3;
+  pintarOpcionesCat(n.para?.categoria); $("#eCat").value = n.para?.categoria || ""; $("#eNombre").value = n.para?.nombre || ""; pintarVerFicha();
+  $("#eMas").open = false; $("#eMasRes").textContent = n.para?.nombre ? `Persona: ${n.para.nombre}` : "Persona relacionada"; $("#eFecha").value = n.fecha || ""; $("#eHora").value = n.hora || "";
+  $("#eTransBtn").innerHTML = n.audio && !n.transcripcion && voz() ? `<button class="btn sec" id="eTranscribir" style="margin-top:10px">${ic("mic")}${n._transcribir ? "Transcribiendo…" : "Transcribir el audio"}</button>` : "";
+  if ($("#eTranscribir")) $("#eTranscribir").onclick = async () => { $("#eTranscribir").textContent = "Transcribiendo…"; const ok = await transcribirNota(n, true); if (ok){ cerrarHojas(); abrirEdicion(n); } else $("#eTranscribir").textContent = "No se pudo. Reintentar"; };
+  $("#eInfo").innerHTML = `<span>${ic(n.ancla ? "ancla" : n.nocturna ? "luna" : "spark")}${capital(fechaLarga(n.creada))}, ${hora(n.creada)}</span>` + (n._etag ? `<button class="enl" id="eHist" type="button">${ic("deshacer")}Versiones</button>` : "")
+    + (n.terminal ? `<span>${ic("movil")}${esc(n.terminal)}</span>` : "")
+    + (n.ubicacion ? `<a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${n.ubicacion.lat},${n.ubicacion.lon}">${ic("pin")}Ver lugar</a>` : "");
+  if ($("#eHist")) $("#eHist").onclick = () => abrirHistorial(n);
+  pintarEnlaces();
+  const tr = n.transcripcion && n.transcripcion !== n.texto ? n.transcripcion : "";
+  $("#eTransc").textContent = tr ? "Dictado: " + tr : ""; $("#eTransc").classList.toggle("oculto", !tr);
+  const iaTxt = [n.ia?.resumen ? `<b>Resumen:</b> ${esc(n.ia.resumen)}` : "", n.ia?.textoFotos ? `<b>Texto de las fotos:</b> ${esc(n.ia.textoFotos).replace(/\n/g, "<br>")}` : ""].filter(Boolean).join("<br>");
+  const puedeTarjeta = ia() && !n.tarjeta && n.fotos?.length > 0;
+  $("#eIA").innerHTML = cajaAsignacion(n) + (iaTxt ? `<div class="ia-caja">${ic("spark")}<div>${iaTxt}</div></div>` : "") + (ia() ? `<button class="enl" id="eOrdenar">${ic("spark")}${n.ia ? "Volver a ordenar con IA" : "Ordenar con IA"}</button>` : "")
+    + (puedeTarjeta ? `<button class="enl" id="eATarjeta">${ic("user")}Es una tarjeta de visita: guardar sus datos</button>` : "")
+    + (ia() && fuenteGuion(n).length >= 300 && (n.audio || n.transcripcion || fuenteGuion(n).length >= 1500) ? `<button class="enl" id="eGuion">${ic("lista")}${n.guion ? "Rehacer el guion" : "Convertir en guion: resumen, puntos clave y desarrollo"} ${chipPlus("guion")}</button>` : "");
+  if ($("#eATarjeta")) $("#eATarjeta").onclick = async () => {
+    const b = $("#eATarjeta"); b.disabled = true; b.innerHTML = ic("spark") + "Leyendo la tarjeta…";
+    try { const c = notaDelEditor(); delete c._imagenes; Object.assign(editando, c); await convertirEnTarjeta(editando); cerrarHojas(); abrirEdicion(editando); refrescar();
+      toast("Guardada como tarjeta de visita. Ya puedes guardarla en tus contactos desde Compartir", "user", 6000); }
+    catch(e){ toast(e.message, "alerta", 5000); b.disabled = false; b.innerHTML = ic("user") + "Es una tarjeta de visita: guardar sus datos"; }
+  };
+  if ($("#eGuion")) $("#eGuion").onclick = () => conPlus("guion", async () => {
+    const b = $("#eGuion"); b.disabled = true; b.innerHTML = ic("spark") + "Preparando el guion…";
+    try { const c = notaDelEditor(); delete c._imagenes; Object.assign(editando, c); await crearGuion(editando); cerrarHojas(); abrirEdicion(editando); refrescar();
+      toast("Guion listo. El texto original sigue en la nota como «Dictado»; y puedes volver atrás desde Versiones", "check", 7000); }
+    catch(e){ toast(e.message, "alerta", 6000); b.disabled = false; b.innerHTML = ic("lista") + "Convertir en guion"; }
+  });
+  if ($("#eOrdenar")) $("#eOrdenar").onclick = async () => {
+    const b = $("#eOrdenar"); b.disabled = true; b.innerHTML = ic("spark") + "Pensando…";
+    try { const c = notaDelEditor(); delete c._imagenes; const r = await enriquecerNota(c), cambios = aplicarIA(c, r);
+      Object.assign(editando, c); await guardarNotaLocal(editando); cerrarHojas(); abrirEdicion(editando); refrescar();
+      toast(cambios.length ? `Ordenada: ${cambios.join(", ")}` : "No había nada que cambiar", "spark", 3500); if (editando.ia?.contactoFoto) ofrecerContacto(editando); }
+    catch(e){ toast(e.message, "alerta", 5000); b.disabled = false; b.innerHTML = ic("spark") + "Ordenar con IA"; }
+  };
+  $("#eHecha").innerHTML = n.hecha ? ic("deshacer") + `<span class="largo">Marcar pendiente</span><span class="corto">Pendiente</span>` : ic("check") + `<span class="largo">Marcar hecha</span><span class="corto">Hecha</span>`;
+  $("#eHecha").title = n.hecha ? "Volver a dejarla pendiente" : "Marcar como hecha"; $("#eHecha").classList.toggle("hecha-on", !n.hecha);
+  pintarOpciones(); pintarAdjEdicion();
+  $("#eSugs").innerHTML = "";
+  abrirHoja("#hEditar"); $("#hEditar").scrollTop = 0;
+  if (!original){
+    firmaInicial = firmaEditor();
+    const d = lsGet("chispa.edicion");
+    if (d?.id === n.id && JSON.stringify(d.campos) !== firmaInicial){
+      const c = {...n, ...d.campos, para: d.campos.para}; if (!d.campos.titulo) delete c.titulo;
+      abrirEdicion(c, n); toast("Recuperados los cambios que no llegaste a guardar", "deshacer", 5000); return;
+    }
+  }
+  requestAnimationFrame(() => { const t = $("#eTexto"); t.style.height = "auto"; t.style.height = Math.max(t.classList.contains("corto") ? 26 : 80, t.scrollHeight) + "px"; });
+}
+// Sugerencias de contactos bajo el campo (sin tapar el teclado ni el campo)
+function contactosConocidos(){
+  const m = new Map(), c = config.contactos || {};
+  for (const cat of LISTAS) for (const x of c[cat] || []) m.set(norm(x), {nombre: x, cat});
+  for (const n of notas) if (n.para?.nombre && !m.has(norm(n.para.nombre))) m.set(norm(n.para.nombre), {nombre: n.para.nombre, cat: n.para.categoria || ""});
+  return [...m.values()];
+}
+// Agenda del móvil: solo en memoria, mientras la app está abierta; nunca se sube a OneDrive
+let agenda = null, agendaT = 0;
+async function cargarAgenda(forzar = false){
+  if (!esApp() || lsGet("chispa.agendaSug") === false) return;
+  if (!forzar && agenda && Date.now() - agendaT < 10 * 60000) return;
+  try { const r = await nativo("ChispaNativo").contactos(); agenda = r.permiso ? (r.contactos || []) : null; agendaT = Date.now(); } catch(e){ agenda = null; }
+}
+function sugerenciasAgenda(q, conocidos){
+  if (!agenda || !q) return [];
+  const ya = new Set(conocidos.map(x => norm(x.nombre))), out = [];
+  for (const c of agenda){
+    if (norm(c.nombre).includes(q) && !ya.has(norm(c.nombre))){ out.push({nombre: c.nombre, cat: "", sub: c.empresa || "Agenda", agenda: true}); ya.add(norm(c.nombre)); }
+    if (c.empresa && norm(c.empresa).includes(q) && !ya.has(norm(c.empresa))){ out.push({nombre: c.empresa, cat: "", sub: "Empresa · agenda", agenda: true}); ya.add(norm(c.empresa)); }
+    if (out.length >= 6) break;
+  }
+  return out;
+}
+function pintarSugs(){
+  const q = norm($("#eNombre").value.trim()), cat = $("#eCat").value, caja = $("#eSugs"); delete caja.dataset.fijo;
+  const conocidos = contactosConocidos();
+  let l = conocidos.filter(x => !q || norm(x.nombre).includes(q));
+  if (l.some(x => norm(x.nombre) === q)) { caja.innerHTML = ""; return; }
+  const peso = x => (q && norm(x.nombre).startsWith(q) ? 0 : 2) + (cat && x.cat !== cat ? 1 : 0);
+  l = l.sort((a, b) => peso(a) - peso(b) || a.nombre.localeCompare(b.nombre)).slice(0, 8);
+  if (l.length < 8) l = [...l, ...sugerenciasAgenda(q, conocidos).slice(0, 8 - l.length)];
+  caja.innerHTML = l.map((x, i) => `<button type="button" class="sug ${x.agenda ? "sug-agenda" : ""}" data-s="${i}">${esc(x.nombre)}${x.sub ? `<small>${esc(x.sub)}</small>` : x.cat && x.cat !== cat ? `<small>${CAT[x.cat] || ""}</small>` : ""}</button>`).join("")
+    + (q ? `<span class="sug-nuevo">${l.length ? "o se guardará" : "Se guardará"} «${esc($("#eNombre").value.trim())}» como nuevo</span>` : "");
+  caja.querySelectorAll("[data-s]").forEach(b => {
+    b.onpointerdown = e => e.preventDefault();   // que el campo no pierda el foco antes de elegir
+    b.onclick = () => { const x = l[+b.dataset.s]; $("#eNombre").value = x.nombre; if (x.cat && !$("#eCat").value) $("#eCat").value = x.cat; caja.innerHTML = ""; $("#eNombre").blur(); };
+  });
+}
+$("#eNombre").addEventListener("focus", () => { cargarAgenda().then(() => { if (document.activeElement === $("#eNombre")) pintarSugs(); }); pintarSugs(); setTimeout(() => $("#eNombre").scrollIntoView({block: "center", behavior: "smooth"}), 350); });
+$("#eNombre").addEventListener("input", pintarSugs);
+const pintarVerFicha = () => { $("#eVerFicha").classList.toggle("oculto", !$("#eNombre").value.trim()); $("#eWa").classList.toggle("oculto", !$("#eNombre").value.trim()); $("#eAgenda").classList.toggle("oculto", !esApp()); };
+$("#eAgenda").onclick = async () => {
+  let r; try { r = await nativo("ChispaNativo").elegirContacto(); } catch(e){ toast(/not implemented|not a function/i.test(e.message || "") ? "Actualiza la app para usar la agenda" : "No se pudo abrir la agenda", "alerta", 4000); return; }
+  if (!r || r.cancelado || !r.nombre) return;
+  const poner = nom => { $("#eNombre").value = nom; delete $("#eSugs").dataset.fijo; $("#eSugs").innerHTML = ""; pintarVerFicha(); guardarEdicionPronto(); };
+  if (!r.empresa){ poner(r.nombre); return; }
+  // tiene empresa: elegir a quién asignar la nota
+  $("#eSugs").dataset.fijo = "1";
+  $("#eSugs").innerHTML = `<span class="sug-nuevo">¿A quién asignas la nota?</span><button type="button" class="sug" data-ag="${esc(r.empresa)}">${esc(r.empresa)}<small>Empresa</small></button><button type="button" class="sug" data-ag="${esc(r.nombre)}">${esc(r.nombre)}<small>Persona</small></button>`;
+  $("#eSugs").querySelectorAll("[data-ag]").forEach(b => b.onclick = () => poner(b.dataset.ag));
+};
+$("#eNombre").addEventListener("input", pintarVerFicha);
+$("#eVerFicha").onclick = async () => { const nom = $("#eNombre").value.trim(); if (!nom) return; if (hayCambiosEdicion()) await guardarEdicion(); else { olvidarEdicion(); cerrarHojas(); } lsSet("chispa.desdePersonas", false); ver("notas"); abrirBuzon("p:" + nom); };
+$("#eNombre").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); $("#eNombre").blur(); } });
+$("#eNombre").addEventListener("blur", () => setTimeout(() => { if (!$("#eSugs").dataset.fijo) $("#eSugs").innerHTML = ""; }, 150));
+$("#eCat").addEventListener("change", () => { if (document.activeElement === $("#eNombre")) pintarSugs(); });
+$("#eTexto").addEventListener("keydown", continuarLista);
+/* Escribir [] o [ ] (o [x]) al principio de una línea de la descripción la convierte al momento en casilla de lista */
+const RX_MARCA = /^\s*(?:[-*•]\s*)?\[( |x|X)?\]\s*(.*)$/;
+function absorberLista(){
+  if (!editando) return;
+  const tx = $("#eTexto"), quedan = [], nuevos = []; let hubo = false;
+  for (const l of tx.value.split("\n")){
+    const m = l.match(RX_MARCA);
+    if (!m){ quedan.push(l); continue; }
+    hubo = true; const t = m[2].trim();
+    if (t) nuevos.push({hecho: (m[1] || "").toLowerCase() === "x", texto: t});
+  }
+  if (!hubo) return;
+  tx.value = quedan.join("\n").replace(/\s+$/, "");   // en modo formato también actualiza la vista rica
+  if (modoRico) apuntarHistRico();
+  eItems = ordenarItems([...eItems, ...nuevos]); vibrar(20);
+  pintarListaEdicion(true);   // muestra la lista y deja el cursor en «Añadir un punto»
+}
+for (const id of ["#eTexto", "#eRico"]) $(id).addEventListener("input", () => setTimeout(absorberLista, 0));
+$("#eTexto").addEventListener("input", function(){ this.style.height = "auto"; this.style.height = Math.max(this.classList.contains("corto") ? 26 : 80, this.scrollHeight) + "px"; });
+function pausarAudio(){ try { audioEl && audioEl.pause(); } catch(e){} }
+function pintarAdjEdicion(){
+  const au = $("#eAudio"); au.innerHTML = ""; pausarAudio(); audioEl = null;
+  if (eAdj.audio){
+    au.innerHTML = `<div class="player"><button class="pp" id="pPlay" aria-label="Reproducir">${ic("play")}</button><div class="barra" id="pBarra"><i></i></div><span class="t" id="pT">Audio</span><button class="ibtn" id="pQuitar" aria-label="Quitar el audio">${ic("borrar")}</button></div>`;
+    const a = audioEl = new Audio(); a.preload = "metadata";
+    const fmt = s => isFinite(s) ? `${Math.floor(s/60)}:${pad(Math.floor(s%60))}` : "0:00";
+    urlAdjunto(eAdj.audio).then(u => a.src = u).catch(() => $("#pT").textContent = "Sin conexión");
+    a.ontimeupdate = () => { $("#pBarra i").style.width = (a.duration ? a.currentTime / a.duration * 100 : 0) + "%"; $("#pT").textContent = `${fmt(a.currentTime)} / ${fmt(a.duration)}`; };
+    a.onloadedmetadata = a.ontimeupdate;
+    a.onended = () => $("#pPlay").innerHTML = ic("play");
+    $("#pPlay").onclick = () => { if (a.paused){ a.play(); $("#pPlay").innerHTML = ic("pausa"); } else { a.pause(); $("#pPlay").innerHTML = ic("play"); } };
+    $("#pBarra").onclick = e => { const r = e.currentTarget.getBoundingClientRect(); if (a.duration) a.currentTime = (e.clientX - r.left) / r.width * a.duration; };
+    $("#pQuitar").onclick = () => { if (confirm("¿Quitar el audio de esta nota?")){ eAdj.quitar.push(eAdj.audio); eAdj.audio = null; pintarAdjEdicion(); } };
+  }
+  const g = $("#eFotos"); g.innerHTML = "";
+  const tarjetaFoto = (src, quitar, anotar, editable, retocar) => { const d = document.createElement("div"); d.className = "ft";
+    d.innerHTML = `<img alt=""><button class="x" aria-label="Quitar">${ic("x")}</button><button class="anotar" aria-label="${editable ? "Editar el dibujo" : "Anotar sobre la foto"}">${ic("pluma")}<span>${editable ? "Editar" : "Anotar"}</span></button>${editable ? "" : `<button class="editar" aria-label="Girar o recortar" title="Girar o recortar">${ic("recortar")}</button>`}`;
+    const img = d.querySelector("img"); src(img); img.onclick = () => verImagen(img.src); d.querySelector(".x").onclick = quitar; d.querySelector(".anotar").onclick = anotar;
+    if (d.querySelector(".editar")) d.querySelector(".editar").onclick = retocar; g.appendChild(d); };
+  eAdj.fotos.forEach(r => tarjetaFoto(img => urlAdjunto(r).then(u => img.src = u).catch(() => {}), () => { eAdj.quitar.push(r); eAdj.fotos = eAdj.fotos.filter(x => x !== r); pintarAdjEdicion(); },
+    () => anotarFoto({ruta: r}), !!eAdj.lienzos[r],
+    async () => { try { const b = await idb.blob(r) || await descargarRuta(r), nuevo = await editarImagen(b); if (!nuevo) return;
+      eAdj.quitar.push(r); eAdj.fotos = eAdj.fotos.filter(x => x !== r); eAdj.nuevas.push(await reducirFoto(nuevo)); pintarAdjEdicion(); guardarEdicionPronto(); toast("Foto cambiada. Pulsa Guardar para conservarla", "check"); }
+      catch(e){ toast("No se pudo abrir la foto", "alerta"); } }));
+  eAdj.nuevas.forEach((b, i) => tarjetaFoto(img => img.src = URL.createObjectURL(b instanceof Blob ? b : b.png), () => { eAdj.nuevas.splice(i, 1); pintarAdjEdicion(); },
+    () => anotarFoto({nueva: b}), !(b instanceof Blob),
+    async () => { const nuevo = await editarImagen(b); if (nuevo){ eAdj.nuevas[i] = await reducirFoto(nuevo); pintarAdjEdicion(); guardarEdicionPronto(); } }));
+  pintarArchEdicion();
+  if (!eAdj.audio && !eAdj.fotos.length && !eAdj.nuevas.length && !eAdj.archivos.length && !eAdj.nuevosArch.length) g.innerHTML = `<div class="sin-adj">Esta nota no tiene adjuntos.</div>`;
+}
+$("#eInFoto").onchange = async () => { for (const f of $("#eInFoto").files) eAdj.nuevas.push(await reducirFoto(f)); $("#eInFoto").value = ""; pintarAdjEdicion(); };
+$("#eBorrar").onclick = () => { if (confirm(`¿Borrar esta nota? Irá a la Papelera de Cuaderna en tu ${nube()}.`)){ olvidarEdicion(); cerrarHojas(); borrarNota(editando); } };
+$("#eHecha").onclick = async () => { editando.hecha = !editando.hecha; editando.hechaEn = editando.hecha ? new Date().toISOString() : null; await guardarEdicion(); toast(editando.hecha ? "Hecha" : "Pendiente de nuevo"); };
+$("#eGuardar").onclick = async () => { await guardarEdicion(); toast("Cambios guardados"); };
+$("#eCompartir").innerHTML = ic("compartir") + `<span class="largo">Compartir</span>`;
+$("#eCompartir").onclick = () => prepararEnviar();
+function prepararEnviar(){
+  const recientes = config.destinatarios || [];
+  $("#evRec").innerHTML = recientes.map(d => `<button class="opc" data-dest="${esc(d)}">${esc(d)}</button>`).join("");
+  $("#evPermiso").classList.toggle("oculto", !!lsGet("chispa.permCorreo")); $("#evCorreoB").classList.toggle("oculto", !lsGet("chispa.permCorreo"));
+  const imp = implicados(notaDelEditor()).map(p => p.nombre);
+  $("#evWaQuien").textContent = imp.length ? "Directo al chat de " + (imp.length > 2 ? imp.slice(0, 2).join(", ") + ` y ${imp.length - 2} más` : imp.join(" y ")) : "Directo al chat de quien elijas";
+  $("#hEnviar").classList.toggle("sin-correo", !conMS());
+  $("#evVcf").classList.toggle("oculto", !editando?.tarjeta);
+  $("#evMsg").value = ""; $("#evMsg").style.height = ""; abrirHoja("#hEnviar"); $("#hEditar").classList.add("on");
+}
+$("#evRec").addEventListener("click", e => { const b = e.target.closest("[data-dest]"); if (b) $("#evPara").value = b.dataset.dest; });
+$("#evPdf").onclick = () => { cerrarHojaEnviar(); compartirPdfEditor(); };
+$("#evVcf").onclick = () => { cerrarHojaEnviar(); if (editando) descargarVcf(editando); };
+$("#evPlantilla").onclick = () => guardarComoPlantilla();
+$("#evPermiso").onclick = async () => { if (hayCambiosEdicion()) await guardarEdicion(); lsSet("chispa.permCorreo", true); irALogin(false); };
+$("#evMsg").addEventListener("input", e => { const t = e.target; t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight + 2, innerHeight * .4) + "px"; });
+$("#evMsg").addEventListener("focus", e => setTimeout(() => e.target.scrollIntoView({block: "center", behavior: "smooth"}), 300));
+function cerrarHojaEnviar(){ $("#hEnviar").classList.remove("on"); }
+$("#evCerrar").onclick = cerrarHojaEnviar;
+$("#evCorreoB").onclick = async () => {
+  const para = $("#evPara").value.trim();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(para)){ toast("Escribe un correo válido", "alerta"); $("#evPara").focus(); return; }
+  const b = $("#evCorreoB"); b.disabled = true; b.textContent = "Enviando…";
+  try {
+    const n = notaDelEditor(), pdf = await notaEnPdf(n), datos = await new Promise(ok => { const f = new FileReader(); f.onload = () => ok(String(f.result).split(",")[1]); f.readAsDataURL(pdf); });
+    const p = partesNota(n), items = partirLista(n.texto).items, msg = $("#evMsg").value.trim();
+    const html = `<div style="font-family:Segoe UI,Roboto,Arial,sans-serif;color:#2B1D14;max-width:620px">${msg ? `<p style="font-size:15px">${esc(msg).replace(/\n/g, "<br>")}</p>` : ""}
+      <div style="border:1px solid #E4E8EF;border-radius:14px;padding:14px 16px"><div style="font-weight:700;font-size:17px">${esc(p.titulo || p.vacio || "Nota")}</div>
+      ${p.desc ? `<div style="margin-top:6px;color:#4A5670">${esc(p.desc)}</div>` : ""}
+      ${items.length ? `<ul style="margin:8px 0 0;padding-left:20px">${items.map(i => `<li${i.hecho ? ' style="color:#A3ACBD;text-decoration:line-through"' : ""}>${esc(i.texto)}</li>`).join("")}</ul>` : ""}
+      ${n.fecha ? `<div style="margin-top:8px;color:#66728A;font-size:13px">Fecha: ${esc(fechaLarga(n.fecha))}${n.hora ? " a las " + esc(n.hora) : ""}</div>` : ""}</div>
+      <p style="font-size:12px;color:#A3ACBD">Enviado desde Cuaderna. La nota completa va en el PDF adjunto.</p></div>`;
+    const r = await graph("https://graph.microsoft.com/v1.0/me/sendMail", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({message: {
+      subject: (tituloPlano(n) || "Nota de Cuaderna").slice(0, 120), body: {contentType: "HTML", content: html}, toRecipients: [{emailAddress: {address: para}}],
+      attachments: [{"@odata.type": "#microsoft.graph.fileAttachment", name: nombrePdf(n), contentType: "application/pdf", contentBytes: datos}]}, saveToSentItems: true})});
+    if (r.status === 401 || r.status === 403){ lsSet("chispa.permCorreo", false); throw new Error("Falta el permiso de correo. Pulsa «Dar permiso para enviar»"); }
+    if (!r.ok) throw await errorDe(r, "al enviar el correo");
+    config.destinatarios = [para, ...(config.destinatarios || []).filter(d => d !== para)].slice(0, 8); guardarConfig();
+    cerrarHojaEnviar(); toast(`Nota enviada a ${para}`, "mail", 4000);
+  } catch(e){ toast(e.message || "No se pudo enviar", "alerta", 6000); prepararEnviar(); }
+  finally { b.disabled = false; b.innerHTML = ic("mail") + "Enviar por correo"; }
+};
+async function compartirPdfEditor(){
+  const b = $("#eCompartir"); if (b.disabled) return; b.disabled = true; b.classList.add("cargando");
+  try {
+    const n = notaDelEditor(), blob = await notaEnPdf(n), nombre = nombrePdf(n);
+    await compartirArchivo(blob, nombre, tituloPlano(n) || "Nota de Cuaderna");
+  } catch(e){ console.warn(e); toast(e.message || "No se pudo preparar el PDF", "alerta", 5000); }
+  finally { b.disabled = false; b.classList.remove("cargando"); }
+};
+/* ================= Servidor de Cuaderna: acceso, IA y voz sin repartir claves, sugerencias ================= */
+const apiBase = () => (lsGet("chispa.api") || API || window.CUADERNA_API || "").replace(/\/+$/, "");
+const estadistica = e => { try { if (apiBase() && !lsGet("chispa.api")) window.cuadernaEvento?.(e); } catch(err){} };
+document.addEventListener("click", e => { if (e.target.closest(".firma-enl")) estadistica("visita_astillero"); });   // solo se cuenta el total del día, sin saber quién
+let acceso = lsGet("chispa.acceso") || null;      // {estado, admin, ia, voz, t}
+const expDe = t => { try { return JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).exp * 1000; } catch(e){ return 0; } };
+async function idToken(){
+  let t = lsGet("chispa.idt");
+  if ((!t || expDe(t) < Date.now() + 120e3) && token?.refresh){ try { await renovarToken({grant_type: "refresh_token", refresh_token: token.refresh}); } catch(e){} t = lsGet("chispa.idt"); }
+  if (!t) throw modoLocal() ? errLocal() : new Error("Vuelve a entrar para identificarte");
+  return t;
+}
+async function api(ruta, {metodo = "POST", cuerpo, tipo = "application/json", crudo = false} = {}){
+  const r = await fetch(`${apiBase()}/${ruta}`, {method: metodo, headers: {"Authorization": "Bearer " + await idToken(), ...(cuerpo !== undefined ? {"Content-Type": tipo} : {})},
+    body: cuerpo === undefined ? undefined : tipo === "application/json" ? JSON.stringify(cuerpo) : cuerpo});
+  if (crudo) return r;
+  let j = {}; try { j = await r.json(); } catch(e){}
+  if (!r.ok) throw Object.assign(new Error(j.error || `Servidor (${r.status})`), {status: r.status});
+  return j;
+}
+// false solo si el servidor ha dicho expresamente que esta cuenta está pendiente o bloqueada
+/* ================= Cuaderna Plus ================= */
+// Funciones Plus. Mientras el servidor no tenga PLUS_EXIGIDO=1, todo el mundo las tiene (con la etiqueta «Plus»).
+// Importar (OneNote, Evernote) es gratis para todos: es la puerta de entrada. Plus cobra lo que se usa después, día a día.
+// Si alguien deja Plus, conserva todo lo que creó: solo deja de poder crear más con estas funciones.
+const FUNCIONES_PLUS = {
+  iaSinLimite: ["IA y voz sin límite diario", "Ordena notas, lee fotos y pasa la voz a texto todo lo que quieras"],
+  borrarLibreta: ["Borrar una libreta con sus notas", "Borra de una vez una libreta, las que tiene dentro y todas sus notas, con opción de deshacer"],
+  revision: ["Revisión de Cuaderna", "Encuentra notas olvidadas, repetidas, vacías y lo que más ocupa, para que tu cuaderno no crezca sin control"],
+  jerarquia: ["Libretas dentro de libretas", "Organiza en varios niveles, como en OneNote"],
+  tarjetasLote: ["Libreta a contactos", "Lee todas las tarjetas de visita de una libreta, te avisa de los datos dudosos y las pasa a tus contactos de una vez"],
+  guion: ["Guion de tus grabaciones", "Convierte un audio largo, como una clase o una reunión, en un guion ordenado con resumen, puntos clave y todo el contenido"],
+};
+const plusExigido = () => !!acceso?.plusExigido;
+const esPlus = () => !plusExigido() || acceso?.plan === "plus" || acceso?.plan === "fundador" || !!acceso?.admin;
+const chipPlus = clave => `<span class="plus-chip" title="${plusExigido() ? "Función de Cuaderna Plus" : "Función de Cuaderna Plus, incluida gratis durante la prueba"}">Plus</span>`;
+function conPlus(clave, accion){ if (esPlus()) return accion(); abrirPlus(clave); }
+function abrirPlus(clave){
+  estadistica("plus_ver");
+  const f = FUNCIONES_PLUS[clave], fondo = document.createElement("div"); fondo.className = "elegir-coche";
+  fondo.innerHTML = `<div class="ec-caja plus-caja" role="dialog" aria-label="Cuaderna Plus"><h3>${f ? esc(f[0]) + " es de " : ""}Cuaderna <span class="plus-chip grande">Plus</span></h3>
+    <p>Cuaderna es gratis para anotar, organizar y recordar. Plus añade las herramientas para quien la usa a fondo:</p>
+    <ul class="plus-lista">${Object.entries(FUNCIONES_PLUS).map(([k, [t, d]]) => `<li class="${k === clave ? "on" : ""}"><b>${esc(t)}</b><small>${esc(d)}</small></li>`).join("")}</ul>
+    <p class="plus-nota">Importar de OneNote y Evernote es gratis para todos. Si algún día dejas Plus, no pierdes nada de lo que hayas creado.<br>Todavía no se puede contratar. Si te interesa, avísanos y serás de los primeros en tenerla.</p>
+    <div class="on-pie"><button class="btn sec" data-x>Ahora no</button><button class="btn" data-quiero>Me interesa</button></div></div>`;
+  document.body.appendChild(fondo);
+  const cerrar = () => fondo.remove();
+  fondo.onclick = e => { if (e.target === fondo || e.target.closest("[data-x]")) cerrar(); if (e.target.closest("[data-quiero]")){ estadistica("plus_interes"); cerrar(); toast("¡Apuntado! Te avisaremos cuando Plus esté disponible", "check", 5000); } };
+}
+// Tope diario de IA o voz del plan gratis o de fundador: se avisa una vez al día, con la puerta a Plus
+function avisarLimite(que){
+  const k = "chispa.limite" + que, hoyS = new Date().toISOString().slice(0, 10);
+  if (lsGet(k) === hoyS) return; lsSet(k, hoyS);
+  toast(`Has usado ${que === "ia" ? "la IA" : "la voz a texto"} todo lo que incluye tu plan hoy. Mañana vuelve a estar disponible${acceso?.plan === "fundador" ? "; como fundador, Plus te sale a mitad de precio" : ""}`, "spark", 12000, () => abrirPlus("iaSinLimite"), "Ver Plus");
+}
+async function comprobarAcceso(){
+  if (!apiBase()) return true;
+  try { acceso = {...await api("registro", {cuerpo: {version: VERSION}}), t: Date.now()}; lsSet("chispa.acceso", acceso); } catch(e){ console.warn(e); }
+  return !acceso || acceso.estado === "autorizado";
+}
+// ---------- mensajes del equipo de Cuaderna: llegan como una nota más y el portal ve si se recibió y se abrió ----------
+async function recibirMensajes(){
+  const l = acceso?.mensajes || []; if (!l.length || !Array.isArray(notas)) return;
+  let nuevas = 0;
+  for (const m of l){
+    if (!/^[0-9a-z]{10,40}$/.test(String(m.id || ""))) continue;
+    if (!notas.some(x => x.deEquipo?.id === m.id)){
+      const ahora = new Date(), n = notaBase(ahora);
+      Object.assign(n, {titulo: String(m.titulo || "").slice(0, 140), texto: String(m.texto || "").slice(0, 6000), ambito: m.ambito === "trabajo" ? "trabajo" : "personal",
+        origen: "equipo", terminal: "Equipo Cuaderna", nocturna: false, deEquipo: {id: m.id}});
+      await guardarNotaLocal(n); nuevas++;
+    }
+    try { await api("mensaje/estado", {cuerpo: {id: m.id, e: "recibida"}}); } catch(e){ console.warn(e); }
+  }
+  acceso.mensajes = []; lsSet("chispa.acceso", acceso);
+  if (nuevas){
+    if (vista === "hoy") ver("hoy");
+    const n = notas.filter(x => x.deEquipo).sort((a, b) => b.creada.localeCompare(a.creada))[0];
+    toast(nuevas > 1 ? `Tienes ${nuevas} notas nuevas del equipo de Cuaderna` : "Tienes una nota del equipo de Cuaderna", "spark", 9000, () => abrirEdicion(n), "Abrir");
+  }
+}
+function mensajeLeido(n){
+  if (!n?.deEquipo || n.deEquipo.leida || !apiBase()) return;
+  api("mensaje/estado", {cuerpo: {id: n.deEquipo.id, e: "leida"}}).then(() => { n.deEquipo.leida = new Date().toISOString(); idb.poner(n); }).catch(() => {});
+}
+// la app puede pasar días abierta en el móvil: al volver a ella, si hace más de 6 h que no se preguntó, se mira si hay mensajes
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible" || !acceso || !apiBase() || Date.now() - (acceso.t || 0) < 6 * 3600e3) return;
+  comprobarAcceso().then(() => setTimeout(recibirMensajes, 1500)).catch(() => {});
+});
+function mostrarEspera(){
+  $("#app").classList.add("oculto"); $("#espera").classList.remove("oculto");
+  $("#esperaMsg").textContent = acceso?.estado === "bloqueado" ? "Esta cuenta no tiene acceso a Cuaderna." : "Tu solicitud de acceso está enviada. En cuanto te autoricen, vuelve a abrir Cuaderna.";
+  $("#esperaQuien").textContent = lsGet("chispa.usuario") || "";
+  $("#esperaOtra").onclick = async () => { $("#esperaOtra").textContent = "Comprobando…"; if (await comprobarAcceso()) location.reload(); else { $("#esperaOtra").textContent = "Comprobar de nuevo"; toast("Todavía no está autorizada", "alerta", 3000); } };
+  $("#esperaMsjBtn").onclick = abrirSugerencia;
+  $("#esperaSalir").onclick = () => { const g = esGoogle(); ["chispa.token", "chispa.idt", "chispa.acceso", "chispa.proveedor", "chispa.admCache", "chispa.onTok"].forEach(k => localStorage.removeItem(k)); if (g){ location.href = REDIRECT; return; } location.href = `${AUTH}/logout?post_logout_redirect_uri=${encodeURIComponent(REDIRECT)}`; };
+}
+// ---------- sugerencias ----------
+let sgTipo = "idea";
+function abrirSugerencia(){ $("#sgTexto").value = lsGet("chispa.sugBorrador") || ""; abrirHoja("#hSugerencia"); setTimeout(() => $("#sgTexto").focus(), 250); }
+$("#sgCerrar").onclick = () => { lsSet("chispa.sugBorrador", $("#sgTexto").value); cerrarHojas(); };
+$("#sgTipo").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b) return; sgTipo = b.dataset.t; $("#sgTipo").querySelectorAll(".opc").forEach(x => x.classList.toggle("on", x === b)); });
+async function enviarSugerencia(s){ await api("sugerencia", {cuerpo: s}); }
+$("#sgEnviar").onclick = async () => {
+  const texto = $("#sgTexto").value.trim(); if (!texto){ toast("Escribe tu sugerencia", "alerta"); return; }
+  const s = {tipo: sgTipo, texto, version: VERSION + (esApp() ? ` · app ${infoApp?.version || ""}` : ""), dispositivo: (disp.terminal || "") + " · " + navigator.userAgent.slice(0, 60)};
+  if (!apiBase()){ toast("Las sugerencias aún no están activadas", "alerta", 4000); return; }
+  const b = $("#sgEnviar"); b.disabled = true;
+  try { await enviarSugerencia(s); toast("¡Gracias! Sugerencia enviada", "check", 3500); }
+  catch(e){ lsSet("chispa.sugPend", [...(lsGet("chispa.sugPend") || []), s]); toast("Sin conexión: se enviará más tarde", "nube", 4000); }
+  finally { b.disabled = false; }
+  localStorage.removeItem("chispa.sugBorrador"); $("#sgTexto").value = ""; cerrarHojas();
+};
+async function enviarSugerenciasPendientes(){
+  const l = lsGet("chispa.sugPend") || []; if (!l.length || !apiBase()) return;
+  const quedan = []; for (const s of l){ try { await enviarSugerencia(s); } catch(e){ quedan.push(s); } }
+  lsSet("chispa.sugPend", quedan);
+}
+// La administración de Cuaderna (personas, planes, sugerencias, correos y difusión) se hace desde el portal interno
+// de Astillero (portal.astillerosoftware.es), que usa las rutas admin/* del servidor con su propia llave.
+
+/* ================= Pasar notas a otras personas ================= */
+// El paquete viaja dentro del enlace (comprimido) o, si es largo, cifrado en el servidor con la llave solo en el enlace.
+const b64aBytes = t => Uint8Array.from(atob(t.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((t.length + 3) % 4)), c => c.charCodeAt(0));
+async function empaquetar(obj){
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  if (window.CompressionStream){ try { const st = new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate-raw")); return "z" + b64url(await new Response(st).arrayBuffer()); } catch(e){} }
+  return "j" + b64url(bytes);
+}
+// Enlaces cortos cifrados: el servidor solo guarda texto cifrado; la llave va en el enlace, tras «#», y nunca le llega
+async function llaveDe(b){ return crypto.subtle.importKey("raw", b, "AES-GCM", false, ["encrypt", "decrypt"]); }
+async function descifrarCorto(datos, llave){
+  const b = b64aBytes(datos), clave = await llaveDe(b64aBytes(llave));
+  const claro = await crypto.subtle.decrypt({name: "AES-GCM", iv: b.slice(0, 12)}, clave, b.slice(12));
+  return new TextDecoder().decode(claro);
+}
+async function desempaquetar(t){
+  if (t[0] === "c"){
+    const [id, llave] = t.slice(1).split(".");
+    const r = await fetch(`${apiBase()}/corto/${encodeURIComponent(id)}`); if (!r.ok) throw new Error("Enlace caducado"); t = (await r.json()).d;
+    if (t[0] === "e"){ if (!llave) throw new Error("Al enlace le falta un trozo"); t = await descifrarCorto(t.slice(1), llave); }
+  }
+  const bytes = b64aBytes(t.slice(1));
+  if (t[0] === "z"){ const st = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw")); return JSON.parse(await new Response(st).text()); }
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+// Tu nombre: el que pusiste, o el de tu cuenta de Microsoft (en el token de inicio de sesión)
+function nombreCuenta(){
+  let n = lsGet("chispa.nombre") || "";
+  if (!n){ try { const t = lsGet("chispa.idt"); if (t){ const d = JSON.parse(decodeURIComponent(escape(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))))); n = d.name || ""; if (n) lsSet("chispa.nombre", n); } } catch(e){} }
+  return n.trim();
+}
+const miNombre = () => config.miNombre || nombreCuenta() || (lsGet("chispa.usuario") || "").split("@")[0] || "Alguien";
+const SELLO_CORREO = '<span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:#A8322D;color:#FBF3E4;text-align:center;font-family:Georgia,serif;font-size:15px;line-height:24px;vertical-align:2px">C</span>';
+const cabCorreo = t => `<div style="background:#2B1D14;color:#FBF3E4;border-radius:16px;padding:16px 20px;font-family:Georgia,serif;font-size:20px;font-weight:700">${SELLO_CORREO} Cuaderna<div style="font-family:Segoe UI,Roboto,Arial,sans-serif;font-size:14px;font-weight:400;opacity:.85;margin-top:4px">${esc(t)}</div></div>`;
+const botonCorreo = (url, t) => `<p style="margin:22px 0"><a href="${url}" style="background:#A8322D;color:#FBF3E4;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:12px;display:inline-block">${esc(t)}</a></p>`;
+const fechaCorreo = f => f ? capital(fechaLarga(f)) : "";
+
+function cajaAsignacion(n){
+  const cuando = d => d ? fechaRelativaCorta(d) : "";
+  if (n.recibida){ const r = n.recibida;
+    return `<div class="asig-caja">${ic("mail")}<div><b>Te la asignó ${esc(r.de?.n || r.de?.e || "")}</b>${r.motivo ? `: <q>${esc(r.motivo)}</q>` : ""}<small>Recibida ${esc(cuando(r.en))}${r.limite ? " · Para " + esc(fechaRelativa(r.limite)) : ""}${r.avisada ? ` · Ya le avisaste de que está hecha` : n.hecha ? "" : ` · Al marcarla hecha se lo diremos`}</small></div></div>`; }
+  if (n.asignada){ const a = n.asignada, quien = esc(a.a?.n || a.a?.e || "");
+    return `<div class="asig-caja">${ic(a.estado === "hecha" ? "check" : "flecha")}<div><b>${a.estado === "hecha" ? `${quien} la terminó` : `Asignada a ${quien}`}</b>${a.motivo ? `: <q>${esc(a.motivo)}</q>` : ""}<small>Enviada ${esc(cuando(a.en))}${a.limite ? " · Para " + esc(fechaRelativa(a.limite)) : ""}${a.estado === "hecha" ? " · Hecha " + esc(cuando(a.hechaEn)) : a.vistaEn ? ` · La abrió ${esc(cuando(a.vistaEn))}${a.progreso ? ` · Lleva ${esc(a.progreso.replace("/", " de "))}` : ""}` : " · Aún no la ha abierto"}</small>${a.comentario ? `<small>«${esc(a.comentario)}»</small>` : ""}</div></div>`; }
+  return "";
+}
+
+/* ================= WhatsApp a los implicados en la nota ================= */
+// Número en formato internacional sin «+» (lo que entiende WhatsApp); los móviles españoles de 9 cifras llevan 34 delante
+const waNum = t => { let d = String(t || "").trim().replace(/[^\d+]/g, ""); if (d.startsWith("+")) d = d.slice(1); else if (d.startsWith("00")) d = d.slice(2); else if (/^[6789]\d{8}$/.test(d)) d = "34" + d; return d.replace(/\D/g, ""); };
+const waValido = d => d.length >= 10 && d.length <= 15;
+const escRx = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+// Teléfonos de las tarjetas de visita guardadas (el móvil primero)
+function telDeTarjetas(nombre){
+  const k = norm(nombre), out = [];
+  for (const n of deNotas()){
+    if (!n.tarjeta) continue;
+    const lineas = String(n.texto || "").split("\n");
+    if (norm(n.para?.nombre) !== k && !norm(n.titulo).split("@").includes(k) && !lineas.some(l => norm(l) === k || norm(l).startsWith(k + ","))) continue;
+    for (const l of lineas){ const m = l.match(/^(Móvil|Teléfono):\s*(.+)$/); if (m) out.push({tel: m[2].trim(), movil: m[1] === "Móvil"}); }
+  }
+  return out.sort((a, b) => b.movil - a.movil);
+}
+// Quién está implicado: «Para quién» y los contactos conocidos que aparecen en el título o el texto
+function implicados(n){
+  const lista = [], ya = new Set(), add = (nombre, origen) => { const k = norm(nombre).trim(); if (!k || ya.has(k)) return; ya.add(k); lista.push({nombre: nombre.trim(), origen}); };
+  if (n.para?.nombre) add(n.para.nombre, "Para quién");
+  const txt = " " + norm(planoMd(n.texto || "") + " " + (n.titulo || "")).replace(/\s+/g, " ") + " ";
+  const conocidos = [...Object.values(config.contactos || {}).flat(), ...Object.values(config.telefonos || {}).map(t => t.nombre)].filter(x => typeof x === "string");
+  for (const c of conocidos){ const k = norm(c).trim(); if (k.length >= 3 && new RegExp(`[^a-z0-9ñ]${escRx(k)}[^a-z0-9ñ]`).test(txt)) add(c, "En la nota"); }
+  return lista;
+}
+function textoWa(n){
+  const pl = partirLista(n.texto), tit = tituloPlano(n), l = [];
+  if (tit && !n.ancla) l.push(`*${tit}*`);
+  const desc = planoMd(pl.intro || "").trim(); if (desc && desc !== tit) l.push(desc);
+  if (n.fecha) l.push(`📅 ${capital(fechaLarga(n.fecha))}${n.hora ? ", a las " + n.hora : ""}`);
+  if (pl.items.length) l.push([...pl.items.filter(i => !i.hecho).map(i => "☐ " + i.texto), ...pl.items.filter(i => i.hecho).map(i => "☑ " + i.texto)].join("\n"));
+  return l.join("\n\n");
+}
+let waFilas = [];
+async function abrirWa(){
+  cerrarHojaEnviar();
+  const n = notaDelEditor();
+  waFilas = implicados(n).map(p => ({...p, tel: "", enviado: false}));
+  // teléfono: el guardado en Cuaderna, el de una tarjeta de visita o el de la agenda del móvil
+  for (const f of waFilas){ const g = (config.telefonos || {})[norm(f.nombre)]; f.tel = g?.tel || telDeTarjetas(f.nombre)[0]?.tel || ""; }
+  if (esApp() && waFilas.some(f => !f.tel)){
+    try { const r = await nativo("ChispaNativo").telefonos({nombres: waFilas.filter(f => !f.tel).map(f => f.nombre)});
+      for (const f of waFilas) if (!f.tel){ const l = r?.telefonos?.[f.nombre] || []; f.tel = (l.find(t => t.movil) || l[0])?.tel || ""; } } catch(e){}
+  }
+  $("#waMsg").value = textoWa(n);
+  $("#waPdfL").classList.toggle("oculto", !esApp()); $("#waPdf").checked = false;
+  pintarWa(); abrirHoja("#hWa"); $("#hEditar").classList.add("on");
+  requestAnimationFrame(() => crecer($("#waMsg")));
+  if (!waFilas.length) setTimeout(() => $("#waOtro").click(), 300);
+}
+function pintarWa(){
+  $("#waLista").innerHTML = waFilas.map((f, i) => {
+    const nom = f.nombre || "Otra persona", corto = (f.nombre || "").split(/\s+/)[0];
+    return `<div class="wa-fila ${f.enviado ? "hecho" : ""}">
+    <div class="wa-arr"><div class="wa-av">${esc(nom.trim()[0] || "?").toUpperCase()}</div>
+      <div class="wa-nom">${esc(nom)}<small>${esc(f.origen || "")}</small></div>${f.enviado ? `<span class="wa-ok">${ic("check")}Enviado</span>` : ""}</div>
+    <div class="wa-tel"><input type="${f.nombre ? "tel" : "text"}" inputmode="${f.nombre ? "tel" : "text"}" data-wat="${i}" value="${esc(f.tel)}" placeholder="${f.nombre ? "Su móvil" : "Nombre o móvil"}" autocomplete="off" enterkeyhint="send">${esApp() ? `<button class="wa-ag" data-waag="${i}" type="button" aria-label="Elegir de la agenda">${ic("user")}</button>` : ""}</div>
+    <button class="wa-env ${f.enviado ? "hecho" : ""}" data-wae="${i}" type="button">${ic("wa")}${f.enviado ? "Enviar otra vez" : corto ? "Enviar a " + esc(corto) : "Enviar"}</button></div>`; }).join("")
+    || `<div class="as-ayuda">No hay nadie en «Para quién» ni contactos conocidos en la nota. Añade a quien quieras.</div>`;
+}
+let waSugLista = [], waSugFila = -1;
+$("#waLista").addEventListener("input", e => { const i = e.target.dataset.wat; if (i === undefined) return; waFilas[+i].tel = e.target.value;
+  const fila = e.target.closest(".wa-fila"); let caja = fila.querySelector(".as-sugs"); if (!caja){ caja = document.createElement("div"); caja.className = "as-sugs"; fila.querySelector(".wa-tel").after(caja); }
+  waSugFila = +i; waSugLista = waFilas[+i].nombre ? [] : buscarPersonas(e.target.value, true); caja.innerHTML = htmlSugs(waSugLista); });
+$("#waLista").addEventListener("focusin", e => { if (e.target.dataset.wat !== undefined) cargarAgenda(); });
+$("#waLista").addEventListener("click", e => { const b = e.target.closest("[data-sp]"); if (!b) return; e.stopPropagation(); const p = waSugLista[+b.dataset.sp], f = waFilas[waSugFila]; if (!p || !f) return;
+  f.nombre = p.n; f.tel = p.tel; f.origen = p.sub || ""; pintarWa(); }, true);
+$("#waLista").addEventListener("click", async e => {
+  const ag = e.target.closest("[data-waag]");
+  if (ag){ const f = waFilas[+ag.dataset.waag];
+    try { const r = await nativo("ChispaNativo").elegirTelefono(); if (r && !r.cancelado && r.tel){ f.tel = r.tel; if (!f.nombre) f.nombre = r.nombre || ""; pintarWa(); } }
+    catch(err){ toast("Actualiza la app para elegir de la agenda", "subir", 5000); } return; }
+  const b = e.target.closest("[data-wae]"); if (!b) return;
+  const f = waFilas[+b.dataset.wae], d = waNum(f.tel);
+  if (!waValido(d)){ toast("Escribe un móvil válido (con prefijo si no es de España)", "alerta", 4000); $(`[data-wat="${b.dataset.wae}"]`)?.focus(); return; }
+  if (f.nombre){ config.telefonos = {...(config.telefonos || {}), [norm(f.nombre)]: {nombre: f.nombre, tel: f.tel.trim()}}; guardarConfig(); }
+  b.disabled = true;
+  try { await enviarWa(d, $("#waMsg").value.trim(), $("#waPdf").checked); f.enviado = true; }
+  catch(err){ toast(err.message || "No se pudo abrir WhatsApp", "alerta", 5000); }
+  finally { pintarWa(); }
+});
+$("#waOtro").onclick = async () => {
+  if (esApp()){
+    try { const r = await nativo("ChispaNativo").elegirTelefono(); if (!r || r.cancelado) return;
+      if (r.tel){ waFilas.push({nombre: r.nombre || "", origen: "De la agenda", tel: r.tel, enviado: false}); pintarWa(); return; } } catch(e){}
+  }
+  waFilas.push({nombre: "", origen: "Escribe su nombre o su móvil", tel: "", enviado: false}); pintarWa();
+  setTimeout(() => $(`[data-wat="${waFilas.length - 1}"]`)?.focus(), 50);
+};
+async function enviarWa(tel, texto, conPdf){
+  if (esApp()){
+    const nat = nativo("ChispaNativo");
+    try {
+      if (conPdf){ const n = notaDelEditor(), blob = await notaEnPdf(n);
+        const datos = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(String(fr.result).split(",")[1]); fr.readAsDataURL(blob); });
+        await nat.whatsapp({tel, texto, datos, nombre: nombrePdf(n)}); }
+      else await nat.whatsapp({tel, texto});
+      return;
+    } catch(e){
+      if (!/not implemented|not a function/i.test(String(e?.message || e))) throw e;
+      if (conPdf) toast("Para enviar el PDF directo al chat, actualiza la app. Va solo el texto", "subir", 6000);
+    }
+  }
+  const url = `https://wa.me/${tel}?text=${encodeURIComponent(texto)}`;
+  if (esApp()){ const nat = nativo("ChispaNativo"); try { if (nat?.abrirUrl){ await nat.abrirUrl({url}); return; } } catch(e){} location.href = url; return; }
+  const w = window.open(url, "_blank", "noopener"); if (!w) location.href = url;
+}
+const cerrarWa = () => $("#hWa").classList.remove("on");
+$("#waCerrar").onclick = cerrarWa; $("#waX").onclick = cerrarWa; $("#waListo").onclick = cerrarWa;
+$("#waLista").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.dataset.wat !== undefined){ e.preventDefault(); $(`[data-wae="${e.target.dataset.wat}"]`)?.click(); } });
+$("#evWa").onclick = abrirWa;
+$("#eWa").onclick = abrirWa;
+
+let asCanal = lsGet("chispa.asCanal") || "wa";
+// Personas a las que pasar la nota: los implicados en ella y con quien ya has compartido (con su móvil o correo)
+function personasParaPasar(n){
+  const out = [], ya = new Set(), add = (p) => { const k = norm(p.n || p.e || p.tel).trim(); if (!k || ya.has(k)) return; ya.add(k); out.push(p); };
+  const telDe = nom => (config.telefonos || {})[norm(nom)]?.tel || telDeTarjetas(nom)[0]?.tel || "";
+  for (const p of implicados(n)) add({n: p.nombre, tel: telDe(p.nombre), e: (config.companerosCorreo || []).find(c => norm(c.n) === norm(p.nombre))?.e || "", deNota: true});
+  for (const p of config.personasPasar || []) add(p);
+  for (const c of config.companerosCorreo || []) add({n: c.n, e: c.e, tel: c.n ? telDe(c.n) : ""});
+  return out.slice(0, 10);
+}
+let asPersonas = [];
+// Directorio para sugerir: tus teléfonos guardados, con quien ya compartiste, tus tarjetas de visita y la agenda del móvil
+function directorioPersonas(){
+  const out = [], ya = new Map();
+  const add = (n, tel, e, sub) => { n = String(n || "").trim(); tel = String(tel || "").trim(); const k = norm(n) || waNum(tel) || norm(e); if (!k) return;
+    const prev = ya.get(k); if (prev){ if (!prev.tel && tel) prev.tel = tel; if (!prev.e && e) prev.e = e; return; }
+    const p = {n, tel, e: e || "", sub}; ya.set(k, p); out.push(p); };
+  for (const p of config.personasPasar || []) add(p.n, p.tel, p.e, "Ya compartiste con ella");
+  for (const t of Object.values(config.telefonos || {})) add(t.nombre, t.tel, "", "Guardado en Cuaderna");
+  for (const c of config.companerosCorreo || []) add(c.n, "", c.e, "Correo");
+  for (const n of deNotas()) if (n.tarjeta){ const persona = String(n.titulo || "").split("@")[1] || n.para?.nombre; const t = telDeTarjetas(n.para?.nombre || persona)[0]?.tel || ""; if (persona) add(persona, t, "", "Tarjeta de visita" + (n.para?.nombre && n.para.nombre !== persona ? " · " + n.para.nombre : "")); }
+  for (const c of agenda || []){ const l = c.tels || []; const t = (l.find(x => x.movil) || l[0])?.tel || ""; if (t) add(c.nombre, t, "", c.empresa ? "Agenda · " + c.empresa : "Agenda"); }
+  return out;
+}
+function buscarPersonas(q, soloConTel){
+  const k = norm(q).trim(), dig = String(q).replace(/\D/g, ""); if (!k && dig.length < 3) return [];
+  const dir = directorioPersonas().filter(p => !soloConTel || p.tel);
+  const puntos = p => { const n = norm(p.n); if (dig.length >= 3 && waNum(p.tel).includes(dig.replace(/^0+/, ""))) return 3; if (n.startsWith(k)) return 2; if (n.split(/\s+/).some(w => w.startsWith(k))) return 1.5; if (k.length >= 3 && n.includes(k)) return 1; return 0; };
+  return dir.map(p => [puntos(p), p]).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0]).slice(0, 6).map(x => x[1]);
+}
+function htmlSugs(lista){ return lista.map((p, i) => `<button class="as-sug" type="button" data-sp="${i}"><span class="wa-av">${esc((p.n || "?")[0]).toUpperCase()}</span><span><b>${esc(p.n || p.tel)}</b><small>${esc([p.tel, p.e, p.sub].filter(Boolean).join(" · "))}</small></span></button>`).join(""); }
+let asSugLista = [], asTelAuto = null;   // nombre de la persona cuyo número se puso solo
+function sugerirAsignar(q){
+  asSugLista = buscarPersonas(q, asCanal === "wa").filter(p => asCanal === "wa" || p.e);
+  $("#asSugs").innerHTML = htmlSugs(asSugLista);
+}
+for (const id of ["#asNombre", "#asTel", "#asPara"]){
+  $(id).addEventListener("input", e => {
+    if (e.target.id === "asNombre"){
+      if (/^[+\d\s]{3,}$/.test(e.target.value)){ $("#asTel").value = e.target.value.replace(/[^\d+\s]/g, ""); asTelAuto = null; }
+      else if (asTelAuto !== null && norm(e.target.value) !== norm(asTelAuto)){ $("#asTel").value = ""; $("#asPara").value = ""; asTelAuto = null; }   // otra persona: fuera el número de la anterior
+    }
+    if (e.target.id === "asTel") asTelAuto = null;
+    sugerirAsignar(e.target.value); });
+  $(id).addEventListener("focus", () => { cargarAgenda(); });
+  $(id).addEventListener("blur", () => setTimeout(() => { if (!document.activeElement?.closest?.("#asSugs")) $("#asSugs").innerHTML = ""; }, 200));
+}
+$("#asSugs").addEventListener("click", e => { const b = e.target.closest("[data-sp]"); if (!b) return; const p = asSugLista[+b.dataset.sp];
+  $("#asNombre").value = p.n || ""; $("#asTel").value = p.tel || ""; $("#asPara").value = p.e || ""; asTelAuto = p.n || null; $("#asSugs").innerHTML = "";
+  (asCanal === "wa" && !p.tel ? $("#asTel") : $("#asMotivo")).focus(); });
+function pintarCanal(){
+  const wa = asCanal === "wa";
+  $("#asCanal").querySelectorAll("[data-c]").forEach(b => b.classList.toggle("on", b.dataset.c === asCanal));
+  $("#asTelF").classList.toggle("oculto", !wa); $("#asPara").classList.toggle("oculto", wa);
+  $("#asAg").classList.toggle("oculto", !esApp());
+  $("#asAyuda").textContent = wa ? "Le llega un WhatsApp con un enlace: ve la nota sin instalar nada, la marca como hecha y te avisa. Si le gusta, puede probar Cuaderna."
+    : "Le llega un correo con el motivo, la nota en PDF y un enlace para verla o añadirla a su Cuaderna. Cuando la termine, te avisa.";
+  const sinPermiso = !wa && !lsGet("chispa.permCorreo");
+  $("#asPermiso").classList.toggle("oculto", !sinPermiso); $("#asEnviar").classList.toggle("oculto", sinPermiso);
+  $("#asEnviar").innerHTML = ic(wa ? "wa" : "mail") + (wa ? "Enviar por WhatsApp" : "Enviar por correo");
+  $("#asRec").innerHTML = asPersonas.filter(p => wa ? true : p.e).map((p, i) => `<button class="opc" data-asr="${asPersonas.indexOf(p)}" type="button">${esc(p.n || p.e || p.tel)}${!wa || p.tel ? "" : "<small>sin móvil</small>"}</button>`).join("");
+  $("#asRec").classList.toggle("oculto", !$("#asRec").innerHTML);
+}
+async function abrirAsignar(){
+  cerrarHojaEnviar();
+  asPersonas = personasParaPasar(notaDelEditor());
+  if (!conMS() && asCanal === "correo") asCanal = "wa";
+  if (!config.miNombre && nombreCuenta()){ config.miNombre = nombreCuenta(); guardarConfig(); }
+  $("#asYo").classList.toggle("oculto", !!config.miNombre); $("#asYo").value = config.miNombre || "";
+  $("#asMotivo").value = ""; $("#asLimite").value = $("#eFecha").value || "";
+  $("#asNombre").value = ""; $("#asTel").value = ""; $("#asPara").value = "";
+  // solo se rellena con la persona de la nota (Para quién o nombrada en el texto); si no hay, el formulario queda vacío
+  const p0 = asPersonas[0]?.deNota ? asPersonas[0] : null; asTelAuto = null; $("#asSugs").innerHTML = "";
+  if (p0 && !p0.tel && esApp()){ try { const r = await nativo("ChispaNativo").telefonos({nombres: [p0.n]}); const l = r?.telefonos?.[p0.n] || []; p0.tel = (l.find(t => t.movil) || l[0])?.tel || ""; } catch(e){} }
+  if (p0){ $("#asNombre").value = p0.n || ""; $("#asTel").value = p0.tel || ""; $("#asPara").value = p0.e || ""; asTelAuto = p0.n || null; }
+  pintarCanal();
+  abrirHoja("#hAsignar"); $("#hEditar").classList.add("on");
+  setTimeout(() => ($("#asNombre").value ? $("#asMotivo") : $("#asNombre")).focus(), 250);
+}
+$("#evAsignar").onclick = abrirAsignar;
+const cerrarAsignar = () => $("#hAsignar").classList.remove("on");
+$("#asCerrar").onclick = cerrarAsignar; $("#asX").onclick = cerrarAsignar;
+$("#asCanal").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (!b) return;
+  if (b.dataset.c === "correo" && !conMS()){ toast(esGoogle() ? "El envío por correo necesita una cuenta de Microsoft. Usa WhatsApp" : "Para enviar correos hace falta conectar tu cuenta de Microsoft (Más › Ajustes)", "alerta", 5000); return; }
+  asCanal = b.dataset.c; lsSet("chispa.asCanal", asCanal); pintarCanal(); });
+$("#asRec").addEventListener("click", e => { const b = e.target.closest("[data-asr]"); if (!b) return; const p = asPersonas[+b.dataset.asr];
+  $("#asNombre").value = p.n || ""; $("#asTel").value = p.tel || ""; $("#asPara").value = p.e || ""; asTelAuto = p.n || null;
+  (asCanal === "wa" && !p.tel ? $("#asTel") : $("#asMotivo")).focus(); });
+$("#asAg").onclick = async () => { try { const r = await nativo("ChispaNativo").elegirTelefono(); if (r && !r.cancelado && r.tel){ $("#asTel").value = r.tel; if (!$("#asNombre").value.trim()) $("#asNombre").value = r.nombre || ""; $("#asMotivo").focus(); } } catch(e){ toast("Actualiza la app para elegir de la agenda", "subir", 5000); } };
+$("#asPermiso").onclick = async () => { if (hayCambiosEdicion()) await guardarEdicion(); lsSet("chispa.permCorreo", true); irALogin(false); };
+// Mensaje de WhatsApp: la nota se lee entera en el propio mensaje; el enlace, al final, sirve para marcarla como hecha
+function mensajeWaNota(n, nombre, motivo, limite, enlace, invitar = true){
+  // *negrita* y _cursiva_ de WhatsApp solo funcionan sin espacios junto a los símbolos: todo va recortado
+  const limpio = t => String(t || "").replace(/[*_~]/g, "").replace(/\s+/g, " ").trim();
+  const pl = partirLista(n.texto), tit = limpio(tituloPlano(n)) || "Nota", desc = planoMd(pl.intro || "").trim();
+  const l = [`Hola${nombre ? " " + nombre.split(" ")[0] : ""} 👋`, "Te paso una nota de mi Cuaderna:", "", `📒 *${tit}*`];
+  if (desc && limpio(desc) !== tit) l.push(desc.length > 400 ? desc.slice(0, 400).trim() + "…" : desc);
+  if (pl.items.length) l.push("", ...pl.items.slice(0, 12).map(i => (i.hecho ? "☑ " : "☐ ") + limpio(i.texto)), ...(pl.items.length > 12 ? [`… y ${pl.items.length - 12} más`] : []));
+  if (motivo || limite) l.push("");
+  if (motivo) l.push(`💬 _${limpio(motivo)}_`);
+  if (limite) l.push(`📅 Para el ${fechaLarga(limite)}`);
+  l.push("", "👉 *Ábrela y márcala como hecha:*", enlace);
+  // la primera vez que le pasas algo a alguien, una recomendación personal para que la pruebe
+  if (invitar) l.push("", "──────────", "✨ Yo apunto todo en *Cuaderna*: dicto una idea en segundos, se ordena sola y me avisa a tiempo. Ya no se me olvida nada.", "", "Es *gratis* y la pruebas sin crear cuenta 👉 cuaderna.astillerosoftware.es/bienvenida");
+  else l.push("", "_Enviado con Cuaderna · gratis en cuaderna.astillerosoftware.es/bienvenida_");
+  return l.join("\n");
+}
+// El paquete viaja dentro del enlace; si hay servidor, se guarda allí y el enlace es corto
+async function paqueteAsignacion(n, motivo, limite, canal){
+  const id = Date.now().toString(36) + [...crypto.getRandomValues(new Uint8Array(8))].map(b => "abcdefghijkmnpqrstuvwxyz23456789"[b % 32]).join("");
+  return {id, paquete: {v: 1, id, c: canal, de: {n: config.miNombre, e: canal === "correo" ? lsGet("chispa.usuario") || "" : ""}, m: motivo, l: limite, t: n.titulo || "", x: n.texto || "", f: n.fecha || null, h: n.hora || null, p: n.para?.nombre ? n.para : null}};
+}
+const limpiarPaquete = o => { const r = {}; for (const k in o){ const v = o[k]; if (v === null || v === undefined || v === "") continue; r[k] = v && typeof v === "object" && !Array.isArray(v) ? limpiarPaquete(v) : v; } return r; };
+async function enlaceNota(paquete){
+  const t = await empaquetar(limpiarPaquete(paquete));
+  return REDIRECT + "nota/#" + await acortar(t);
+}
+// Enlace corto: el servidor guarda el paquete CIFRADO y devuelve una clave de 8 letras; la llave para descifrarlo solo va en el enlace (si no hay servidor, va el paquete entero)
+async function acortar(t){
+  const b = apiBase(); if (!b) return t;
+  try {
+    // se cifra aquí, en el móvil, con una llave nueva para cada enlace: el servidor no puede leer la nota
+    const llave = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({name: "AES-GCM", iv}, await llaveDe(llave), new TextEncoder().encode(t)));
+    const datos = new Uint8Array(iv.length + ct.length); datos.set(iv); datos.set(ct, iv.length);
+    const r = await fetch(b + "/corto", {method: "POST", headers: {"Content-Type": "text/plain"}, body: "e" + b64url(datos)});
+    if (r.ok){ const j = await r.json(); if (j.id) return "c" + j.id + "." + b64url(llave); }
+  } catch(e){}
+  return t;
+}
+$("#asEnviar").onclick = async () => {
+  const wa = asCanal === "wa", para = $("#asPara").value.trim(), tel = $("#asTel").value.trim(), nombre = $("#asNombre").value.trim(), motivo = $("#asMotivo").value.trim(), limite = $("#asLimite").value || null;
+  if (wa && !waValido(waNum(tel))){ toast("Escribe su móvil (con prefijo si no es de España)", "alerta"); $("#asTel").focus(); return; }
+  if (!wa && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(para)){ toast("Escribe su correo", "alerta"); $("#asPara").focus(); return; }
+  if (!motivo){ toast("Cuéntale por qué se la pasas", "alerta"); $("#asMotivo").focus(); return; }
+  if (!config.miNombre){ const yo = $("#asYo").value.trim(); if (!yo){ toast("Escribe tu nombre", "alerta"); $("#asYo").classList.remove("oculto"); $("#asYo").focus(); return; } config.miNombre = yo; }
+  const b = $("#asEnviar"); b.disabled = true; b.textContent = wa ? "Abriendo WhatsApp…" : "Enviando…";
+  try {
+    const n = notaDelEditor(), {id, paquete} = await paqueteAsignacion(n, motivo, limite, wa ? "wa" : "correo"), verla = await enlaceNota(paquete);
+    if (wa){
+      const yaInvitado = (config.personasPasar || []).some(x => (waNum(x.tel) && waNum(x.tel) === waNum(tel)) || (nombre && norm(x.n) === norm(nombre)));
+      const msg = mensajeWaNota(n, nombre, motivo, limite, verla, !yaInvitado);
+      await enviarWa(waNum(tel), msg, false);
+      if (nombre) config.telefonos = {...(config.telefonos || {}), [norm(nombre)]: {nombre, tel}};
+      editando.asignada = {id, via: "wa", a: {n: nombre, tel}, motivo, limite, en: new Date().toISOString(), estado: "enviada"};
+      estadistica("pasada_wa");
+    } else {
+      const p = partesNota(n), items = partirLista(n.texto).items;
+      const enlace = REDIRECT + "?asignacion=" + await empaquetar(paquete);
+      const pdf = await notaEnPdf(n), datos = await new Promise(ok => { const f = new FileReader(); f.onload = () => ok(String(f.result).split(",")[1]); f.readAsDataURL(pdf); });
+      const saludo = nombre ? esc(nombre.split(" ")[0]) + ", " : "";
+      const html = `<div style="font-family:Segoe UI,Roboto,Arial,sans-serif;color:#2B1D14;max-width:620px">${cabCorreo(`${config.miNombre} te pasa una nota`)}
+        <p style="font-size:16px;margin:20px 2px 6px">${saludo}<b>${esc(config.miNombre)}</b> te pasa esta nota:</p>
+        <div style="border-left:3px solid #A8322D;background:#FBF6EC;padding:10px 14px;border-radius:8px;font-size:15.5px;font-style:italic">${esc(motivo).replace(/\n/g, "<br>")}</div>
+        ${limite ? `<p style="margin:12px 2px 0;font-size:14px"><b>Para:</b> ${esc(fechaCorreo(limite))}</p>` : ""}
+        <div style="border:1px solid #E3D6BE;border-radius:14px;padding:14px 16px;margin-top:14px"><div style="font-weight:700;font-size:17px">${esc(p.titulo || p.vacio || "Nota")}</div>
+        ${p.desc ? `<div style="margin-top:6px;color:#5A4A3A">${esc(p.desc).replace(/\n/g, "<br>")}</div>` : ""}
+        ${items.length ? `<ul style="margin:8px 0 0;padding-left:20px">${items.map(i => `<li${i.hecho ? ' style="color:#B3A28B;text-decoration:line-through"' : ""}>${esc(i.texto)}</li>`).join("")}</ul>` : ""}
+        ${n.para?.nombre ? `<div style="margin-top:8px;color:#7A6652;font-size:13px">Cliente o contacto: ${esc(n.para.nombre)}</div>` : ""}</div>
+        ${botonCorreo(verla, "Ver la nota")}
+        <p style="font-size:13px;color:#7A6652;margin-top:-4px">¿Usas Cuaderna? <a href="${enlace}" style="color:#A8322D">Añádela a tu Cuaderna</a>. Cuando la marques como hecha, ${esc(config.miNombre)} recibirá un aviso. También tienes la nota en el PDF adjunto.</p></div>`;
+      const r = await graph("https://graph.microsoft.com/v1.0/me/sendMail", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({message: {
+        subject: `Te paso: ${(tituloPlano(n) || "una tarea").slice(0, 110)}`, body: {contentType: "HTML", content: html}, toRecipients: [{emailAddress: {address: para, name: nombre || undefined}}],
+        attachments: [{"@odata.type": "#microsoft.graph.fileAttachment", name: nombrePdf(n), contentType: "application/pdf", contentBytes: datos}]}, saveToSentItems: true})});
+      if (r.status === 401 || r.status === 403){ lsSet("chispa.permCorreo", false); throw new Error("Falta el permiso de correo. Pulsa «Dar permiso para enviar»"); }
+      if (!r.ok) throw await errorDe(r, "al enviar el correo");
+      config.companerosCorreo = [{e: para, n: nombre}, ...(config.companerosCorreo || []).filter(c => c.e.toLowerCase() !== para.toLowerCase())].slice(0, 8);
+      editando.asignada = {id, via: "correo", a: {e: para, n: nombre}, motivo, limite, en: new Date().toISOString(), estado: "enviada"};
+      estadistica("pasada_correo");
+    }
+    const k = norm(nombre || para || tel);
+    config.personasPasar = [{n: nombre, tel: wa ? tel : ((config.personasPasar || []).find(x => norm(x.n || x.e || x.tel) === k)?.tel || ""), e: wa ? "" : para},
+      ...(config.personasPasar || []).filter(x => norm(x.n || x.e || x.tel) !== k)].slice(0, 12);
+    guardarConfig();
+    $("#hAsignar").classList.remove("on"); await guardarEdicion();
+    toast(`Pasada a ${nombre || para || tel}. Te avisará cuando la termine`, wa ? "wa" : "mail", 5000);
+  } catch(e){ toast(e.message || "No se pudo enviar", "alerta", 6000); }
+  finally { b.disabled = false; pintarCanal(); }
+};
+
+// Al recibir: el enlace del correo abre Cuaderna con ?asignacion=…
+async function mostrarAsignacionEnLogin(){
+  const t = lsGet("chispa.asigPend"); if (!t) return;
+  try { const d = await desempaquetar(t);
+    $("#loginAsig").innerHTML = `<small>${esc(d.de?.n || "Alguien")} te ha pasado</small><b>${esc(d.t || (d.x || "").split("\n")[0].slice(0, 80) || "Una nota")}</b>${d.m ? `<q>${esc(d.m)}</q>` : ""}`;
+    $("#loginAsig").classList.remove("oculto"); $("#loginMsg").classList.remove("oculto"); $("#loginMsg").textContent = "Entra o pulsa «Probar sin cuenta» para añadirla a tu Cuaderna.";
+  } catch(e){}
+}
+async function abrirNotaPendiente(intento = 0){
+  const id = lsGet("chispa.notaPend"); if (!id) return;
+  const n = notas.find(x => x.id === id && !x._borrar);
+  if (n){ localStorage.removeItem("chispa.notaPend"); ver("hoy"); setTimeout(() => abrirEdicion(n), 250); return; }
+  if (intento < 5) return setTimeout(() => abrirNotaPendiente(intento + 1), 4000);   // puede que aún no haya bajado de la nube
+  localStorage.removeItem("chispa.notaPend"); toast("No encuentro esa nota: puede que se haya borrado o sea de otra cuenta", "alerta", 5000);
+}
+async function procesarAsignaciones(intento = 0){
+  if (!intento) abrirNotaPendiente();
+  const a = lsGet("chispa.asigPend");
+  if (a){ localStorage.removeItem("chispa.asigPend");
+    try { await recibirAsignacion(await desempaquetar(a)); } catch(e){ console.warn(e); toast("El enlace de la nota asignada no es válido", "alerta", 5000); } }
+  const h = lsGet("chispa.hechoPend");
+  if (h){ let d = null; try { d = await desempaquetar(h); } catch(e){ localStorage.removeItem("chispa.hechoPend"); return; }
+    if (await recibirHecho(d)) localStorage.removeItem("chispa.hechoPend");
+    else if (intento < 4) setTimeout(() => procesarAsignaciones(intento + 1), 5000);   // puede que la nota aún no haya bajado de OneDrive
+    else { localStorage.removeItem("chispa.hechoPend"); toast("No encuentro esa nota en esta Cuaderna", "alerta", 5000); } }
+}
+// Lo que llega dentro de un enlace lo escribe otra persona: se valida campo a campo antes de guardarlo
+const RX_DIA = /^\d{4}-\d{2}-\d{2}$/, RX_HORA = /^\d{2}:\d{2}$/, RX_ID = /^[a-z0-9]{6,40}$/i;
+const txtCorto = (v, max) => String(v ?? "").slice(0, max);
+function validarRecibida(d){
+  if (!d || typeof d !== "object" || !RX_ID.test(String(d.id || ""))) throw new Error("Paquete no válido");
+  const p = d.p && typeof d.p === "object" ? d.p : {};
+  return {id: String(d.id), c: d.c === "wa" ? "wa" : "correo", t: txtCorto(d.t, 300), x: txtCorto(d.x, 20000), m: txtCorto(d.m, 1000),
+    f: RX_DIA.test(d.f) ? d.f : null, h: RX_HORA.test(d.h) ? d.h : null, l: RX_DIA.test(d.l) ? d.l : null,
+    p: {categoria: CAT[p.categoria] ? p.categoria : "", nombre: txtCorto(p.nombre, 120)},
+    de: {n: txtCorto(d.de?.n, 120), e: /^[^\s@<>"']{1,80}@[^\s@<>"']{1,120}$/.test(String(d.de?.e || "")) ? String(d.de.e) : ""}};
+}
+async function recibirAsignacion(d){
+  d = validarRecibida(d);
+  let n = notas.find(x => x.recibida?.id === d.id && !x._borrar);
+  if (!n){
+    n = notaBase(new Date());
+    Object.assign(n, {texto: d.x || "", tipo: "tarea", ambito: "trabajo", fecha: d.l || d.f || null, hora: d.l && d.l !== d.f ? null : d.h || null,
+      para: d.p || {categoria: "", nombre: ""}, recibida: {id: d.id, de: d.de || {}, via: d.c || "correo", motivo: d.m || "", limite: d.l || null, en: new Date().toISOString()}});
+    if (d.t) n.titulo = d.t;
+    if (!confirm(`${d.de.n || "Alguien"} te pasa la nota «${(d.t || d.x || "sin título").slice(0, 80)}». ¿La guardas en tu Cuaderna?`)) return;
+    await guardarNotaLocal(n); refrescar();
+    toast(`Añadida a tu Cuaderna la nota de ${d.de?.n || "quien te la mandó"}`, "mail", 4500);
+  }
+  ver(esMovil() ? "hoy" : "notas"); abrirEdicion(n);
+}
+// Estado de las notas pasadas, según lo que la página pública ha contado al servidor
+function estadoAsignada(a){
+  if (a.estado === "hecha") return "hecha";
+  if (a.progreso && a.vistaEn){ const [h, t] = a.progreso.split("/"); if (+h > 0) return `lleva ${h} de ${t}`; }
+  if (a.vistaEn) return "la ha visto";
+  return "enviada";
+}
+let ultRevCompartidas = 0;
+async function revisarCompartidas(forzar){
+  if (!apiBase() || !navigator.onLine || document.hidden) return;
+  if (!forzar && Date.now() - ultRevCompartidas < 3 * 60000) return;
+  const abiertas = deNotas().filter(n => n.asignada && n.asignada.estado !== "hecha" && n.asignada.id && Date.now() - new Date(n.asignada.en || 0) < 90 * 864e5);
+  if (!abiertas.length) return;
+  ultRevCompartidas = Date.now();
+  try {
+    const r = await fetch(apiBase() + "/estados", {method: "POST", headers: {"Content-Type": "text/plain"}, body: JSON.stringify({ids: abiertas.map(n => n.asignada.id)})});
+    if (!r.ok) return;
+    const {estados = {}} = await r.json(); let cambios = 0;
+    for (const n of abiertas){
+      const e = estados[n.asignada.id]; if (!e) continue;
+      const a = {...n.asignada};
+      if (e.vista && !a.vistaEn) a.vistaEn = e.vista;
+      if (e.progreso && e.progreso !== a.progreso) a.progreso = e.progreso;
+      if (e.hecha){ a.estado = "hecha"; a.hechaEn = e.hecha; }
+      else if (a.vistaEn && a.estado === "enviada") a.estado = "vista";
+      if (JSON.stringify(a) === JSON.stringify(n.asignada)) continue;
+      const terminada = a.estado === "hecha";
+      n.asignada = a;
+      if (terminada && !n.hecha){ n.hecha = true; n.hechaEn = new Date().toISOString(); }
+      await guardarNotaLocal(n); cambios++;
+      if (terminada) toast(`${a.a?.n || a.a?.e || "La otra persona"} ha terminado «${(partesNota(n).titulo || "la nota").slice(0, 40)}»`, "check", 6000);
+    }
+    if (cambios) refrescar();
+  } catch(e){}
+}
+// Quien recibió la nota en su Cuaderna y la marca hecha: también se cuenta al servidor
+function contarHechaRecibida(n){
+  if (!n.recibida?.id || !apiBase()) return;
+  fetch(apiBase() + "/estado", {method: "POST", headers: {"Content-Type": "text/plain"}, body: JSON.stringify({id: n.recibida.id, e: "hecha"}), keepalive: true}).catch(() => {});
+}
+async function recibirHecho(d){
+  if (!d || !RX_ID.test(String(d.id || ""))) return false;
+  d = {id: String(d.id), en: !isNaN(new Date(d.en)) ? new Date(d.en).toISOString() : null, c: txtCorto(d.c, 1000)};
+  const n = notas.find(x => x.asignada?.id === d.id && !x._borrar); if (!n) return false;
+  if (n.asignada.estado !== "hecha"){
+    n.asignada = {...n.asignada, estado: "hecha", hechaEn: d.en || new Date().toISOString(), comentario: d.c || ""};
+    if (!n.hecha){ n.hecha = true; n.hechaEn = new Date().toISOString(); }
+    await guardarNotaLocal(n); refrescar();
+  }
+  toast(`${n.asignada.a?.n || n.asignada.a?.e || "La otra persona"} terminó «${(partesNota(n).titulo || "la nota").slice(0, 40)}»`, "check", 5000);
+  ver(esMovil() ? "hoy" : "notas"); abrirEdicion(n); return true;
+}
+// Quien la recibió la marca hecha: se avisa a quien la mandó
+const avisando = new Set();
+async function avisarAsignante(n){
+  if (!n.hecha || !n.recibida || n.recibida.avisada || avisando.has(n.id)) return;
+  if (!n.recibida.contada){ n.recibida.contada = true; contarHechaRecibida(n); }
+  if (n.recibida.via === "wa" || !n.recibida.de?.e){   // llegó por WhatsApp: el aviso vuelve por WhatsApp (se elige su chat)
+    const de = n.recibida.de || {}, enlace = REDIRECT + "?hecho=" + await empaquetar({v: 1, id: n.recibida.id, por: {n: miNombre(), e: lsGet("chispa.usuario") || ""}, en: n.hechaEn || new Date().toISOString()});
+    toast(`¿Avisas a ${de.n || "quien te la pasó"} de que está hecha?`, "wa", 10000, async () => {
+      await enviarWa("", `✅ Hecho: *${tituloPlano(n) || "la nota"}*\n\nToca aquí para marcarla en tu Cuaderna:\n${enlace}`, false);
+      n.recibida.avisada = new Date().toISOString(); await guardarNotaLocal(n); refrescar(); }, "Avisar");
+    return;
+  }
+  avisando.add(n.id);
+  try {
+    const de = n.recibida.de, p = partesNota(n);
+    const enlace = REDIRECT + "?hecho=" + await empaquetar({v: 1, id: n.recibida.id, por: {n: miNombre(), e: lsGet("chispa.usuario") || ""}, en: n.hechaEn || new Date().toISOString()});
+    const asunto = `Hecho: ${(tituloPlano(n) || "la tarea que me asignaste").slice(0, 110)}`;
+    const marcar = async () => { n.recibida.avisada = new Date().toISOString(); await guardarNotaLocal(n); refrescar(); };
+    if (lsGet("chispa.permCorreo")){
+      const html = `<div style="font-family:Segoe UI,Roboto,Arial,sans-serif;color:#2B1D14;max-width:620px">${cabCorreo("Tarea terminada")}
+        <p style="font-size:16px;margin:20px 2px 6px"><b>${esc(miNombre())}</b> ha terminado la tarea que le asignaste:</p>
+        <div style="border:1px solid #E3D6BE;border-radius:14px;padding:14px 16px"><div style="font-weight:700;font-size:17px">${esc(p.titulo || p.vacio || "Nota")}</div>${p.desc ? `<div style="margin-top:6px;color:#5A4A3A">${esc(p.desc).replace(/\n/g, "<br>")}</div>` : ""}</div>
+        ${botonCorreo(enlace, "Marcarla hecha en mi Cuaderna")}</div>`;
+      const r = await graph("https://graph.microsoft.com/v1.0/me/sendMail", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({message: {
+        subject: asunto, body: {contentType: "HTML", content: html}, toRecipients: [{emailAddress: {address: de.e, name: de.n || undefined}}]}, saveToSentItems: true})});
+      if (r.ok){ await marcar(); toast(`Avisado ${de.n || de.e}: tarea hecha`, "mail", 3500); return; }
+      if (r.status === 401 || r.status === 403) lsSet("chispa.permCorreo", false);
+    }
+    toast(`¿Avisas a ${de.n || de.e} de que está hecha?`, "mail", 9000, async () => {
+      location.href = `mailto:${encodeURIComponent(de.e)}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(`Ya está hecha.\n\nPulsa aquí para marcarla en tu Cuaderna:\n${enlace}`)}`;
+      await marcar(); }, "Avisar");
+  } catch(e){ console.warn(e); }
+  finally { avisando.delete(n.id); }
+}
+// Lo que se ve en el editor ahora mismo (aunque no se haya guardado)
+function notaDelEditor(){
+  const nuevo = $("#eNuevoItem")?.value.trim(), items = nuevo ? [...eItems, {hecho: false, texto: nuevo}] : eItems;
+  const n = {...editando, texto: items.length ? unirLista($("#eTexto").value, items) : $("#eTexto").value.trim(), tipo: eTipoSel, ambito: eAmbSel,
+    para: {categoria: $("#eCat").value, nombre: $("#eNombre").value.trim()}, fecha: $("#eFecha").value || null, hora: $("#eHora").value || null};
+  if (eEtq.length) n.etiquetas = [...eEtq];
+  const t = $("#eTitulo").value.trim(); if (t) n.titulo = t; else delete n.titulo;
+  n._imagenes = [...eAdj.fotos.map(r => ({ruta: r, dibujo: r.includes("trazo")})), ...eAdj.nuevas.map(b => b instanceof Blob ? {blob: b} : {blob: b.png, dibujo: true})];
+  return n;
+}
+const nombrePdf = n => `Cuaderna - ${(tituloPlano(n) || "Nota").replace(/[\\/:*?"<>|\n\r]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 60)} - ${isoDia(new Date(n.creada))}.pdf`;
+// jsPDF solo trae las letras del alfabeto latino: se cambian comillas tipográficas, guiones largos y se quitan emojis
+const latin1 = s => String(s || "").replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/[–—]/g, "-").replace(/…/g, "...").replace(/[•]/g, "-").replace(/[^\x00-\xFF]/g, "");
+async function cargarJsPdf(){
+  if (window.jspdf) return window.jspdf.jsPDF;
+  await new Promise((ok, ko) => { const s = document.createElement("script"); s.src = "lib/jspdf-2.5.1.min.js"; s.onload = ok; s.onerror = () => ko(new Error("Sin conexión: no se pudo preparar el PDF")); document.head.appendChild(s); });
+  return window.jspdf.jsPDF;
+}
+async function imagenParaPdf(im){
+  const blob = im.blob || await idb.blob(im.ruta) || await descargarRuta(im.ruta);
+  const bmp = await createImageBitmap(blob), max = 1400, k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+  return {url: c.toDataURL("image/jpeg", 0.82), w: c.width, h: c.height, dibujo: !!im.dibujo};
+}
+async function notaEnPdf(n){
+  const jsPDF = await cargarJsPdf();
+  const doc = new jsPDF({unit: "mm", format: "a4"}), W = 210, H = 297, M = 18, AN = W - 2 * M;
+  const TINTA = [43, 29, 20], GRIS = [122, 102, 82], CLARO = [179, 162, 139], AMBAR = [168, 50, 45];
+  let y = 0;
+  const cabecera = () => {
+    doc.setFillColor(...TINTA); doc.rect(0, 0, W, 20, "F");
+    doc.setFillColor(168, 50, 45); doc.circle(M + 3.6, 10, 3.9, "F"); doc.setTextColor(251, 243, 228); doc.setFont("times", "bold"); doc.setFontSize(10); doc.text("C", M + 3.6, 11.5, {align: "center"});   // la marca
+    doc.setTextColor(255, 255, 255); doc.setFont("times", "bold"); doc.setFontSize(15); doc.text("Cuaderna", M + 9.5, 12.8);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(222, 205, 180); doc.text("Nota compartida", W - M, 12.6, {align: "right"});
+    y = 32;
+  };
+  const sitio = h => { if (y + h > H - 18){ doc.addPage(); cabecera(); } };
+  const parrafo = (texto, {tam = 11.5, color = TINTA, estilo = "normal", sangria = 0, interlineado = 1.42} = {}) => {
+    doc.setFont("helvetica", estilo); doc.setFontSize(tam); doc.setTextColor(...color);
+    const alto = tam * 0.3528 * interlineado;
+    for (const linea of doc.splitTextToSize(latin1(texto), AN - sangria)){ sitio(alto); doc.text(linea, M + sangria, y + alto * 0.75); y += alto; }
+  };
+  const subtitulo = t => { y += 5; sitio(12); doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(...GRIS); doc.text(latin1(t.toUpperCase()), M, y + 4); y += 8; };
+  cabecera();
+  // título y datos
+  const p = partesNota(n), {intro: intro0, items} = partirLista(n.texto), intro = planoMd(intro0);
+  const titulo = n.titulo || (n.ancla ? `Ancla de las ${hora(n.creada)}` : (p.titulo || p.vacio || "Nota"));
+  parrafo(titulo, {tam: 20, estilo: "bold", interlineado: 1.25}); y += 2;
+  const datos = [`Anotada el ${fechaLarga(n.creada)} de ${new Date(n.creada).getFullYear()} a las ${hora(n.creada)}`];
+  if (n.tipo && n.tipo !== "nota") datos.push(TIPOS[n.tipo]?.[0] || n.tipo);
+  datos.push(n.ambito === "personal" ? "Personal" : "Trabajo");
+  if (n.para?.nombre || n.para?.categoria) datos.push("Para: " + [n.para.nombre, n.para.categoria ? `(${CAT[n.para.categoria]})` : ""].filter(Boolean).join(" "));
+  parrafo(datos.join("  ·  "), {tam: 9.5, color: GRIS});
+  if (n.fecha) parrafo(`Fecha: ${fechaLarga(n.fecha)}${n.hora ? " a las " + n.hora : ""}${n.hecha ? "  ·  Hecha" : ""}`, {tam: 9.5, color: GRIS});
+  else if (n.hecha) parrafo("Hecha", {tam: 9.5, color: GRIS});
+  y += 4; doc.setDrawColor(228, 232, 239); doc.setLineWidth(0.4); doc.line(M, y, W - M, y); y += 6;
+  // texto (sin repetir la línea que hace de título)
+  let cuerpo = intro;
+  if (!n.titulo && cuerpo){ const l = cuerpo.split("\n"); if (l[0].trim() === titulo) cuerpo = l.slice(1).join("\n").trim(); }
+  if (cuerpo) for (const par of cuerpo.split(/\n/)){ if (par.trim()) parrafo(par); else y += 3; }
+  // lista
+  if (items.length){
+    subtitulo(`Lista (${items.filter(i => i.hecho).length} de ${items.length} hechos)`);
+    for (const it of [...items.filter(i => !i.hecho), ...items.filter(i => i.hecho)]){
+      doc.setFontSize(11.5); const lineas = doc.splitTextToSize(latin1(it.texto), AN - 9), alto = 11.5 * 0.3528 * 1.42;
+      sitio(alto * lineas.length + 2);
+      doc.setLineWidth(0.35); doc.setDrawColor(...(it.hecho ? TINTA : CLARO));
+      if (it.hecho){ doc.setFillColor(...TINTA); doc.roundedRect(M, y + 0.9, 4.2, 4.2, 0.9, 0.9, "FD"); doc.setDrawColor(255, 255, 255); doc.setLineWidth(0.6); doc.lines([[1.1, 1.1], [2, -2.3]], M + 0.9, y + 3.1); }
+      else doc.roundedRect(M, y + 0.9, 4.2, 4.2, 0.9, 0.9, "S");
+      doc.setFont("helvetica", "normal"); doc.setTextColor(...(it.hecho ? CLARO : TINTA));
+      lineas.forEach((l, i) => doc.text(l, M + 7.5, y + alto * 0.75 + i * alto));
+      y += alto * lineas.length + 1.6;
+    }
+  }
+  // dictado
+  if (n.transcripcion && norm(n.transcripcion).trim() !== norm(n.texto).trim()){ subtitulo("Dictado"); parrafo(n.transcripcion, {estilo: "italic", color: GRIS}); }
+  // fotos y dibujo
+  const imgs = [];
+  for (const im of n._imagenes || (n.fotos || []).map(r => ({ruta: r, dibujo: r.includes("trazo")}))){ try { imgs.push(await imagenParaPdf(im)); } catch(e){} }
+  if (imgs.length){
+    subtitulo(imgs.length === 1 ? (imgs[0].dibujo ? "Dibujo" : "Foto") : `Fotos y dibujos (${imgs.length})`);
+    for (const im of imgs){
+      let w = AN, h = w * im.h / im.w; const maxH = H - 18 - 32 - 4;
+      if (h > maxH){ h = maxH; w = h * im.w / im.h; }
+      if (h > 120 && y + h > H - 18){ doc.addPage(); cabecera(); } else sitio(h + 4);
+      doc.addImage(im.url, "JPEG", M + (AN - w) / 2, y, w, h); if (im.dibujo){ doc.setDrawColor(228, 232, 239); doc.setLineWidth(0.3); doc.rect(M + (AN - w) / 2, y, w, h); }
+      y += h + 5;
+    }
+  }
+  // pie con páginas
+  const total = doc.getNumberOfPages(), hoy = new Date().toLocaleDateString("es-ES");
+  for (let i = 1; i <= total; i++){
+    doc.setPage(i); doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...CLARO);
+    doc.text(`Compartido desde Cuaderna el ${hoy}`, M, H - 9); if (total > 1) doc.text(`${i} / ${total}`, W - M, H - 9, {align: "right"});
+  }
+  doc.setProperties({title: latin1(titulo), creator: "Cuaderna", author: "Cuaderna · Astillero"});
+  return doc.output("blob");
+}
+// Enviar un archivo: en la app, con el menú «Compartir» de Android; en el navegador, con el del sistema o descargándolo
+
+// ---------- Tarjeta de visita → contacto (.vcf, vCard 3.0) ----------
+function datosContacto(n){
+  if (n.contacto) return {...n.contacto};
+  // tarjetas guardadas antes: se leen del título «Empresa@Persona» y de las líneas del texto
+  const d = {}, [emp, per] = String(n.titulo || "").split("@");
+  if (emp && emp !== "Sin empresa") d.empresa = emp.trim(); if (per && per !== "Sin nombre") d.persona = per.trim();
+  const sueltas = [];
+  for (const l of String(n.texto || "").split("\n").map(x => x.trim()).filter(Boolean)){
+    const m = l.match(/^(Teléfono|Móvil|Correo|Web):\s*(.+)$/i);
+    if (m) d[{"teléfono": "telefono", "móvil": "movil", "correo": "email", "web": "web"}[m[1].toLowerCase()]] = m[2].trim(); else sueltas.push(l);
+  }
+  for (const l of sueltas){
+    if (d.persona && norm(l).startsWith(norm(d.persona) + ",")) d.cargo = l.slice(l.indexOf(",") + 1).trim();
+    else if (norm(l) === norm(d.persona || "") || norm(l) === norm(d.empresa || "")) continue;
+    else if (!d.direccion && /\d/.test(l)) d.direccion = l;
+  }
+  return d;
+}
+const partirVarios = v => String(v || "").split(/\s*[\/;|]\s*|\s+-\s+/).map(x => x.trim()).filter(Boolean);
+function vcard(d){
+  const e = t => String(t || "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/([,;])/g, "\\$1");
+  const partes = String(d.persona || "").trim().split(/\s+/), nombre = partes.shift() || "", apellidos = partes.join(" ");
+  const l = ["BEGIN:VCARD", "VERSION:3.0", `N:${e(apellidos)};${e(nombre)};;;`, `FN:${e(d.persona || d.empresa || "Contacto")}`];
+  if (d.empresa) l.push(`ORG:${e(d.empresa)}`);
+  if (d.cargo) l.push(`TITLE:${e(d.cargo)}`);
+  for (const t of partirVarios(d.movil)) l.push(`TEL;TYPE=CELL:${e(t)}`);
+  for (const t of partirVarios(d.telefono)) l.push(`TEL;TYPE=WORK,VOICE:${e(t)}`);
+  for (const t of partirVarios(d.email)) l.push(`EMAIL;TYPE=INTERNET,WORK:${e(t)}`);
+  if (d.web) l.push(`URL:${e(/^https?:\/\//i.test(d.web) ? d.web : "https://" + d.web)}`);
+  if (d.direccion) l.push(`ADR;TYPE=WORK:;;${e(d.direccion)};;;;`);
+  l.push(`NOTE:${e("Guardado desde una tarjeta de visita en Cuaderna, " + new Date().toLocaleDateString("es-ES"))}`, "END:VCARD");
+  return l.join("\r\n") + "\r\n";
+}
+async function descargarVcf(n){
+  const d = datosContacto(n);
+  if (!d.persona && !d.empresa){ toast("Esta tarjeta no tiene nombre ni empresa", "alerta", 4000); return; }
+  return entregarVcf(vcard(d), nombreSeguro(d.persona || d.empresa) + ".vcf", d.persona || d.empresa);
+}
+async function entregarVcf(texto, nombre, titulo, varios = 0){
+  const d = {persona: titulo}, blob = new Blob([texto], {type: "text/vcard"});
+  if (esApp()) return compartirArchivo(blob, nombre, d.persona || d.empresa);   // el menú Compartir ofrece «Contactos»
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (!ios && esMovil()){ const f = new File([blob], nombre, {type: "text/vcard"}); if (navigator.canShare?.({files: [f]})){ try { await navigator.share({files: [f], title: d.persona || d.empresa}); return; } catch(e){ if (e.name === "AbortError") return; } } }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = nombre; document.body.appendChild(a); a.click(); a.remove();   // en iPhone abre la ficha «Crear contacto»
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  toast(varios ? (ios ? `Abre el archivo y pulsa «Añadir los ${varios} contactos»` : esMovil() ? `Abre el archivo para añadir los ${varios} contactos` : `${varios} contactos en un archivo: impórtalo en Google Contactos (Importar) o en Outlook`)
+    : ios ? "Pulsa «Crear contacto nuevo» para guardarlo" : esMovil() ? "Abre el archivo para añadirlo a tus contactos" : "Contacto descargado: ábrelo para añadirlo a Outlook o impórtalo en Gmail", "user", 7000);
+}
+async function compartirArchivo(blob, nombre, titulo){
+  if (esApp()){
+    const datos = await new Promise(r => { const f = new FileReader(); f.onload = () => r(String(f.result).split(",")[1]); f.readAsDataURL(blob); });
+    const nat = nativo("ChispaNativo");
+    const pedirActualizar = () => toast("Para compartir notas, actualiza la app a la última versión", "subir", 9000, actualizarApp, "Actualizar");
+    if (typeof nat?.compartirArchivo !== "function" || (infoApp?.codigo && infoApp.codigo < 9)){ pedirActualizar(); return; }   // compartir funciona desde la 1.0.9
+    try { await nat.compartirArchivo({nombre, datos, tipo: blob.type || "application/pdf", asunto: titulo}); return; }
+    catch(e){ if (/not implemented|not a function|FILE_PROVIDER/i.test(String(e?.message || e))){ pedirActualizar(); return; } throw e; }
+  }
+  const archivo = new File([blob], nombre, {type: blob.type || "application/pdf"});
+  // en el móvil, menú «Compartir» del sistema; en el PC se descarga directamente
+  if (esMovil() && navigator.canShare?.({files: [archivo]})){ try { await navigator.share({files: [archivo], title: titulo}); return; } catch(e){ if (e.name === "AbortError") return; } }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(archivo); a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000); toast("PDF descargado", "check");
+}
+async function guardarEdicion(){
+  const n = editando; if (!n) return;
+  olvidarEdicion();
+  const nuevoPunto = $("#eNuevoItem")?.value.trim(); if (nuevoPunto) eItems.push({hecho: false, texto: nuevoPunto});
+  n.texto = eItems.length ? unirLista($("#eTexto").value, eItems) : $("#eTexto").value.trim(); n.ambito = eAmbSel; n.tipo = eTipoSel;
+  const tit = $("#eTitulo").value.trim(); if (tit) n.titulo = tit; else delete n.titulo;
+  n.para = {categoria: $("#eCat").value, nombre: $("#eNombre").value.trim()}; n.fecha = $("#eFecha").value || null;
+  n.hora = $("#eHora").value || null; if (n.hora && !n.fecha) n.fecha = hoyISO();
+  if (eImp) n.importante = true; else delete n.importante;
+  if (eDonde) n.donde = eDonde; else delete n.donde;
+  if (eAlgun && !n.fecha) n.algunDia = true; else delete n.algunDia;
+  const esp = $("#eEspera").value.trim().slice(0, 60);
+  if (esp) n.esperando = {quien: esp, desde: n.esperando?.quien === esp ? n.esperando.desde : new Date().toISOString()}; else delete n.esperando;
+  if (eArch){ if (!enArchivo(n)) n.archivada = true; }
+  else { delete n.archivada; if (n.hecha && hechaHace(n) > DIAS_ARCHIVO * 864e5) n.hechaEn = new Date().toISOString(); }   // sale del archivo: vuelve a «Completadas»
+  const cpe = $("#eCarpeta").value.replace("+", ""); if (cpe) n.carpeta = cpe; else delete n.carpeta;
+  if (n.hora) pedirPermisoAvisos();
+  if (n.ancla && (n.texto || n.titulo)) n.ancla = false;
+  const nuevos = [];
+  const lienzos = {...eAdj.lienzos};
+  for (const r0 of eAdj.quitar) for (const r of [r0, lienzos[r0]].filter(Boolean)){
+    if ((n._subir || []).includes(r)){ n._subir = n._subir.filter(x => x !== r); await idb.quitarBlob(r); }
+    else n._quitar = [...new Set([...(n._quitar || []), r])];
+  }
+  for (const r0 of eAdj.quitar) delete lienzos[r0];
+  n.audio = eAdj.audio; n.fotos = [...eAdj.fotos];
+  const d = new Date(n.creada), carpeta = `${d.getFullYear()}/${pad(d.getMonth()+1)}`;
+  for (const b of eAdj.nuevas){
+    const base = `Fotos/${carpeta}/${n.id}-${b instanceof Blob ? "" : "trazo-"}${Date.now().toString(36)}${Math.random().toString(36).slice(2,4)}`;
+    if (b instanceof Blob){ const r = base + ".jpg"; await idb.ponerBlob(r, b); n.fotos.push(r); nuevos.push(r); }
+    else { const r = `${base}.${b.ext}`, j = base + ".json"; await idb.ponerBlob(r, b.png); await idb.ponerBlob(j, new Blob([JSON.stringify(b.doc)], {type: "application/json"}));
+      n.fotos.push(r); lienzos[r] = j; nuevos.push(r, j); }
+  }
+  for (const r of Object.keys(lienzos)) if (!n.fotos.includes(r)) delete lienzos[r];
+  if (Object.keys(lienzos).length) n.lienzos = lienzos; else delete n.lienzos;
+  n.archivos = [...eAdj.archivos]; const paraLeer = [];
+  for (const a of eAdj.nuevosArch){
+    const r = `Archivos/${carpeta}/${n.id}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}-${nombreSeguro(a.nombre)}`;
+    await idb.ponerBlob(r, a.blob); n.archivos.push({ruta: r, nombre: a.nombre, tipo: a.tipo, tam: a.blob.size}); nuevos.push(r); paraLeer.push({ruta: r, blob: a.blob, tipo: a.tipo, nombre: a.nombre, ocr: a.ocr});
+  }
+  if (!n.archivos.length) delete n.archivos;
+  if (n.textoArch){ for (const k of Object.keys(n.textoArch)) if (!(n.archivos || []).some(a => a.ruta === k)) delete n.textoArch[k]; if (!Object.keys(n.textoArch).length) delete n.textoArch; }
+  if (eEtq.length) n.etiquetas = [...eEtq]; else delete n.etiquetas;
+  const cat = n.para.categoria;
+  if (n.para.nombre && LISTAS.includes(cat)){
+    config.contactos[cat] = config.contactos[cat] || [];
+    if (!config.contactos[cat].some(x => norm(x) === norm(n.para.nombre))){ config.contactos[cat].push(n.para.nombre); guardarConfig(); }
+  }
+  cerrarHojas(); await guardarNotaLocal(n, nuevos); refrescar();
+  if (paraLeer.length) leerArchivos(n, paraLeer);
+}
+async function borrarNota(n){
+  if (!n) return;
+  n._borrar = true; n._borrarEn = Date.now(); await idb.poner(n);
+  refrescar(); pintarEstado();
+  setTimeout(() => sincronizar(true), 7500);              // margen para deshacer
+  toast("Nota borrada", "borrar", 6000, async () => { n._borrar = false; delete n._borrarEn; await idb.poner(n); refrescar(); pintarEstado(); toast("Nota recuperada"); });
+}
+function guardarConfig(){ lsSet("chispa.config", config); lsSet("chispa.cfgPend", true); pintarEstado(); sincronizar(true); }
+
+/* ================= Transcripción con Azure Speech ================= */
+const vozPropia = () => !!(config.voz?.clave && config.voz?.region);
+const voz = () => vozPropia() || !!(apiBase() && acceso?.estado === "autorizado" && acceso?.voz);
+async function aWav16k(blob){
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  let buf; try { buf = await ctx.decodeAudioData(await blob.arrayBuffer()); } finally { try { ctx.close(); } catch(e){} }
+  const sr = 16000, len = Math.ceil(buf.duration * sr);
+  const off = new OfflineAudioContext(1, Math.max(len, 1), sr);
+  const src = off.createBufferSource(); src.buffer = buf; src.connect(off.destination); src.start();
+  const out = (await off.startRendering()).getChannelData(0);
+  const trozo = 50 * sr, wavs = [];
+  for (let i = 0; i < out.length; i += trozo) wavs.push(wavPCM(out.subarray(i, Math.min(out.length, i + trozo)), sr));
+  return wavs;
+}
+function wavPCM(muestras, sr){
+  const b = new ArrayBuffer(44 + muestras.length * 2), v = new DataView(b), w = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + muestras.length * 2, true); w(8, "WAVE"); w(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, muestras.length * 2, true);
+  for (let i = 0; i < muestras.length; i++){ const x = Math.max(-1, Math.min(1, muestras[i])); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7fff, true); }
+  return new Blob([b], {type: "audio/wav"});
+}
+async function reconocer(wav){
+  if (!vozPropia()){
+    const r = await api("voz", {cuerpo: wav, tipo: "audio/wav", crudo: true});
+    if (!r.ok){ let j = {}; try { j = await r.json(); } catch(e){} if (j.limite) avisarLimite("voz"); throw new Error(j.error || `Voz (${r.status})`); }
+    const j = await r.json(); return j.RecognitionStatus === "Success" ? (j.DisplayText || "") : "";
+  }
+  const url = `https://${config.voz.region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=es-ES&format=simple`;
+  let r;
+  try { r = await fetch(url, {method: "POST", headers: {"Ocp-Apim-Subscription-Key": config.voz.clave, "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000", "Accept": "application/json"}, body: wav}); }
+  catch(e){ return reconocerSDK(wav); }                    // si el navegador bloquea la llamada directa, se usa el kit oficial de Microsoft
+  if (r.status === 401 || r.status === 403) throw new Error("La clave o la región no son correctas");
+  if (!r.ok) throw new Error(`Azure Speech respondió ${r.status}`);
+  const j = await r.json();
+  return j.RecognitionStatus === "Success" ? (j.DisplayText || "") : "";
+}
+async function reconocerSDK(wav){
+  if (!window.SpeechSDK) await new Promise((ok, ko) => { const s = document.createElement("script");
+    s.src = "lib/speech-sdk-1.40.0.min.js"; s.onload = ok; s.onerror = () => ko(new Error("No se pudo conectar con Azure Speech")); document.head.appendChild(s); });
+  const S = window.SpeechSDK, cfg = S.SpeechConfig.fromSubscription(config.voz.clave, config.voz.region); cfg.speechRecognitionLanguage = "es-ES";
+  const rec = new S.SpeechRecognizer(cfg, S.AudioConfig.fromWavFileInput(new File([wav], "nota.wav", {type: "audio/wav"})));
+  return new Promise((ok, ko) => { const partes = [];
+    rec.recognized = (_, e) => { if (e.result.reason === S.ResultReason.RecognizedSpeech && e.result.text) partes.push(e.result.text); };
+    rec.canceled = (_, e) => { rec.close(); e.reason === S.CancellationReason.Error ? ko(new Error(e.errorCode === 1 || /401|403|auth/i.test(e.errorDetails) ? "La clave o la región no son correctas" : "Azure Speech: " + e.errorDetails)) : ok(partes.join(" ")); };
+    rec.sessionStopped = () => { rec.close(); ok(partes.join(" ")); };
+    rec.startContinuousRecognitionAsync(() => {}, err => ko(new Error(String(err))));
+  });
+}
+async function transcribirAudio(blob){ const partes = []; for (const w of await aWav16k(blob)) partes.push(await reconocer(w)); return partes.filter(Boolean).join(" ").trim(); }
+async function probarVoz(){
+  if (!voz()) throw new Error("Falta la clave");
+  const silencio = wavPCM(new Float32Array(16000), 16000);
+  await reconocer(silencio);
+}
+let transcribiendo = false;
+async function transcribirNota(n, forzar = false){
+  try {
+    const b = await idb.blob(n.audio) || await descargarRuta(n.audio);
+    const texto = await transcribirAudio(b);
+    n.transcripcion = texto || "(sin voz reconocible)";
+    if (texto && !n.texto){
+      n.texto = texto; const s = sugerir(texto, new Date(n.creada));
+      if (s.fecha && !n.fecha){ n.fecha = s.fecha; if (s.hora) n.hora = s.hora; }
+      if (s.tipo && n.tipo === "nota") n.tipo = s.tipo;
+      if (s.cat && !n.para?.categoria) n.para = {categoria: s.cat, nombre: s.nombre};
+    }
+    delete n._transcribir; delete n._intentosT;
+    await guardarNotaLocal(n); refrescar();
+    return true;
+  } catch(e){
+    n._intentosT = (n._intentosT || 0) + 1; if (n._intentosT >= 3 && !forzar) delete n._transcribir;
+    await idb.poner(n); if (forzar) toast(e.message, "alerta", 5000);
+    return false;
+  }
+}
+async function procesarTranscripciones(){
+  if (transcribiendo || !voz() || !navigator.onLine || !token) return;
+  transcribiendo = true;
+  try { for (const n of notas.filter(x => x._transcribir && !x._borrar)){ if (await transcribirNota(n)) toast("Nota de voz transcrita", "mic"); } }
+  finally { transcribiendo = false; setTimeout(procesarIA, 500); }
+}
+setInterval(() => { if (document.visibilityState === "visible") procesarTranscripciones(); }, 90000);
+
+/* ================= Editor de fotos: girar y recortar ================= */
+const EI = {base: null, giro: 0, img: null, rec: null, fin: null};
+async function editarImagen(blob){
+  EI.base = await cargarCanvas(blob, 3000); EI.giro = 0; prepararGiro();
+  $("#ei").classList.remove("oculto"); document.documentElement.classList.add("lz-on");
+  requestAnimationFrame(pintarEI);
+  return new Promise(fin => EI.fin = fin);
+}
+function prepararGiro(){
+  const b = EI.base, recto = EI.giro % 180 === 0, c = document.createElement("canvas");
+  c.width = recto ? b.width : b.height; c.height = recto ? b.height : b.width;
+  const g = c.getContext("2d"); g.translate(c.width / 2, c.height / 2); g.rotate(EI.giro * Math.PI / 180); g.drawImage(b, -b.width / 2, -b.height / 2);
+  EI.img = c; EI.rec = {x: 0, y: 0, w: c.width, h: c.height};
+}
+let eiEsc = 1, eiOx = 0, eiOy = 0;
+function pintarEI(){
+  const c = $("#eiCanvas"), r = c.getBoundingClientRect(), k = devicePixelRatio || 1, im = EI.img; if (!im || !r.width) return;
+  c.width = r.width * k; c.height = r.height * k; eiEsc = Math.min((r.width - 48) / im.width, (r.height - 48) / im.height); eiOx = (r.width - im.width * eiEsc) / 2; eiOy = (r.height - im.height * eiEsc) / 2;
+  const g = c.getContext("2d"); g.setTransform(k, 0, 0, k, 0, 0); g.clearRect(0, 0, r.width, r.height); g.drawImage(im, eiOx, eiOy, im.width * eiEsc, im.height * eiEsc);
+  const q = EI.rec, x = eiOx + q.x * eiEsc, y = eiOy + q.y * eiEsc, w = q.w * eiEsc, h = q.h * eiEsc;
+  g.fillStyle = "rgba(8,12,24,.6)"; g.beginPath(); g.rect(eiOx, eiOy, im.width * eiEsc, im.height * eiEsc); g.rect(x, y, w, h); g.fill("evenodd");
+  g.strokeStyle = "rgba(255,255,255,.5)"; g.lineWidth = 1; g.beginPath(); for (const f of [1/3, 2/3]){ g.moveTo(x + w * f, y); g.lineTo(x + w * f, y + h); g.moveTo(x, y + h * f); g.lineTo(x + w, y + h * f); } g.stroke();
+  g.strokeStyle = "#fff"; g.lineWidth = 2; g.strokeRect(x, y, w, h);
+  g.strokeStyle = "#D0614F"; g.lineWidth = 5; g.lineCap = "round"; const L = Math.min(22, w / 3, h / 3);
+  for (const [a, b, dx, dy] of [[x, y, 1, 1], [x + w, y, -1, 1], [x, y + h, 1, -1], [x + w, y + h, -1, -1]]){ g.beginPath(); g.moveTo(a + dx * L, b); g.lineTo(a, b); g.lineTo(a, b + dy * L); g.stroke(); }
+}
+(() => {
+  const c = $("#eiCanvas"); let arr = null;
+  const aImg = e => { const r = c.getBoundingClientRect(); return {x: (e.clientX - r.left - eiOx) / eiEsc, y: (e.clientY - r.top - eiOy) / eiEsc}; };
+  c.onpointerdown = e => {
+    c.setPointerCapture(e.pointerId); const p = aImg(e), q = EI.rec, t = 30 / eiEsc;
+    const cerca = (a, b) => Math.abs(a - b) < t;
+    let tipo = (cerca(p.y, q.y) ? "n" : cerca(p.y, q.y + q.h) ? "s" : "") + (cerca(p.x, q.x) ? "w" : cerca(p.x, q.x + q.w) ? "e" : "");
+    if (tipo && (p.x < q.x - t || p.x > q.x + q.w + t || p.y < q.y - t || p.y > q.y + q.h + t)) tipo = "";
+    if (!tipo && p.x > q.x && p.x < q.x + q.w && p.y > q.y && p.y < q.y + q.h) tipo = "mover";
+    arr = tipo ? {tipo, p0: p, q0: {...q}} : null;
+  };
+  c.onpointermove = e => {
+    if (!arr) return; const p = aImg(e), im = EI.img, dx = p.x - arr.p0.x, dy = p.y - arr.p0.y, q0 = arr.q0, min = 40 / eiEsc;
+    let {x, y, w, h} = q0;
+    if (arr.tipo === "mover"){ x = Math.min(Math.max(0, q0.x + dx), im.width - w); y = Math.min(Math.max(0, q0.y + dy), im.height - h); }
+    else {
+      if (arr.tipo.includes("w")){ x = Math.min(Math.max(0, q0.x + dx), q0.x + q0.w - min); w = q0.x + q0.w - x; }
+      if (arr.tipo.includes("e")) w = Math.min(Math.max(min, q0.w + dx), im.width - q0.x);
+      if (arr.tipo.includes("n")){ y = Math.min(Math.max(0, q0.y + dy), q0.y + q0.h - min); h = q0.y + q0.h - y; }
+      if (arr.tipo.includes("s")) h = Math.min(Math.max(min, q0.h + dy), im.height - q0.y);
+    }
+    EI.rec = {x, y, w, h}; pintarEI();
+  };
+  c.onpointerup = c.onpointercancel = () => { arr = null; };
+  addEventListener("resize", () => { if (!$("#ei").classList.contains("oculto")) pintarEI(); });
+})();
+$("#eiIzq").onclick = () => { EI.giro = (EI.giro + 270) % 360; prepararGiro(); pintarEI(); };
+$("#eiDer").onclick = () => { EI.giro = (EI.giro + 90) % 360; prepararGiro(); pintarEI(); };
+$("#eiReset").onclick = () => { EI.rec = {x: 0, y: 0, w: EI.img.width, h: EI.img.height}; pintarEI(); };
+function cerrarEI(res){ $("#ei").classList.add("oculto"); if ($("#lz").classList.contains("oculto") && $("#tj").classList.contains("oculto")) document.documentElement.classList.remove("lz-on"); const f = EI.fin; EI.fin = null; f?.(res); }
+$("#eiCerrar").onclick = () => cerrarEI(null);
+$("#eiOk").onclick = async () => {
+  const q = EI.rec, sinCambios = EI.giro === 0 && q.x === 0 && q.y === 0 && q.w === EI.img.width && q.h === EI.img.height;
+  if (sinCambios) return cerrarEI(null);
+  const o = document.createElement("canvas"); o.width = Math.round(q.w); o.height = Math.round(q.h);
+  o.getContext("2d").drawImage(EI.img, q.x, q.y, q.w, q.h, 0, 0, o.width, o.height);
+  cerrarEI(await new Promise(ok => o.toBlob(ok, "image/jpeg", .9)));
+};
+
+/* ================= Cámara de Cuaderna ================= */
+// Usa la cámara trasera dentro de la propia app (la app de cámara del sistema abría a veces la frontal).
+// Si no hay cámara o no hay permiso, se abre el selector de fotos del sistema.
+const CAM = {stream: null, fin: null, frontal: false, luz: false};
+function hacerFoto({guia = false} = {}){
+  return new Promise(async fin => {
+    CAM.fin = fin; CAM.frontal = false; CAM.luz = false;
+    if (!navigator.mediaDevices?.getUserMedia){ elegirArchivo(fin); return; }
+    $("#camGuia").classList.toggle("oculto", !guia); $("#cam").classList.remove("oculto"); document.documentElement.classList.add("lz-on");
+    if (!(await arrancarCamara())){ cerrarCamara(); toast("No puedo abrir la cámara: elige la foto de la galería", "alerta", 4000); elegirArchivo(fin); }
+  });
+}
+function elegirArchivo(fin){ const i = $("#camIn"); i.value = ""; i.onchange = () => fin(i.files[0] || null); i.click(); }
+async function arrancarCamara(){
+  pararCamara();
+  try {
+    CAM.stream = await navigator.mediaDevices.getUserMedia({audio: false, video: {facingMode: CAM.frontal ? "user" : {ideal: "environment"}, width: {ideal: 3840}, height: {ideal: 2160}}});
+    const v = $("#camVideo"); v.srcObject = CAM.stream; v.style.transform = CAM.frontal ? "scaleX(-1)" : ""; await v.play().catch(() => {});
+    const pista = CAM.stream.getVideoTracks()[0], cap = pista.getCapabilities?.() || {};
+    $("#camLuz").classList.toggle("oculto", !cap.torch); $("#camLuz").classList.toggle("on", CAM.luz);
+    return true;
+  } catch(e){ return false; }
+}
+function pararCamara(){ CAM.stream?.getTracks().forEach(t => t.stop()); CAM.stream = null; }
+function cerrarCamara(){ pararCamara(); $("#cam").classList.add("oculto"); if ($("#lz").classList.contains("oculto") && $("#tj").classList.contains("oculto")) document.documentElement.classList.remove("lz-on"); }
+function terminarCamara(blob){ const f = CAM.fin; CAM.fin = null; cerrarCamara(); f?.(blob); }
+$("#camCerrar").onclick = () => terminarCamara(null);
+$("#camGirar").onclick = async () => { CAM.frontal = !CAM.frontal; if (!(await arrancarCamara())){ CAM.frontal = !CAM.frontal; await arrancarCamara(); } };
+$("#camLuz").onclick = async () => { const t = CAM.stream?.getVideoTracks()[0]; if (!t) return; CAM.luz = !CAM.luz; try { await t.applyConstraints({advanced: [{torch: CAM.luz}]}); } catch(e){} $("#camLuz").classList.toggle("on", CAM.luz); };
+$("#camGal").onclick = () => { const f = CAM.fin; CAM.fin = null; cerrarCamara(); elegirArchivo(f); };
+$("#camDisparo").onclick = async () => {
+  const t = CAM.stream?.getVideoTracks()[0]; if (!t) return; vibrar(30);
+  let blob = null;
+  try { if (window.ImageCapture && !CAM.frontal) blob = await new ImageCapture(t).takePhoto(); } catch(e){}   // máxima resolución del sensor
+  if (!blob){
+    const v = $("#camVideo"), c = document.createElement("canvas"); c.width = v.videoWidth; c.height = v.videoHeight;
+    const g = c.getContext("2d"); if (CAM.frontal){ g.translate(c.width, 0); g.scale(-1, 1); } g.drawImage(v, 0, 0);
+    blob = await new Promise(ok => c.toBlob(ok, "image/jpeg", .92));
+  }
+  terminarCamara(blob);
+};
+
+/* ================= Tarjetas de visita ================= */
+// Frontal (y reverso si hace falta): se detecta la tarjeta en la foto, se endereza, se encuadra y se mejora el contraste.
+// Se guardan como «Empresa@Persona.jpg» y «Empresa@Persona (reverso).jpg» en una nota del archivador «Tarjetas de visita».
+const TJ = {lado: "frontal", caras: {frontal: null, reverso: null}, foto: null, quad: null, datos: {}};
+async function cargarCanvas(blob, max = 2400){
+  const bmp = await createImageBitmap(blob, {imageOrientation: "from-image"}), k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height); return c;
+}
+// Detección de tarjetas y documentos: candidatos por color, luz y bordes; el mejor cuadrilátero; y afinado de cada lado con el gradiente
+function detectarTarjeta(src){
+  const max = 420, k = Math.min(1, max / Math.max(src.width, src.height)), w = Math.max(8, Math.round(src.width * k)), h = Math.max(8, Math.round(src.height * k)), N = w * h;
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d", {willReadFrequently: true}); g.drawImage(src, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h).data, gris = new Float32Array(N);
+  for (let i = 0; i < N; i++) gris[i] = d[i*4] * .299 + d[i*4+1] * .587 + d[i*4+2] * .114;
+  const suaviza = (a, r = 2) => {   // caja separable
+    const t = new Float32Array(N), o = new Float32Array(N);
+    for (let y = 0; y < h; y++){ let s = 0, n = 0; for (let x = -r; x < w + r; x++){ if (x + r < w){ s += a[y*w + x + r]; n++; } if (x - r - 1 >= 0){ s -= a[y*w + x - r - 1]; n--; } if (x >= 0 && x < w) t[y*w + x] = s / n; } }
+    for (let x = 0; x < w; x++){ let s = 0, n = 0; for (let y = -r; y < h + r; y++){ if (y + r < h){ s += t[(y + r)*w + x]; n++; } if (y - r - 1 >= 0){ s -= t[(y - r - 1)*w + x]; n--; } if (y >= 0 && y < h) o[y*w + x] = s / n; } }
+    return o;
+  };
+  const bl = suaviza(gris);
+  const otsu = arr => { const hs = new Array(256).fill(0); for (const v of arr) hs[Math.max(0, Math.min(255, v | 0))]++; let tot = arr.length, sm = 0; for (let i = 0; i < 256; i++) sm += i * hs[i];
+    let sb = 0, wb = 0, mj = 0, t0 = 128; for (let t = 0; t < 256; t++){ wb += hs[t]; if (!wb) continue; const wf = tot - wb; if (!wf) break; sb += t * hs[t]; const v = wb * wf * (sb / wb - (sm - sb) / wf) ** 2; if (v > mj){ mj = v; t0 = t; } } return t0; };
+  // color de la mesa: mediana de los bordes de la foto
+  const borde = [[], [], []];
+  for (let x = 0; x < w; x++) for (const y of [0, 1, h - 2, h - 1]){ const i = (y * w + x) * 4; for (let q = 0; q < 3; q++) borde[q].push(d[i + q]); }
+  for (let y = 0; y < h; y++) for (const x of [0, 1, w - 2, w - 1]){ const i = (y * w + x) * 4; for (let q = 0; q < 3; q++) borde[q].push(d[i + q]); }
+  const fondo = borde.map(l => l.sort((a, b) => a - b)[l.length >> 1]);
+  const dist = new Float32Array(N); for (let i = 0; i < N; i++) dist[i] = Math.min(255, Math.hypot(d[i*4] - fondo[0], d[i*4+1] - fondo[1], d[i*4+2] - fondo[2]));
+  const distS = suaviza(dist), uDist = Math.max(18, Math.min(60, otsu(distS))), uLuz = otsu(bl);
+  // bordes (Sobel sobre la imagen suavizada)
+  const b1 = suaviza(gris, 1), mag = new Float32Array(N), GX = new Float32Array(N), GY = new Float32Array(N);
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++){ const i = y*w + x;
+    const gx = b1[i-w+1] + 2*b1[i+1] + b1[i+w+1] - b1[i-w-1] - 2*b1[i-1] - b1[i+w-1], gy = b1[i+w-1] + 2*b1[i+w] + b1[i+w+1] - b1[i-w-1] - 2*b1[i-w] - b1[i-w+1]; GX[i] = gx; GY[i] = gy; mag[i] = Math.hypot(gx, gy); }
+  const ord = Float32Array.from(mag).sort(), uBorde = Math.max(12, ord[Math.floor(N * .9)]);
+  const morf = (m, r, dilatar) => { const o = new Uint8Array(N); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){ let v = dilatar ? 0 : 1;
+      for (let dy = -r; dy <= r && v === (dilatar ? 0 : 1); dy++) for (let dx = -r; dx <= r; dx++){ const xx = x + dx, yy = y + dy; const mv = xx < 0 || yy < 0 || xx >= w || yy >= h ? 0 : m[yy*w + xx]; if (dilatar && mv){ v = 1; break; } if (!dilatar && !mv){ v = 0; break; } } o[y*w + x] = v; } return o; };
+  const cerrar = (m, r = 2) => morf(morf(m, r, true), r, false);
+  const mascaras = [];
+  const mk = f => { const m = new Uint8Array(N); for (let i = 0; i < N; i++) m[i] = f(i) ? 1 : 0; return m; };
+  mascaras.push(["color", cerrar(mk(i => distS[i] > uDist))]);
+  mascaras.push(["claro", cerrar(mk(i => bl[i] > uLuz))]);
+  mascaras.push(["oscuro", cerrar(mk(i => bl[i] <= uLuz))]);
+  // por bordes: lo encerrado por un contorno (vale para blanco sobre blanco y tarjetas con franjas)
+  { const e = cerrar(mk(i => mag[i] > uBorde), 2), fuera = new Uint8Array(N), pila = [];
+    for (let x = 0; x < w; x++) for (const y of [0, h - 1]) { const i = y*w + x; if (!e[i] && !fuera[i]){ fuera[i] = 1; pila.push(i); } }
+    for (let y = 0; y < h; y++) for (const x of [0, w - 1]) { const i = y*w + x; if (!e[i] && !fuera[i]){ fuera[i] = 1; pila.push(i); } }
+    while (pila.length){ const p = pila.pop(), x = p % w; for (const q of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, p - w, p + w]) if (q >= 0 && q < N && !e[q] && !fuera[q]){ fuera[q] = 1; pila.push(q); } }
+    mascaras.push(["bordes", morf(mk(i => !fuera[i]), 1, false)]); }
+  const area = P => { let s = 0; for (let i = 0; i < P.length; i++){ const a = P[i], b = P[(i + 1) % P.length]; s += a[0] * b[1] - b[0] * a[1]; } return Math.abs(s) / 2; };
+  const envolvente = pts => { pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]); const cr = (o, a, b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]); const lo = [], up = [];
+    for (const p of pts){ while (lo.length >= 2 && cr(lo[lo.length-2], lo[lo.length-1], p) <= 0) lo.pop(); lo.push(p); }
+    for (let i = pts.length - 1; i >= 0; i--){ const p = pts[i]; while (up.length >= 2 && cr(up[up.length-2], up[up.length-1], p) <= 0) up.pop(); up.push(p); }
+    return lo.slice(0, -1).concat(up.slice(0, -1)); };
+  const tri = (a, b, c2) => Math.abs((b[0]-a[0])*(c2[1]-a[1]) - (b[1]-a[1])*(c2[0]-a[0])) / 2;
+  const mayorCuadrilatero = H => {   // el de más área con vértices en la envolvente
+    let P = H; if (P.length > 90){ const s = P.length / 90; P = Array.from({length: 90}, (_, i) => H[Math.floor(i * s)]); }
+    const n = P.length; if (n < 4) return null; let mejor = 0, q = null;
+    for (let i = 0; i < n; i++) for (let kk = i + 2; kk < n; kk++){
+      let bj = 0, j0 = -1; for (let j = i + 1; j < kk; j++){ const t = tri(P[i], P[j], P[kk]); if (t > bj){ bj = t; j0 = j; } }
+      let bl2 = 0, l0 = -1; for (let l = kk + 1; l < n + i; l++){ const t = tri(P[kk], P[l % n], P[i]); if (t > bl2){ bl2 = t; l0 = l % n; } }
+      if (j0 >= 0 && l0 >= 0 && bj + bl2 > mejor){ mejor = bj + bl2; q = [P[i], P[j0], P[kk], P[l0]]; } }
+    return q; };
+  const candidatos = [];
+  for (const [modo, m] of mascaras){
+    const lab = new Int32Array(N).fill(-1); let id = 0;
+    for (let i0 = 0; i0 < N; i0++){
+      if (!m[i0] || lab[i0] >= 0) continue;
+      const pila = [i0], pts = []; lab[i0] = id; let ar = 0, toca = 0;
+      while (pila.length){ const p = pila.pop(), x = p % w, y = (p / w) | 0; ar++;
+        if (x === 0 || y === 0 || x === w - 1 || y === h - 1) toca++;
+        let frontera = false;
+        for (const q of [x > 0 ? p - 1 : -1, x < w - 1 ? p + 1 : -1, y > 0 ? p - w : -1, y < h - 1 ? p + w : -1]){ if (q < 0 || !m[q]){ frontera = true; continue; } if (lab[q] < 0){ lab[q] = id; pila.push(q); } }
+        if (frontera) pts.push([x + .5, y + .5]); }
+      id++;
+      const frac = ar / N, tocaFrac = toca / (2 * (w + h));
+      if (frac < .06 || frac > .985 || tocaFrac > .3 || pts.length < 20) continue;
+      const H = envolvente(pts), q = mayorCuadrilatero(H); if (!q) continue;
+      const aq = area(q), rect = Math.min(ar / aq, aq / ar), conv = ar / area(H);
+      // ángulos: que no sea un rombo raro
+      let angOk = true; for (let i = 0; i < 4; i++){ const a = q[(i + 3) % 4], b = q[i], c2 = q[(i + 1) % 4]; const v1 = [a[0]-b[0], a[1]-b[1]], v2 = [c2[0]-b[0], c2[1]-b[1]];
+        const cos = (v1[0]*v2[0] + v1[1]*v2[1]) / (Math.hypot(...v1) * Math.hypot(...v2)); if (Math.abs(cos) > .6) angOk = false; }
+      if (!angOk || rect < .8) continue;
+      candidatos.push({previo: rect ** 4 * conv ** 2 * (1 - tocaFrac), modo, q: ordenarQuad(q), pts});
+    }
+  }
+  // Rectas fuertes (Hough) y cuadriláteros formados por dos pares de ellas: encuentran la hoja aunque se confunda con lo que la rodea
+  { const uH = Math.max(14, Math.min(uBorde * .8, 28)), nT = 180, diagI = Math.ceil(Math.hypot(w, h)), acc = new Uint16Array(nT * (2 * diagI + 1)), cs = [], sn = [];
+    for (let t = 0; t < nT; t++){ cs.push(Math.cos(t * Math.PI / nT)); sn.push(Math.sin(t * Math.PI / nT)); }
+    for (let y = 2; y < h - 2; y++) for (let x = 2; x < w - 2; x++){ const i = y*w + x; if (mag[i] < uH) continue;
+      // solo máximos locales en la dirección del gradiente (bordes finos)
+      const ux = GX[i] / mag[i], uy = GY[i] / mag[i], a1 = mag[Math.round(y + uy) * w + Math.round(x + ux)], a2 = mag[Math.round(y - uy) * w + Math.round(x - ux)]; if (mag[i] < a1 || mag[i] < a2) continue;
+      const t0 = Math.round(((Math.atan2(uy, ux) + Math.PI) % Math.PI) / Math.PI * nT);
+      for (let dt = -3; dt <= 3; dt++){ const t = (t0 + dt + nT) % nT, r = Math.round(x * cs[t] + y * sn[t]) + diagI; acc[t * (2 * diagI + 1) + r]++; } }
+    const picos = [], R = 2 * diagI + 1;
+    for (let t = 0; t < nT; t++) for (let r = 0; r < R; r++){ const v = acc[t * R + r]; if (v < Math.min(w, h) * .15) continue;
+      let es = true; for (let dt = -4; dt <= 4 && es; dt++) for (let dr = -6; dr <= 6; dr++){ if (!dt && !dr) continue; const tt = (t + dt + nT) % nT, rr = r + dr; if (rr < 0 || rr >= R) continue; if (acc[tt * R + rr] > v || (acc[tt * R + rr] === v && (dt < 0 || (!dt && dr < 0)))){ es = false; break; } }
+      if (es) picos.push({t, r: r - diagI, v}); }
+    picos.sort((a, b) => b.v - a.v);  const rs = picos.slice(0, 14).map(p => ({px: cs[p.t] * p.r, py: sn[p.t] * p.r, dx: -sn[p.t], dy: cs[p.t], t: p.t}));
+    const angD = (a, b) => { const d2 = Math.abs(a.t - b.t) % nT; return Math.min(d2, nT - d2); };
+    const pares = []; for (let i = 0; i < rs.length; i++) for (let j = i + 1; j < rs.length; j++) if (angD(rs[i], rs[j]) < 25){ const sep = Math.abs((rs[j].px - rs[i].px) * rs[i].dy - (rs[j].py - rs[i].py) * rs[i].dx); if (sep > Math.min(w, h) * .15) pares.push([rs[i], rs[j]]); }
+    for (let i = 0; i < pares.length; i++) for (let j = i + 1; j < pares.length; j++){
+      const [a, b] = pares[i], [c2, d2] = pares[j]; if (angD(a, c2) < 55) continue;
+      const q = [corte(a, c2), corte(c2, b), corte(b, d2), corte(d2, a)]; if (q.some(p => !p || p[0] < -w * .03 || p[1] < -h * .03 || p[0] > w * 1.03 || p[1] > h * 1.03)) continue;
+      const qo = ordenarQuad(q), aq = area(qo); if (aq < N * .06 || aq > N * .97) continue;
+      candidatos.push({previo: .9, modo: "rectas", q: qo, pts: null}); } }
+  // Puntuación final: cuánto de cada lado cae sobre un borde de verdad, y tamaño
+  const uSop = Math.max(12, Math.min(uBorde * .45, 22));
+  const soporte = q => { let peor = 1, suma = 0;
+    for (let s2 = 0; s2 < 4; s2++){ const a = q[s2], b = q[(s2 + 1) % 4], L = Math.hypot(b[0]-a[0], b[1]-a[1]); if (L < 5) return 0; const nx = -(b[1]-a[1]) / L, ny = (b[0]-a[0]) / L; let ok = 0, n = 0;
+      for (let t = .06; t < .95; t += .03){ const px = a[0] + (b[0]-a[0]) * t, py = a[1] + (b[1]-a[1]) * t; let bien = false; n++;
+        for (let dd = -2; dd <= 2 && !bien; dd++){ const x = Math.round(px + nx * dd), y = Math.round(py + ny * dd); if (x < 1 || y < 1 || x >= w - 1 || y >= h - 1) continue; const i = y*w + x;
+          if (mag[i] > uSop && Math.abs(GX[i] * nx + GY[i] * ny) > mag[i] * .8) bien = true; }
+        if (bien) ok++; }
+      const f = ok / n; peor = Math.min(peor, f); suma += f; }
+    return {peor, media: suma / 4}; };
+  const validos = [];
+  for (const cd of candidatos){ const sp = soporte(cd.q); if (sp.peor < .3) continue; validos.push({...cd, sp, ar: area(cd.q), puntos: Math.sqrt(area(cd.q) / N) * sp.media ** 2 * (.5 + sp.peor) * cd.previo}); }
+  validos.sort((a, b) => b.puntos - a.puntos);
+  let elegido = validos[0] || null;
+  // si lo mejor cabe dentro de otro rectángulo bien marcado y bastante mayor (una franja o un logo dentro de la tarjeta, una foto dentro de la hoja), se queda el de fuera
+  const dentroDe = (p, q) => { for (let i = 0; i < 4; i++){ const a = q[i], b = q[(i + 1) % 4]; if (((b[0]-a[0])*(p[1]-a[1]) - (b[1]-a[1])*(p[0]-a[0])) / Math.hypot(b[0]-a[0], b[1]-a[1]) < -Math.min(w, h) * .03) return false; } return true; };
+  if (elegido){ const fuera = validos.filter(v => v !== elegido && v.ar > elegido.ar * 1.6 && v.sp.peor >= .5 && v.sp.media >= .75 && elegido.q.every(p => dentroDe(p, v.q))); if (fuera.length) elegido = fuera[0]; }
+  const esc = 1 / k;
+  if (!elegido){ const mx = src.width * .06, my = src.height * .06; return {auto: false, quad: [[mx, my], [src.width - mx, my], [src.width - mx, src.height - my], [mx, src.height - my]]}; }
+  let q = elegido.q;
+  // cada lado, recta ajustada a los puntos del contorno cercanos (las esquinas redondeadas no lo estropean)
+  if (elegido.pts) q = ajustarLados(q, elegido.pts, Math.max(2, Math.min(w, h) * .015));
+  const quad = afinarConBordes(src, q.map(([x, y]) => [x * esc, y * esc]));
+  return {auto: true, quad};
+}
+// arriba-izq, arriba-dcha, abajo-dcha, abajo-izq (sentido horario empezando por el de menor x+y)
+function ordenarQuad(q){
+  q = q.slice(); const cx = q.reduce((s, p) => s + p[0], 0) / 4, cy = q.reduce((s, p) => s + p[1], 0) / 4;
+  q.sort((a, b) => Math.atan2(a[1] - cy, a[0] - cx) - Math.atan2(b[1] - cy, b[0] - cx));
+  let i0 = 0; for (let i = 1; i < 4; i++) if (q[i][0] + q[i][1] < q[i0][0] + q[i0][1]) i0 = i;
+  return [0, 1, 2, 3].map(i => q[(i0 + i) % 4]);
+}
+function rectaDe(pts){   // mínimos cuadrados totales: {px, py, dx, dy}
+  let mx = 0, my = 0; for (const p of pts){ mx += p[0]; my += p[1]; } mx /= pts.length; my /= pts.length;
+  let sxx = 0, syy = 0, sxy = 0; for (const p of pts){ const a = p[0] - mx, b = p[1] - my; sxx += a*a; syy += b*b; sxy += a*b; }
+  const ang = Math.atan2(2 * sxy, sxx - syy) / 2; return {px: mx, py: my, dx: Math.cos(ang), dy: Math.sin(ang)};
+}
+function corte(r1, r2){ const den = r1.dx * r2.dy - r1.dy * r2.dx; if (Math.abs(den) < 1e-6) return null; const t = ((r2.px - r1.px) * r2.dy - (r2.py - r1.py) * r2.dx) / den; return [r1.px + t * r1.dx, r1.py + t * r1.dy]; }
+function ajustarLados(q, pts, tol){
+  const rectas = [];
+  for (let s = 0; s < 4; s++){
+    const a = q[s], b = q[(s + 1) % 4], L = Math.hypot(b[0]-a[0], b[1]-a[1]), ux = (b[0]-a[0]) / L, uy = (b[1]-a[1]) / L;
+    const sel = pts.filter(p => { const t = (p[0]-a[0])*ux + (p[1]-a[1])*uy, dn = Math.abs((p[0]-a[0])*uy - (p[1]-a[1])*ux); return t > L * .12 && t < L * .88 && dn < tol; });
+    rectas.push(sel.length >= 8 ? rectaDe(sel) : {px: a[0], py: a[1], dx: ux, dy: uy});
+  }
+  const nq = [0, 1, 2, 3].map(i => corte(rectas[(i + 3) % 4], rectas[i]));
+  const diag = Math.hypot(q[0][0] - q[2][0], q[0][1] - q[2][1]);
+  return nq.map((p, i) => p && Math.hypot(p[0] - q[i][0], p[1] - q[i][1]) < diag * .06 ? p : q[i]);
+}
+// Afinado: a más resolución, busca en cada lado el salto de luz más fuerte cerca de la recta y vuelve a cortar las rectas
+function afinarConBordes(src, quad){
+  const max = 1100, k = Math.min(1, max / Math.max(src.width, src.height)), w = Math.round(src.width * k), h = Math.round(src.height * k);
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const g = c.getContext("2d", {willReadFrequently: true}); g.drawImage(src, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h).data, L = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) L[i] = d[i*4] * .299 + d[i*4+1] * .587 + d[i*4+2] * .114;
+  const val = (x, y) => { x = Math.max(0, Math.min(w - 1.001, x)); y = Math.max(0, Math.min(h - 1.001, y)); const x0 = x | 0, y0 = y | 0, fx = x - x0, fy = y - y0, i = y0 * w + x0;
+    return (L[i] * (1 - fx) + L[i + 1] * fx) * (1 - fy) + (L[i + w] * (1 - fx) + L[i + w + 1] * fx) * fy; };
+  const q = quad.map(([x, y]) => [x * k, y * k]), cx = q.reduce((s, p) => s + p[0], 0) / 4, cy = q.reduce((s, p) => s + p[1], 0) / 4;
+  const rectas = [];
+  for (let s = 0; s < 4; s++){
+    const a = q[s], b = q[(s + 1) % 4], len = Math.hypot(b[0]-a[0], b[1]-a[1]), ux = (b[0]-a[0]) / len, uy = (b[1]-a[1]) / len;
+    let nx = -uy, ny = ux; if (((a[0] + b[0]) / 2 - cx) * nx + ((a[1] + b[1]) / 2 - cy) * ny < 0){ nx = -nx; ny = -ny; }   // normal hacia fuera
+    const r = Math.max(5, len * .03), cand = [];
+    for (let t = .1; t <= .9001; t += .8 / 40){
+      const px = a[0] + (b[0]-a[0]) * t, py = a[1] + (b[1]-a[1]) * t; let mejor = 0, md = 0, sg = 0;
+      for (let dd = -r; dd <= r; dd += .5){ const x = px + nx * dd, y = py + ny * dd; const gr = val(x + nx * 1.5, y + ny * 1.5) - val(x - nx * 1.5, y - ny * 1.5);
+        if (Math.abs(gr) > mejor){ mejor = Math.abs(gr); md = dd; sg = Math.sign(gr); } }
+      if (mejor > 8) cand.push({p: [px + nx * md, py + ny * md], m: mejor, sg});
+    }
+    if (cand.length < 10){ rectas.push({px: a[0], py: a[1], dx: ux, dy: uy}); continue; }
+    const sgn = Math.sign(cand.reduce((s, x) => s + x.sg, 0)) || 1;
+    let sel = cand.filter(x => x.sg === sgn).map(x => x.p);
+    if (sel.length < 8) sel = cand.map(x => x.p);
+    let rr = rectaDe(sel);
+    for (let it = 0; it < 3; it++){   // fuera los puntos que se alejan (letras, sombras)
+      const dist = p => Math.abs((p[0] - rr.px) * rr.dy - (p[1] - rr.py) * rr.dx), ds = sel.map(dist).sort((x, y) => x - y), lim = Math.max(1.2, ds[Math.floor(ds.length * .6)] * 2.5);
+      const s2 = sel.filter(p => dist(p) <= lim); if (s2.length < 8) break; sel = s2; rr = rectaDe(sel); }
+    // si la recta nueva se aparta mucho de la original, no se fía
+    const ang = Math.abs(rr.dx * uy - rr.dy * ux), desv = Math.abs(((a[0] + b[0]) / 2 - rr.px) * rr.dy - ((a[1] + b[1]) / 2 - rr.py) * rr.dx);
+    rectas.push(ang < .08 && desv < r * 1.2 ? rr : {px: a[0], py: a[1], dx: ux, dy: uy});
+  }
+  const diag = Math.hypot(q[0][0] - q[2][0], q[0][1] - q[2][1]);
+  return [0, 1, 2, 3].map(i => { const p = corte(rectas[(i + 3) % 4], rectas[i]); return (p && Math.hypot(p[0] - q[i][0], p[1] - q[i][1]) < diag * .04 ? p : q[i]).map(v => v / k); });
+}
+// Homografía: de un rectángulo de salida a las 4 esquinas de la foto
+function homografia(dst, src){
+  const A = [], B = [];
+  for (let i = 0; i < 4; i++){ const [x, y] = dst[i], [u, v] = src[i];
+    A.push([x, y, 1, 0, 0, 0, -u * x, -u * y]); B.push(u); A.push([0, 0, 0, x, y, 1, -v * x, -v * y]); B.push(v); }
+  for (let c = 0; c < 8; c++){
+    let p = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]]; [B[c], B[p]] = [B[p], B[c]];
+    for (let r = 0; r < 8; r++){ if (r === c) continue; const f = A[r][c] / A[c][c]; for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k]; B[r] -= f * B[c]; }
+  }
+  return B.map((b, i) => b / A[i][i]);
+}
+function enderezar(src, quad, doc = false){
+  const L = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  let ancho = (L(quad[0], quad[1]) + L(quad[3], quad[2])) / 2, alto = (L(quad[0], quad[3]) + L(quad[1], quad[2])) / 2;
+  let ratio = ancho / alto; const horizontal = ratio >= 1, r = horizontal ? ratio : 1 / ratio;
+  const final = doc ? (r > 1.2 && r < 1.65 ? 1.414 : r) : r > 1.35 && r < 1.85 ? 1.585 : r;   // A4 o tarjeta estándar (85 × 54 mm) si se parece
+  const largo = doc ? 1754 : 1400;
+  const W = horizontal ? largo : Math.round(largo / final), H = horizontal ? Math.round(largo / final) : largo;
+  const hm = homografia([[0, 0], [W, 0], [W, H], [0, H]], quad);
+  const sd = src.getContext("2d", {willReadFrequently: true}).getImageData(0, 0, src.width, src.height), s = sd.data, sw = src.width, sh = src.height;
+  const out = document.createElement("canvas"); out.width = W; out.height = H; const og = out.getContext("2d"), od = og.createImageData(W, H), o = od.data;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+    const z = hm[6] * x + hm[7] * y + 1, u = (hm[0] * x + hm[1] * y + hm[2]) / z, v = (hm[3] * x + hm[4] * y + hm[5]) / z;
+    const x0 = Math.max(0, Math.min(sw - 2, u | 0)), y0 = Math.max(0, Math.min(sh - 2, v | 0)), fx = Math.max(0, Math.min(1, u - x0)), fy = Math.max(0, Math.min(1, v - y0));
+    const i00 = (y0 * sw + x0) * 4, i10 = i00 + 4, i01 = i00 + sw * 4, i11 = i01 + 4, j = (y * W + x) * 4;
+    for (let k = 0; k < 3; k++) o[j + k] = (s[i00 + k] * (1 - fx) + s[i10 + k] * fx) * (1 - fy) + (s[i01 + k] * (1 - fx) + s[i11 + k] * fx) * fy;
+    o[j + 3] = 255;
+  }
+  // contraste y blancos limpios, como escaneada
+  const lum = []; for (let i = 0; i < o.length; i += 16) lum.push(o[i] * .299 + o[i+1] * .587 + o[i+2] * .114); lum.sort((a, b) => a - b);
+  const lo = lum[Math.floor(lum.length * .02)], hi = lum[Math.floor(lum.length * .97)], f = 255 / Math.max(40, hi - lo);
+  for (let i = 0; i < o.length; i += 4) for (let k = 0; k < 3; k++) o[i + k] = Math.max(0, Math.min(255, (o[i + k] - lo) * f));
+  og.putImageData(od, 0, 0); return out;
+}
+// ---------- Pantalla de la tarjeta
+function abrirTarjeta(){
+  TJ.modo = "tarjeta"; prepararModoTj();
+  TJ.lado = "frontal"; TJ.caras = {frontal: null, reverso: null}; TJ.datos = {}; TJ.foto = null;
+  $("#tj").classList.remove("oculto"); document.documentElement.classList.add("lz-on"); pasoTarjeta("elegir");
+}
+function cerrarTarjeta(){ $("#tj").classList.add("oculto"); document.documentElement.classList.remove("lz-on"); }
+function pasoTarjeta(p){
+  for (const id of ["tjElegir", "tjAjustar", "tjDatos", "tjPaginas"]) $("#" + id).classList.toggle("oculto", id !== {elegir: "tjElegir", ajustar: "tjAjustar", datos: "tjDatos", paginas: "tjPaginas"}[p]);
+  $("#tjPaso").textContent = TJ.modo === "doc" ? (p === "paginas" ? `${DOC.paginas.length} página${DOC.paginas.length === 1 ? "" : "s"}` : `Página ${DOC.paginas.length + 1}`) : p === "datos" ? "Revisa los datos" : TJ.lado === "frontal" ? "Frontal" : "Reverso";
+  if (p === "paginas") pintarPaginasDoc();
+  if (p === "datos") pintarDatosTarjeta();
+}
+$("#tjCam").onclick = () => hacerFoto({guia: TJ.modo !== "doc"}).then(f => { if (f) fotoTarjeta(f); });
+$("#tjGal").onclick = () => { const i = $("#tjIn"); i.removeAttribute("capture"); i.click(); };
+$("#tjIn").onchange = () => { const f = $("#tjIn").files[0]; $("#tjIn").value = ""; if (f) fotoTarjeta(f); };
+async function fotoTarjeta(f){
+  try { TJ.foto = await cargarCanvas(f); const r = detectarTarjeta(TJ.foto); TJ.quad = r.quad; pasoTarjeta("ajustar");
+    $("#tjAviso").textContent = TJ.modo === "doc" ? (r.auto ? "He encuadrado la página. Si hace falta, arrastra una esquina: verás una lupa encima." : "Arrastra las esquinas a los bordes de la página.") : r.auto ? "He encuadrado la tarjeta. Para afinar, arrastra una esquina: verás una lupa encima." : "No he encontrado bien la tarjeta: arrastra las esquinas a sus bordes.";
+    requestAnimationFrame(pintarAjuste); }
+  catch(e){ toast("No se pudo abrir la foto", "alerta"); }
+}
+let tjEsc = 1, tjOx = 0, tjOy = 0, tjArr = -1, tjDesfase = [0, 0];
+function pintarAjuste(){
+  const c = $("#tjCanvas"), r = c.getBoundingClientRect(), k = devicePixelRatio || 1, im = TJ.foto; if (!im || !r.width) return;
+  c.width = r.width * k; c.height = r.height * k; tjEsc = Math.min((r.width - 32) / im.width, (r.height - 32) / im.height); tjOx = (r.width - im.width * tjEsc) / 2; tjOy = (r.height - im.height * tjEsc) / 2;
+  const g = c.getContext("2d"); g.setTransform(k, 0, 0, k, 0, 0); g.clearRect(0, 0, r.width, r.height); g.drawImage(im, tjOx, tjOy, im.width * tjEsc, im.height * tjEsc);
+  const P = TJ.quad.map(([x, y]) => [tjOx + x * tjEsc, tjOy + y * tjEsc]);
+  g.fillStyle = "rgba(8,12,24,.5)"; g.beginPath(); g.rect(0, 0, r.width, r.height); g.moveTo(...P[0]); for (const p of P.slice(1)) g.lineTo(...p); g.closePath(); g.fill("evenodd");
+  g.strokeStyle = "#D0614F"; g.lineWidth = 2.5; g.beginPath(); g.moveTo(...P[0]); for (const p of P.slice(1)) g.lineTo(...p); g.closePath(); g.stroke();
+  P.forEach((p, i) => { g.fillStyle = i === tjArr ? "rgba(208,97,79,.45)" : "#D0614F"; g.beginPath(); g.arc(p[0], p[1], 11, 0, Math.PI * 2); g.fill(); g.fillStyle = "#2B1D14"; g.beginPath(); g.arc(p[0], p[1], 3, 0, Math.PI * 2); g.fill(); });
+  // lupa: mientras arrastras una esquina, se ve ampliada por encima del dedo
+  if (tjArr >= 0){
+    const [cx, cy] = P[tjArr], R = 70, Z = 4, ex = tjEsc * Z;
+    let lx = cx, ly = cy - 125; if (ly - R < 4) ly = cy + 125; lx = Math.max(R + 6, Math.min(r.width - R - 6, lx));
+    g.save(); g.beginPath(); g.arc(lx, ly, R, 0, Math.PI * 2); g.closePath(); g.fillStyle = "#0b0f1a"; g.fill(); g.clip();
+    const [qx, qy] = TJ.quad[tjArr];
+    g.drawImage(im, qx - R / ex, qy - R / ex, 2 * R / ex, 2 * R / ex, lx - R, ly - R, 2 * R, 2 * R);
+    // los dos lados que llegan a esa esquina, también ampliados
+    g.strokeStyle = "#D0614F"; g.lineWidth = 2;
+    for (const o of [(tjArr + 1) % 4, (tjArr + 3) % 4]){ const [ox, oy] = TJ.quad[o]; g.beginPath(); g.moveTo(lx, ly); g.lineTo(lx + (ox - qx) * ex, ly + (oy - qy) * ex); g.stroke(); }
+    g.strokeStyle = "rgba(255,255,255,.9)"; g.lineWidth = 1; g.beginPath(); g.moveTo(lx - 12, ly); g.lineTo(lx + 12, ly); g.moveTo(lx, ly - 12); g.lineTo(lx, ly + 12); g.stroke();
+    g.restore(); g.strokeStyle = "#fff"; g.lineWidth = 3; g.beginPath(); g.arc(lx, ly, R, 0, Math.PI * 2); g.stroke();
+  }
+}
+(() => {
+  const c = $("#tjCanvas"), pos = e => { const r = c.getBoundingClientRect(); return [(e.clientX - r.left - tjOx) / tjEsc, (e.clientY - r.top - tjOy) / tjEsc]; };
+  // la esquina se mueve con el dedo pero sin saltar debajo de él (así no la tapa), y más despacio que el dedo para afinar
+  let inicio = null;
+  c.onpointerdown = e => { c.setPointerCapture(e.pointerId); const [x, y] = pos(e); let m = 1e9; tjArr = -1;
+    TJ.quad.forEach(([qx, qy], i) => { const d = Math.hypot(qx - x, qy - y) * tjEsc; if (d < m && d < 60){ m = d; tjArr = i; } });
+    if (tjArr >= 0){ inicio = {dedo: [x, y], esquina: [...TJ.quad[tjArr]]}; pintarAjuste(); } };
+  c.onpointermove = e => { if (tjArr < 0 || !inicio) return; const [x, y] = pos(e), lento = e.pointerType === "touch" ? .5 : 1;
+    const nx = inicio.esquina[0] + (x - inicio.dedo[0]) * lento, ny = inicio.esquina[1] + (y - inicio.dedo[1]) * lento;
+    TJ.quad[tjArr] = [Math.max(0, Math.min(TJ.foto.width, nx)), Math.max(0, Math.min(TJ.foto.height, ny))]; pintarAjuste(); };
+  c.onpointerup = c.onpointercancel = () => { tjArr = -1; inicio = null; pintarAjuste(); };
+  addEventListener("resize", () => { if (!$("#tjAjustar").classList.contains("oculto")) pintarAjuste(); });
+})();
+$("#tjRepetir").onclick = () => pasoTarjeta("elegir");
+$("#tjUsar").onclick = async () => {
+  const b = $("#tjUsar"); b.disabled = true; b.textContent = "Enderezando…"; await new Promise(r => setTimeout(r, 30));
+  if (TJ.modo === "doc"){ try { DOC.paginas.push(enderezar(TJ.foto, TJ.quad, true)); TJ.foto = null; pasoTarjeta("paginas"); } finally { b.disabled = false; b.textContent = "Usar"; } return; }
+  try { TJ.caras[TJ.lado] = enderezar(TJ.foto, TJ.quad); TJ.foto = null; pasoTarjeta("datos"); leerTarjeta(); }   // con el reverso, completa lo que falte (dirección, web…)
+  finally { b.disabled = false; b.textContent = "Usar"; }
+};
+$("#tjCerrar").onclick = () => { if (TJ.modo === "doc" ? (DOC.paginas.length || TJ.foto) && !confirm("¿Descartar este documento?") : (TJ.caras.frontal || TJ.foto) && !confirm("¿Descartar esta tarjeta?")) return; cerrarTarjeta(); };
+function pintarDatosTarjeta(){
+  const cara = (lado, t) => TJ.caras[lado]
+    ? `<div class="tj-cara"><img src="${TJ.caras[lado].toDataURL("image/jpeg", .8)}" alt="${t}"><span>${t}</span><button class="enl" data-rehacer="${lado}">Repetir</button></div>`
+    : `<button class="tj-cara tj-anadir" data-anadir="${lado}">${ic("mas")}<span>Añadir ${t.toLowerCase()}</span><small>Solo si la tarjeta tiene algo detrás</small></button>`;
+  $("#tjCaras").innerHTML = cara("frontal", "Frontal") + cara("reverso", "Reverso");
+  const d = TJ.datos;
+  for (const k of ["empresa", "persona", "cargo", "telefono", "movil", "email", "web", "direccion"]) if ($("#tj_" + k) && document.activeElement !== $("#tj_" + k)) $("#tj_" + k).value = d[k] || "";
+  pintarNombreTarjeta();
+}
+function nombreTarjeta(){
+  const limpio = t => String(t || "").replace(/[\\/:*?"<>|#%\n\r]+/g, " ").replace(/\s+/g, " ").trim();
+  const e = limpio($("#tj_empresa").value), p = limpio($("#tj_persona").value);
+  return e || p ? `${e || "Sin empresa"}@${p || "Sin nombre"}` : "";
+}
+function pintarNombreTarjeta(){ const n = nombreTarjeta(); $("#tjNombre").innerHTML = n ? `Se guardará como <b>${esc(n)}</b>${TJ.caras.reverso ? ` y <b>${esc(n)} (reverso)</b>` : ""}` : "Escribe al menos la empresa o la persona"; $("#tjGuardar").disabled = !n; }
+document.addEventListener("input", e => { if (e.target.id?.startsWith("tj_")){ TJ.datos[e.target.id.slice(3)] = e.target.value; pintarNombreTarjeta(); } });
+$("#tjCaras").addEventListener("click", e => {
+  const a = e.target.closest("[data-anadir]"), r = e.target.closest("[data-rehacer]");
+  if (a || r){ TJ.lado = (a || r).dataset.anadir || (a || r).dataset.rehacer; pasoTarjeta("elegir"); }
+});
+async function leerTarjeta(){
+  if (!ia()){ $("#tjLeyendo").textContent = "Escribe los datos (con la IA activada se rellenan solos)."; return; }
+  $("#tjLeyendo").innerHTML = `${ic("spark")}Leyendo la tarjeta…`;
+  try {
+    const contenido = [{type: "text", text: "Tarjeta de visita (frontal y, si está, reverso)."}];
+    for (const l of ["frontal", "reverso"]) if (TJ.caras[l]) contenido.push({type: "image_url", image_url: {url: TJ.caras[l].toDataURL("image/jpeg", .85), detail: "high"}});
+    const r = await llamarIA([{role: "system", content: 'Lee la tarjeta de visita y responde SOLO con un JSON: {"empresa","persona","cargo","telefono","movil","email","web","direccion"}. Usa "" si un dato no aparece. "persona" es nombre y apellidos de la persona. "telefono" es el fijo y "movil" el móvil (en España los móviles empiezan por 6 o 7; los fijos por 8 o 9); si hay varios del mismo tipo, sepáralos con « / ». No pongas el fax.'}, {role: "user", content: contenido}], {max: 400});
+    for (const k of Object.keys(r)) if (r[k] && !TJ.datos[k]) TJ.datos[k] = String(r[k]);
+    TJ.datos.leida = true; $("#tjLeyendo").textContent = "Datos leídos de la tarjeta. Corrige lo que haga falta.";
+    pintarDatosTarjeta();
+  } catch(e){ $("#tjLeyendo").textContent = "No se pudo leer: " + e.message + ". Escribe los datos."; }
+}
+$("#tjGuardar").onclick = async () => {
+  const nombre = nombreTarjeta(); if (!nombre || !TJ.caras.frontal) return;
+  const b = $("#tjGuardar"); b.disabled = true; b.textContent = "Guardando…";
+  try {
+    const ahora = new Date(), n = notaBase(ahora), carpeta = `${ahora.getFullYear()}/${pad(ahora.getMonth()+1)}`, adj = [];
+    const usados = new Set(notas.flatMap(x => x.fotos || []).map(r => r.split("/").pop()));
+    let base = nombre, k = 2; while (usados.has(base + ".jpg")) base = `${nombre} ${k++}`;
+    for (const [lado, sufijo] of [["frontal", ""], ["reverso", " (reverso)"]]){
+      if (!TJ.caras[lado]) continue;
+      const r = `Fotos/${carpeta}/${base}${sufijo}.jpg`, blob = await new Promise(ok => TJ.caras[lado].toBlob(ok, "image/jpeg", .9));
+      await idb.ponerBlob(r, blob); n.fotos.push(r); adj.push(r);
+    }
+    const v = id => $("#tj_" + id).value.trim(), empresa = v("empresa"), persona = v("persona");
+    n.titulo = nombre; n.tarjeta = true;
+    n.contacto = Object.fromEntries(["empresa", "persona", "cargo", "telefono", "movil", "email", "web", "direccion"].map(k => [k, v(k)]).filter(([, x]) => x));
+    n.texto = [persona && v("cargo") ? `${persona}, ${v("cargo")}` : persona || v("cargo"), empresa, v("telefono") && "Teléfono: " + v("telefono"), v("movil") && "Móvil: " + v("movil"), v("email") && "Correo: " + v("email"), v("web") && "Web: " + v("web"), v("direccion")].filter(Boolean).join("\n");
+    if (empresa || persona) n.para = {categoria: "cliente", nombre: empresa || persona};
+    let car = archivadores().find(c => norm(c.nombre) === norm("Tarjetas de visita"));
+    if (!car){ car = {id: "c" + Date.now().toString(36), nombre: "Tarjetas de visita"}; config.carpetas = [...archivadores(), car]; }
+    n.carpeta = car.id;
+    if (n.para){ config.contactos = config.contactos || {}; const l = config.contactos.cliente || []; if (!l.some(x => norm(x) === norm(n.para.nombre))) config.contactos.cliente = [...l, n.para.nombre]; }
+    guardarConfig();
+    await guardarNotaLocal(n, adj);
+    cerrarTarjeta(); vibrar(60); toast(`Tarjeta guardada: ${nombre}`, "check", 3500);
+  } catch(e){ toast("No se pudo guardar la tarjeta: " + e.message, "alerta", 5000); }
+  finally { b.disabled = false; b.textContent = "Guardar tarjeta"; }
+};
+
+/* ================= Inteligencia artificial (Azure OpenAI con la clave del usuario) ================= */
+// config.ia = {endpoint, clave, despliegue, auto}. La clave vive en Configuracion/config.json de tu OneDrive.
+const iaPropia = () => !!(config.ia?.endpoint && config.ia?.clave);
+const iaServidor = () => !!(apiBase() && acceso?.estado === "autorizado" && acceso?.ia);
+const ia = () => iaPropia() || iaServidor();
+// «Ayúdame a organizarme» (apagado de serie): dónde se hace cada tarea y «algún día»
+const organizar = () => !!config.organizar;
+const DONDE = {llamar: ["Llamadas", "tel", "Llamadas pendientes"], ordenador: ["Ordenador", "pantalla", "Para hacer con el ordenador"], fuera: ["Fuera", "coche", "Para cuando salgas"], casa: ["Casa", "casa", "Para hacer en casa"]};
+const iaAuto = () => ia() && config.ia?.auto !== false && config.iaAuto !== false;
+// ---------- Lo que llega de la nube se comprueba antes de usarlo ----------
+// Un archivo de la carpeta de Cuaderna podría haberlo escrito otra app o un PC infectado: los campos que acaban dentro
+// del HTML (identificadores, rutas de fotos, coordenadas, colores) tienen que tener la forma esperada o se descartan.
+const RX_NID = /^[A-Za-z0-9_-]{1,80}$/, RX_RUTA = /^[\w\-./ ]{1,200}$/, RX_COLOR = /^#[0-9a-f]{3,8}$/i;
+function notaSegura(n, idArchivo){
+  if (!n || typeof n !== "object" || Array.isArray(n) || !RX_NID.test(String(n.id)) || (idArchivo && n.id !== idArchivo)) return null;
+  for (const k of ["titulo", "texto", "fecha", "hora", "carpeta", "tipo", "ambito", "creada", "audio"]) if (n[k] != null && typeof n[k] !== "string") delete n[k];
+  if (n.fecha && !/^\d{4}-\d{2}-\d{2}$/.test(n.fecha)) delete n.fecha;
+  if (n.hora && !/^\d{2}:\d{2}$/.test(n.hora)) delete n.hora;
+  if (n.carpeta && !RX_NID.test(n.carpeta)) delete n.carpeta;
+  if (n.audio && !RX_RUTA.test(n.audio)) delete n.audio;
+  n.fotos = Array.isArray(n.fotos) ? n.fotos.filter(f => typeof f === "string" && RX_RUTA.test(f)) : [];
+  if (Array.isArray(n.adjuntos)) n.adjuntos = n.adjuntos.filter(a => a && typeof a === "object" && (!a.ruta || RX_RUTA.test(String(a.ruta))));
+  if (n.ubicacion && !(Number.isFinite(+n.ubicacion.lat) && Number.isFinite(+n.ubicacion.lon))) n.ubicacion = null;
+  else if (n.ubicacion){ n.ubicacion.lat = +n.ubicacion.lat; n.ubicacion.lon = +n.ubicacion.lon; }
+  return n;
+}
+function configSegura(c){
+  if (!c || typeof c !== "object" || Array.isArray(c)) return {};
+  if (Array.isArray(c.carpetas)) c.carpetas = c.carpetas.filter(x => x && RX_NID.test(String(x.id))).map(x => {
+    if (x.color && !RX_COLOR.test(x.color)) delete x.color;
+    if (x.icono && !ICONOS[x.icono]) delete x.icono;
+    if (x.padre && !RX_NID.test(String(x.padre))) delete x.padre;
+    x.nombre = String(x.nombre || "Libreta").slice(0, 120);
+    return x;
+  });
+  // la voz y la IA propias solo pueden apuntar a Azure: nunca mandar claves ni notas a otro sitio
+  if (c.voz && c.voz.region && !/^[a-z0-9]{2,30}$/.test(c.voz.region)) delete c.voz.region;
+  if (c.ia && c.ia.endpoint && !/^https:\/\/[\w-]+\.(openai|cognitiveservices)\.azure\.com\/?/i.test(c.ia.endpoint)) delete c.ia.endpoint;
+  return c;
+}
+// Lo que el usuario cuenta de sí mismo en Ajustes; quien ya tenía su propia clave conserva el contexto de antes
+const sobreMi = () => (config.sobreMi ?? (iaPropia() ? "Delegado comercial de material eléctrico en Sevilla." : "")).trim();
+async function llamarIA(mensajes, {json = true, max = 900} = {}, intento = 0){
+  // vale tanto «https://recurso.openai.azure.com/» como la dirección larga que muestra Azure
+  const c = config.ia || {}, cuerpo = {messages: mensajes, temperature: 0.2, max_tokens: max, ...(json ? {response_format: {type: "json_object"}} : {})};
+  let r;
+  if (iaPropia()){
+    let base = c.endpoint.trim(); try { base = new URL(base).origin; } catch(e){ base = base.replace(/\/+$/, ""); }
+    const url = `${base}/openai/deployments/${encodeURIComponent(c.despliegue || "gpt-4.1-mini")}/chat/completions?api-version=2024-10-21`;
+    r = await fetch(url, {method: "POST", headers: {"Content-Type": "application/json", "api-key": c.clave.trim()}, body: JSON.stringify(cuerpo)});
+  } else {
+    if (!iaServidor()) throw new Error("La IA no está activa");
+    r = await api("ia", {cuerpo, crudo: true});
+    if (r.status === 401 || r.status === 403){ let m = ""; try { m = (await r.json()).error || ""; } catch(e){} throw new Error(m || "Tu acceso a la IA no está activo"); }
+    if (r.status === 429){ let j = {}; try { j = await r.clone().json(); } catch(e){} if (j.limite){ avisarLimite("ia"); throw new Error(j.error); } }   // tope diario del plan: no se reintenta
+  }
+  if ((r.status === 429 || r.status >= 500) && intento < 4){   // límite por minuto de Azure: espera lo que pida y reintenta
+    const ms = +r.headers.get("retry-after-ms") || (+r.headers.get("retry-after") || 0) * 1000 || 4000 * 2 ** intento;
+    await esperar(Math.min(60000, ms)); return llamarIA(mensajes, {json, max}, intento + 1);
+  }
+  if (!r.ok){
+    let m = ""; try { const j = await r.json(); m = j.error?.message || j.error?.code || ""; } catch(e){}
+    throw new Error(r.status === 401 ? "La clave de la IA no es válida" : r.status === 404 ? "No encuentro la implementación «" + (c.despliegue || "gpt-4.1-mini") + "». Revisa el nombre" : r.status === 429 ? "La IA está saturada; se reintentará" : `IA (${r.status})${m ? ": " + m : ""}`);
+  }
+  const t = (await r.json()).choices?.[0]?.message?.content || "";
+  if (!json) return t;
+  try { return JSON.parse(t); } catch(e){ const m = t.match(/\{[\s\S]*\}/); if (m) return JSON.parse(m[0]); throw new Error("La IA respondió algo que no entiendo"); }
+}
+async function probarIA(){
+  const r = await llamarIA([{role: "user", content: 'Responde solo con este JSON: {"ok": true}'}], {max: 20});
+  if (!r.ok) throw new Error("Respuesta inesperada");
+}
+const hoyLargo = () => new Date().toLocaleDateString("es-ES", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+async function imagenParaIA(ruta){
+  const b = await idb.blob(ruta) || await descargarRuta(ruta);
+  return (await blobADataUrl(b, 1024)).src;
+}
+// Ordena una nota: título, resumen, tareas, tipo, para quién y fecha; lee el texto de las fotos
+async function enriquecerNota(n){
+  let contactos = personas().slice(0, 150).map(p => `${p.nombre}${p.cat ? " (" + CAT[p.cat] + ")" : ""}`).join("; ");
+  if (agenda){   // de la agenda del móvil, solo los que se mencionan en la nota
+    const t = norm([n.titulo, n.texto, n.transcripcion].join(" ")), palabras = new Set(t.split(/[^a-z0-9ñ]+/).filter(w => w.length > 3));
+    const vistos = agenda.filter(c => norm(c.nombre).split(/\s+/).some(w => w.length > 3 && palabras.has(w)) || (c.empresa && norm(c.empresa).split(/\s+/).some(w => w.length > 3 && palabras.has(w)))).slice(0, 25);
+    if (vistos.length) contactos += "; de la agenda: " + vistos.map(c => c.nombre + (c.empresa ? " (" + c.empresa + ")" : "")).join("; ");
+  }
+  const todas = (n.fotos || []).filter(r => !r.includes("trazo")), fotos = todas.slice(0, 4);
+  const texto = [n.titulo ? "Título: " + n.titulo : "", n.texto || "", n.transcripcion && n.transcripcion !== n.texto ? "Dictado: " + n.transcripcion : ""].filter(Boolean).join("\n").slice(0, 6000);
+  const sistema = `Eres el asistente de Cuaderna, una app de notas para el día a día.${sobreMi() ? " Sobre quien la usa: " + sobreMi() : ""} Hoy es ${hoyLargo()}.
+Analiza la nota (y sus fotos, si las hay) y responde SOLO con un JSON con estas claves:
+"titulo": título breve y concreto en español (máx. 60 caracteres), sin comillas;
+"resumen": 1-2 frases si el texto es largo o confuso (más de 3 frases); si no, "";
+"tareas": lista de acciones concretas que se deducen (verbo en infinitivo, máx. 8); [] si no hay;
+"tipo": "tarea", "idea", "recordatorio" o "nota";
+"para": {"nombre": persona o empresa a la que se refiere, usando EXACTAMENTE el nombre de la lista de contactos si coincide, "categoria": ${catsVisibles().map(c => `"${c[0]}"`).join(", ")} o "" (persona = alguien; asunto = un tema, proyecto o empresa que agrupa notas)};
+"fecha": "AAAA-MM-DD" si se menciona un día concreto o relativo (mañana, el jueves…), si no "";
+"hora": "HH:MM" o "";
+"textoFotos": texto legible en las fotos (tarjeta de visita, albarán, cartel…), resumido y ordenado; "" si no hay fotos o no tienen texto;
+"contactoFoto": si una foto es una tarjeta de visita, {"nombre","empresa","telefono","email","cargo"}; si no, null.${organizar() ? `
+"donde": dónde o con qué se hace lo que pide la nota: "llamar" si consiste en llamar o hablar por teléfono con alguien, "ordenador" si se hace con el ordenador (correos, presupuestos, documentos, gestiones en una web), "fuera" si hay que ir a algún sitio (visitas, recados, compras), "casa" si se hace en casa; "" si no es algo que hacer o no está claro.
+"esperando": si la nota dice que otra persona o empresa tiene que hacer o mandar algo para el usuario («Zemper me tiene que enviar el presupuesto», «espero la respuesta de Carmen»), el nombre de esa persona o empresa; si no, "".` : ""}
+Contactos conocidos: ${contactos || "ninguno"}.`;
+  const contenido = [{type: "text", text: texto || "(nota sin texto)"}];
+  for (const r of fotos){ try { contenido.push({type: "image_url", image_url: {url: await imagenParaIA(r), detail: "low"}}); } catch(e){} }
+  const res = await llamarIA([{role: "system", content: sistema}, {role: "user", content: contenido}], {max: 900});
+  // el resto de fotos, de 8 en 8: solo se lee su texto
+  const resto = todas.slice(4, 100);
+  if (resto.length){
+    const textos = res.textoFotos ? ["Fotos 1-" + fotos.length + ": " + res.textoFotos] : [];
+    for (let i = 0; i < resto.length; i += 8){
+      const tanda = resto.slice(i, i + 8), desde = 5 + i;
+      if (resto.length > 8) toast(`Leyendo fotos ${desde}-${desde + tanda.length - 1} de ${todas.length}…`, "spark", 2500);
+      const c2 = [{type: "text", text: `Fotos ${desde} a ${desde + tanda.length - 1} de una nota${n.titulo ? " titulada «" + n.titulo + "»" : ""}.`}];
+      for (const r of tanda){ try { c2.push({type: "image_url", image_url: {url: await imagenParaIA(r), detail: "low"}}); } catch(e){} }
+      try {
+        const t = await llamarIA([{role: "system", content: 'Para cada foto, en orden, resume el texto legible o, si no hay texto, describe en pocas palabras lo que se ve. Responde SOLO con un JSON: {"fotos": ["…", "…"]}.'}, {role: "user", content: c2}], {max: 120 * tanda.length + 100});
+        (t.fotos || []).forEach((x, k) => { if (x) textos.push(`Foto ${desde + k}: ${x}`); });
+      } catch(e){}
+    }
+    res.textoFotos = textos.join("\n");
+  }
+  return res;
+}
+// Aplica lo que propone la IA sin pisar lo que ya puso el usuario
+function aplicarIA(n, r){
+  const cambios = [];
+  if (r.titulo && !n.titulo && !n.ancla){ n.titulo = String(r.titulo).slice(0, 80); cambios.push("título"); }
+  if (r.tipo && TIPOS[r.tipo] && (!n.tipo || n.tipo === "nota") && r.tipo !== "nota"){ n.tipo = r.tipo; cambios.push("tipo"); }
+  if (r.para?.nombre && !n.para?.nombre){ n.para = {categoria: CAT[r.para.categoria] ? r.para.categoria : "", nombre: String(r.para.nombre).slice(0, 60)}; cambios.push("para quién"); }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(r.fecha || "") && !n.fecha){ n.fecha = r.fecha; if (/^\d{2}:\d{2}$/.test(r.hora || "")) n.hora = r.hora; cambios.push("fecha"); }
+  const paraOrganizar = organizar() && !n.tarjeta && !r.contactoFoto && !notaConsulta(n);
+  if (paraOrganizar && DONDE[r.donde] && !n.donde && !n.algunDia){ n.donde = r.donde; cambios.push("dónde"); }
+  if (paraOrganizar && typeof r.esperando === "string" && r.esperando.trim() && !n.esperando && !n.asignada){ n.esperando = {quien: r.esperando.trim().slice(0, 60), desde: new Date().toISOString()}; cambios.push("a la espera"); }
+  const tareas = (Array.isArray(r.tareas) ? r.tareas : []).map(t => String(t).trim()).filter(Boolean).slice(0, 8);
+  if (tareas.length >= 2 && !partirLista(n.texto).items.length){ n.texto = [String(n.texto || "").trim(), ...tareas.map(t => `[ ] ${t}`)].filter(Boolean).join("\n"); cambios.push("tareas"); }
+  n.ia = {resumen: r.resumen || "", textoFotos: r.textoFotos || "", contactoFoto: r.contactoFoto || null, fecha: new Date().toISOString()};
+  if (!n.ia.resumen && !n.ia.textoFotos && !n.ia.contactoFoto) n.ia = {fecha: n.ia.fecha};
+  return cambios;
+}
+const mereceIA = n => !n.ancla && !n.hecha && ((n.texto || "").length > 25 || n.audio || (n.fotos || []).some(r => !r.includes("trazo")));
+let pensandoIA = false;
+async function procesarIA(){
+  if (pensandoIA || !iaAuto() || !navigator.onLine) return;
+  pensandoIA = true;
+  try {
+    for (const n of notas.filter(x => x._ia && !x._transcribir && !x._borrar)){
+      try {
+        const r = await enriquecerNota(n), cambios = aplicarIA(n, r);
+        delete n._ia; delete n._intentosIA; await guardarNotaLocal(n); refrescar();
+        if (cambios.length) toast(`Cuaderna ordenó tu nota: ${cambios.join(", ")}`, "spark", 3500);
+        if (n.ia?.contactoFoto?.nombre || n.ia?.contactoFoto?.empresa) ofrecerContacto(n);
+      } catch(e){ n._intentosIA = (n._intentosIA || 0) + 1; if (n._intentosIA >= 3) delete n._ia; await idb.poner(n); }
+    }
+  } finally { pensandoIA = false; }
+}
+setInterval(() => { if (document.visibilityState === "visible") procesarIA(); }, 60000);
+// Tarjeta de visita: ofrecer guardarla como cliente
+// Una nota con la foto de una tarjeta (importada de OneNote, Evernote o hecha a mano) pasa a ser tarjeta de visita
+const PIDE_TARJETA = 'Lee la tarjeta de visita y responde SOLO con un JSON: {"empresa","persona","cargo","telefono","movil","email","web","direccion"}. Usa "" si un dato no aparece. "persona" es nombre y apellidos de la persona. "telefono" es el fijo y "movil" el móvil (en España los móviles empiezan por 6 o 7; los fijos por 8 o 9); si hay varios del mismo tipo, sepáralos con « / ». No pongas el fax. Si la imagen no es una tarjeta de visita, responde {"no_es": true}.';
+async function convertirEnTarjeta(n){
+  const contenido = [{type: "text", text: `Tarjeta de visita${n.titulo ? " (la nota se titula «" + n.titulo + "»)" : ""}. Puede haber frontal y reverso.`}];
+  for (const r of (n.fotos || []).slice(0, 2)) contenido.push({type: "image_url", image_url: {url: await imagenParaIA(r), detail: "high"}});
+  const r = await llamarIA([{role: "system", content: PIDE_TARJETA}, {role: "user", content: contenido}], {max: 400});
+  if (r.no_es) throw new Error("La foto no parece una tarjeta de visita");
+  const d = {}; for (const k of ["empresa", "persona", "cargo", "telefono", "movil", "email", "web", "direccion"]) if (r[k] && String(r[k]).trim()) d[k] = String(r[k]).trim().slice(0, 200);
+  if (!d.empresa && !d.persona) throw new Error("No se ve ni el nombre ni la empresa en la tarjeta");
+  n.tarjeta = true; n.contacto = d;
+  if (!n.titulo || !n.titulo.includes("@")) n.titulo = `${d.empresa || "Sin empresa"}@${d.persona || "Sin nombre"}`;
+  const lineas = [d.persona && d.cargo ? `${d.persona}, ${d.cargo}` : d.persona || d.cargo, d.empresa, d.telefono && "Teléfono: " + d.telefono, d.movil && "Móvil: " + d.movil, d.email && "Correo: " + d.email, d.web && "Web: " + d.web, d.direccion].filter(Boolean).join("\n");
+  if (!String(n.texto || "").trim()) n.texto = lineas; else if (!n.texto.includes(lineas)) n.texto = n.texto.trim() + "\n\n" + lineas;
+  if (!n.para?.nombre && (d.empresa || d.persona)) n.para = {categoria: "cliente", nombre: d.empresa || d.persona};
+  if (n.para?.nombre){ config.contactos = config.contactos || {}; const l = config.contactos.cliente || []; if (!l.some(x => norm(x) === norm(n.para.nombre))){ config.contactos.cliente = [...l, n.para.nombre]; guardarConfig(); } }
+  await guardarNotaLocal(n);
+}
+// Todas las de una libreta de una vez (por ejemplo, las importadas de OneNote)
+async function convertirLibretaEnTarjetas(c){
+  const lista = deNotas().filter(n => n.carpeta === c.id && !n.tarjeta && n.fotos?.length);
+  if (!lista.length){ toast("En esta libreta no hay notas con foto pendientes de convertir", "user", 4000); return; }
+  if (!confirm(`Hay ${lista.length} nota${lista.length === 1 ? "" : "s"} con foto en «${c.nombre}». La IA leerá cada foto y, si es una tarjeta de visita, guardará sus datos para poder pasarlos a tus contactos. ¿Seguimos?`)) return;
+  let hechas = 0, no = 0;
+  for (const [i, n] of lista.entries()){
+    toast(`Leyendo tarjetas: ${i + 1} de ${lista.length}…`, "spark", 60000);
+    try { await convertirEnTarjeta(n); hechas++; } catch(e){ no++; if (/límite/i.test(e.message)){ toast(e.message, "alerta", 6000); break; } }
+  }
+  refrescar(); toast(`${hechas} tarjeta${hechas === 1 ? "" : "s"} guardada${hechas === 1 ? "" : "s"}${no ? ` · ${no} no parecían tarjetas` : ""}`, "check", 6000);
+}
+// ---------- Libreta a contactos (Plus): lee las fotos pendientes, revisa los datos y crea un solo archivo con todos ----------
+async function libretaAContactos(c){
+  const rama = descendientes(c.id), enRama = n => rama.has(n.carpeta);
+  const pendientes = ia() ? deNotas().filter(n => enRama(n) && !n.tarjeta && n.fotos?.length) : [];
+  if (pendientes.length && confirm(`Hay ${pendientes.length} ${pendientes.length === 1 ? "foto que aún no se ha leído" : "fotos que aún no se han leído"} en «${c.nombre}». ¿Las leo primero con la IA para no dejarme ninguna tarjeta? Las que no sean tarjetas se quedan como están.`)){
+    let hechas = 0;
+    for (const [i, n] of pendientes.entries()){
+      toast(`Leyendo tarjetas: ${i + 1} de ${pendientes.length}…`, "spark", 60000);
+      try { await convertirEnTarjeta(n); hechas++; } catch(e){ if (/límite/i.test(e.message)){ toast(e.message, "alerta", 6000); break; } }
+    }
+    toast(`${hechas} ${hechas === 1 ? "tarjeta leída" : "tarjetas leídas"}`, "check", 2500); refrescar();
+  }
+  const lista = deNotas().filter(n => enRama(n) && n.tarjeta).map(n => ({n, d: datosContacto(n)}));
+  if (!lista.length){ toast("En esta libreta no hay tarjetas de visita", "user", 4000); return; }
+  revisarContactos(lista, c.nombre);
+}
+const CAMPOS_CONTACTO = [["persona", "Nombre y apellidos"], ["empresa", "Empresa"], ["cargo", "Cargo"], ["movil", "Móvil"], ["telefono", "Teléfono fijo"], ["email", "Correo"], ["web", "Web"], ["direccion", "Dirección"]];
+function avisosContacto(d, todos = []){
+  const av = [], tels = [...partirVarios(d.movil), ...partirVarios(d.telefono)], cifras = t => t.replace(/[^\d]/g, "").replace(/^(00)?34(?=\d{9}$)/, "");
+  if (!d.persona && !d.empresa) av.push("Sin nombre ni empresa");
+  else if (!d.persona) av.push("Falta el nombre de la persona");
+  if (d.persona && /\d|@/.test(d.persona)) av.push("El nombre tiene números o una @");
+  if (!tels.length && !d.email) av.push("Sin teléfono ni correo");
+  for (const t of tels){ const n = cifras(t); if (n.length < 9 || n.length > 15) av.push(`Teléfono incompleto o raro: ${t}`); }
+  for (const t of partirVarios(d.movil)){ const n = cifras(t); if (n.length === 9 && !/^[67]/.test(n)) av.push(`${t} parece un fijo, no un móvil`); }
+  for (const m of partirVarios(d.email)) if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(m)) av.push(`Correo no válido: ${m}`);
+  if (d.web && !/^(https?:\/\/)?[\w-]+(\.[\w-]+)+([\/?#].*)?$/i.test(d.web.trim())) av.push(`Web no válida: ${d.web}`);
+  // repetidos dentro de la misma libreta
+  const claves = [...partirVarios(d.email).map(norm), ...tels.map(cifras)].filter(k => k.length > 5);
+  const otro = todos.find(o => o.d !== d && [...partirVarios(o.d.email).map(norm), ...[...partirVarios(o.d.movil), ...partirVarios(o.d.telefono)].map(cifras)].some(k => claves.includes(k)));
+  if (otro) av.push(`Repetido con ${otro.d.persona || otro.d.empresa || "otra tarjeta"}`);
+  return av;
+}
+function revisarContactos(lista, nombreLib){
+  const fondo = document.createElement("div"); fondo.className = "elegir-coche";
+  const pintar = () => {
+    lista.forEach(x => x.av = avisosContacto(x.d, lista)); lista.sort((a, b) => (b.av.length > 0) - (a.av.length > 0));
+    const conAviso = lista.filter(x => x.av.length).length;
+    fondo.innerHTML = `<div class="ec-caja rv-caja" role="dialog" aria-label="Pasar a contactos"><h3>${ic("user")} Pasar «${esc(nombreLib)}» a contactos</h3>
+      <p>${lista.length} ${lista.length === 1 ? "tarjeta" : "tarjetas"}. ${conAviso ? `<b>${conAviso} ${conAviso === 1 ? "tiene datos dudosos" : "tienen datos dudosos"}</b>: revísalos arriba y corrige lo que haga falta. Lo que cambies se guarda también en la tarjeta.` : "Todos los datos parecen correctos."}</p>
+      <div class="ct-lista">${lista.map((x, i) => `<details class="rv-grupo ct"${x.av.length ? " open" : ""}><summary><input type="checkbox" data-incl="${i}"${x.av.includes("Sin nombre ni empresa") ? "" : " checked"}> <span class="ct-n"><b>${esc(x.d.persona || x.d.empresa || "(sin nombre)")}</b><small>${esc([x.d.persona ? x.d.empresa : "", partirVarios(x.d.movil)[0] || partirVarios(x.d.telefono)[0], partirVarios(x.d.email)[0]].filter(Boolean).join(" · "))}</small></span>${x.av.length ? `<span class="ct-av">${ic("alerta")}${x.av.length}</span>` : ""}</summary>
+        ${x.av.length ? `<ul class="ct-avisos">${x.av.map(a => `<li>${esc(a)}</li>`).join("")}</ul>` : ""}
+        <div class="ct-campos">${CAMPOS_CONTACTO.map(([k, t]) => `<label><small>${t}</small><input type="${k === "email" ? "email" : /movil|telefono/.test(k) ? "tel" : "text"}" data-c="${i}" data-k="${k}" value="${esc(x.d[k] || "")}"></label>`).join("")}</div></details>`).join("")}</div>
+      <div class="on-pie"><button class="btn sec" data-x>Cancelar</button><button class="btn sec" data-revisar>Volver a comprobar</button><button class="btn" data-crear>Crear contactos</button></div></div>`;
+  };
+  const leer = () => fondo.querySelectorAll("[data-c]").forEach(inp => { const x = lista[+inp.dataset.c], v = inp.value.trim(); if (v) x.d[inp.dataset.k] = v.slice(0, 200); else delete x.d[inp.dataset.k]; });
+  pintar(); document.body.appendChild(fondo);
+  fondo.onclick = async e => {
+    if (e.target.matches?.("summary input[data-incl]")) return;   // marcar la casilla no abre ni cierra el grupo ni dispara nada más
+    if (e.target === fondo || e.target.closest("[data-x]")) return fondo.remove();
+    if (e.target.closest("[data-revisar]")){ const incl = new Set([...fondo.querySelectorAll("[data-incl]:checked")].map(c => +c.dataset.incl)); leer(); const marcados = lista.map((x, i) => incl.has(i) ? x : null); pintar(); fondo.querySelectorAll("[data-incl]").forEach(c => c.checked = marcados.includes(lista[+c.dataset.incl])); return; }
+    if (!e.target.closest("[data-crear]")) return;
+    const incl = new Set([...fondo.querySelectorAll("[data-incl]:checked")].map(c => +c.dataset.incl)); leer();
+    const elegidos = lista.filter((x, i) => incl.has(i) && (x.d.persona || x.d.empresa));
+    if (!elegidos.length) return toast("Marca al menos un contacto con nombre o empresa", "alerta");
+    const dudosos = elegidos.filter(x => avisosContacto(x.d, lista).length).length;
+    if (dudosos && !confirm(`${dudosos} de los contactos marcados aún tienen avisos. ¿Crearlos igualmente?`)) return;
+    // lo corregido se guarda en cada tarjeta
+    for (const x of lista){ if (JSON.stringify(x.d) !== JSON.stringify(datosContacto(x.n))){ x.n.contacto = {...x.d}; await guardarNotaLocal(x.n); } }
+    fondo.remove(); refrescar();
+    await entregarVcf(elegidos.map(x => vcard(x.d)).join(""), nombreSeguro("Contactos " + nombreLib) + ".vcf", `Contactos de ${nombreLib}`, elegidos.length);
+  };
+}
+
+// ---------- Guion de una grabación (Plus): de la transcripción a un documento ordenado y completo ----------
+const PIDE_GUION = `Conviertes la transcripción de una grabación (una clase, una reunión, una charla o un dictado largo) en un documento de estudio completo en español.
+Responde SOLO en Markdown, sin bloques de código, con esta estructura:
+# (un título claro de 3 a 8 palabras)
+## Resumen
+Un párrafo de 4 a 8 líneas que explique de qué trata y refuerce las ideas más importantes.
+## Puntos clave
+Entre 4 y 10 viñetas con lo esencial; el concepto principal de cada una en **negrita**.
+## Desarrollo
+Secciones con ### en un orden lógico (agrupa lo que se dijo disperso, aunque no siga el orden de la grabación). Incluye TODO el contenido: explicaciones, definiciones, ejemplos, datos, cifras, fechas y nombres. No recortes en exceso y no inventes nada que no se haya dicho. Corrige errores evidentes de la transcripción.
+## Tareas y próximos pasos
+Solo si se mencionan: viñetas con lo que hay que hacer, entregas o fechas.
+## Dudas
+Solo si hay partes confusas o que no se entienden: viñetas breves.`;
+const PIDE_TROZO = `Esta es una parte de la transcripción de una grabación larga. Pásala a notas completas y ordenadas en español, en Markdown con secciones ###, sin perder ningún dato, ejemplo, cifra, fecha ni nombre. No escribas introducción ni conclusión. Corrige errores evidentes de la transcripción.`;
+const fuenteGuion = n => String((n.transcripcion && n.transcripcion.length > (n.texto || "").length ? n.transcripcion : n.texto) || "").trim();
+async function crearGuion(n){
+  const fuente = fuenteGuion(n);
+  if (fuente.length < 300) throw new Error("Hace falta un texto o una transcripción más larga para hacer un guion");
+  let material = fuente;
+  if (fuente.length > 30000){   // grabaciones largas: primero por partes, luego el guion completo
+    const trozos = [], frases = fuente.split(/(?<=[.!?])\s+/); let t = "";
+    for (const f of frases){ if ((t + " " + f).length > 25000 && t){ trozos.push(t); t = ""; } t += (t ? " " : "") + f; }
+    if (t) trozos.push(t);
+    const partes = [];
+    for (const [i, tr] of trozos.entries()){
+      toast(`Preparando el guion: parte ${i + 1} de ${trozos.length}…`, "spark", 120000);
+      partes.push(await llamarIA([{role: "system", content: PIDE_TROZO}, {role: "user", content: `Parte ${i + 1} de ${trozos.length}:\n\n${tr}`}], {json: false, max: 3500}));
+    }
+    material = partes.map((p, i) => `--- Parte ${i + 1} ---\n${p}`).join("\n\n");
+  }
+  toast("Escribiendo el guion…", "spark", 120000);
+  const md = String(await llamarIA([{role: "system", content: PIDE_GUION}, {role: "user", content: (n.titulo ? `La nota se titula «${n.titulo}».\n\n` : "") + material}], {json: false, max: 4000}))
+    .replace(/^```(?:markdown)?\s*|\s*```$/g, "").trim();
+  if (md.length < 100) throw new Error("La IA no ha devuelto un guion. Prueba otra vez");
+  const m = md.match(/^#\s+(.+)\n+/), titulo = m ? m[1].trim().slice(0, 120) : "", cuerpo = m ? md.slice(m[0].length) : md;
+  if (!n.transcripcion) n.transcripcion = String(n.texto || "");   // el texto original se conserva como dictado
+  n.texto = cuerpo; if (!n.titulo && titulo) n.titulo = titulo; n.guion = new Date().toISOString();
+  await guardarNotaLocal(n);
+}
+function ofrecerContacto(n){
+  const c = n.ia.contactoFoto, nombre = c.empresa || c.nombre;
+  if (!nombre || personas().some(p => norm(p.nombre) === norm(nombre))) return;
+  toast(`Tarjeta de ${nombre}. ¿Guardar como cliente?`, "user", 9000, () => {
+    config.contactos = config.contactos || {}; config.contactos.cliente = [...(config.contactos.cliente || []), nombre]; guardarConfig();
+    if (!n.para?.nombre){ n.para = {categoria: "cliente", nombre}; guardarNotaLocal(n); }
+    toast(`${nombre} añadido a tus clientes`, "check");
+  }, "Guardar");
+}
+// ---------- Pregúntale a tus notas
+function notasParaPregunta(pregunta, persona){
+  const palabras = norm(pregunta).split(/[^a-z0-9ñ]+/).filter(p => p.length > 3);
+  const puntua = n => { const h = norm([n.titulo, n.texto, n.transcripcion, n.para?.nombre, n.ia?.textoFotos].join(" ")); let p = 0; for (const w of palabras) if (h.includes(w)) p += 3; return p + (Date.now() - new Date(n.creada) < 30 * 864e5 ? 1 : 0); };
+  let l = deNotas(); if (persona) l = l.filter(n => norm(n.para?.nombre || "") === norm(persona));
+  return l.map(n => [puntua(n), n]).sort((a, b) => b[0] - a[0] || b[1].creada.localeCompare(a[1].creada)).slice(0, 120).map(x => x[1]);
+}
+async function preguntarNotas(pregunta, persona){
+  const ns = notasParaPregunta(pregunta, persona);
+  const compacta = n => [`[${n.id}]`, isoDia(new Date(n.creada)), n.hecha ? "HECHA" : "PENDIENTE", n.fecha ? "para " + n.fecha + (n.hora ? " " + n.hora : "") : "", n.para?.nombre ? "con " + n.para.nombre : "", carpetaDe(n) ? "libreta " + carpetaDe(n).nombre : "",
+    "|", (n.titulo ? n.titulo + ". " : "") + String(n.texto || n.transcripcion || "").replace(/\s+/g, " ").slice(0, 400), n.ia?.textoFotos ? "| fotos: " + n.ia.textoFotos.slice(0, 200) : ""].filter(Boolean).join(" ");
+  const sistema = `Eres el asistente de Cuaderna.${sobreMi() ? " Sobre quien la usa: " + sobreMi() : ""} Hoy es ${hoyLargo()}. Responde en español, breve y concreto, usando SOLO las notas del usuario que te paso (cada una empieza con su [id]). Si no está en las notas, dilo. Responde SOLO con un JSON: {"respuesta": texto (puedes usar saltos de línea y viñetas con «- »), "notas": [ids de las notas en que te basas, máx. 8]}.`;
+  const r = await llamarIA([{role: "system", content: sistema}, {role: "user", content: `NOTAS:\n${ns.map(compacta).join("\n")}\n\nPREGUNTA: ${pregunta}`}], {max: 700});
+  return {respuesta: String(r.respuesta || "No he encontrado nada."), notas: (r.notas || []).map(id => notas.find(n => n.id === String(id).replace(/[\[\]]/g, ""))).filter(Boolean)};
+}
+function abrirPregunta(persona){
+  if (!ia()){ toast(esMovil() ? "Activa la IA en Ajustes desde el PC" : "Activa la IA en Ajustes", "alerta", 4500); if (!esMovil()) ver("ajustes"); return; }
+  $("#pqPersona").textContent = persona ? `Sobre ${persona}` : "Sobre todas tus notas";
+  $("#hPregunta").dataset.quien = persona || ""; $("#pqRes").innerHTML = ""; $("#pqIn").value = "";
+  $("#pqIdeas").innerHTML = (persona ? [`¿Qué tengo pendiente con ${persona}?`, `¿Qué hablamos la última vez?`, `Resume la relación con ${persona}`] : ["¿Qué tengo pendiente esta semana?", "¿Qué ideas he tenido este mes?", "¿Qué tengo atrasado?"])
+    .map(t => `<button class="opc" data-pq="${esc(t)}">${esc(t)}</button>`).join("");
+  abrirHoja("#hPregunta"); setTimeout(() => $("#pqIn").focus(), 250);
+}
+async function lanzarPregunta(){
+  const q = $("#pqIn").value.trim(); if (!q) return;
+  const persona = $("#hPregunta").dataset.quien || null, res = $("#pqRes");
+  res.innerHTML = `<div class="pq-pensando">${ic("spark")}Buscando en tus notas…</div>`; $("#pqOk").disabled = true;
+  try {
+    const r = await preguntarNotas(q, persona);
+    res.innerHTML = `<div class="pq-resp">${esc(r.respuesta).replace(/\n/g, "<br>")}</div>${r.notas.length ? `<div class="dia">Notas en las que me baso</div><div class="lista">${r.notas.map(n => fila(n, {hora: false})).join("")}</div>` : ""}`;
+    cargarMinis(res);
+  } catch(e){ res.innerHTML = `<div class="pq-resp error">${esc(e.message)}</div>`; }
+  finally { $("#pqOk").disabled = false; }
+}
+$("#pqOk").onclick = lanzarPregunta;
+$("#pqIn").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); lanzarPregunta(); } });
+$("#pqIdeas").addEventListener("click", e => { const b = e.target.closest("[data-pq]"); if (b){ $("#pqIn").value = b.dataset.pq; lanzarPregunta(); } });
+$("#hPregunta").addEventListener("click", e => { if (e.target.closest("[data-abrir]")) cerrarHojas(); }, true);
+$("#pqCerrar").onclick = () => cerrarHojas();
+
+/* ================= Biblioteca: formato, etiquetas, archivos, libretas y pilas ================= */
+// ---------- formato: Markdown sencillo, que en OneDrive sigue siendo texto legible ----------
+const RX_MD = /(\*\*[^*\n]+\*\*|^#{1,3} |^\s*[-*] |^\s*\d+\. |^\|.*\|\s*$|\[[^\]\n]+\]\([^)\s]+\))/m;
+const tieneFormato = t => RX_MD.test(t || "");
+function planoMd(t){
+  return String(t || "").replace(/^#{1,3}\s+/gm, "").replace(/\*\*([^*\n]+)\*\*/g, "$1").replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,;:!?]|$)/gm, "$1$2")
+    .replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g, "$1").replace(/^\|?\s*:?-{3,}[-|:\s]*$/gm, "").replace(/^\|(.*)\|\s*$/gm, (m, c) => c.split("|").map(x => x.trim()).filter(Boolean).join(" · ")).replace(/^\s*[-*]\s+/gm, "• ");
+}
+function mdEnLinea(t){
+  return esc(t).replace(/\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)/g, (m, a, u) => `<a href="${u}" target="_blank" rel="noopener">${a}</a>`).replace(/\[([^\]\n]+)\]\((nota:[\w-]+)\)/g, (m, a, u) => `<a href="${u}">${a}</a>`)
+    .replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>").replace(/(^|[\s(>])\*([^*\n]+)\*(?=[\s).,;:!?<]|$)/g, "$1<i>$2</i>");
+}
+function mdAHtml(md){
+  const l = String(md || "").split("\n"), out = []; let i = 0;
+  const es = (rx) => i < l.length && rx.test(l[i]);
+  while (i < l.length){
+    const x = l[i];
+    if (/^#{3,6}\s+/.test(x)){ out.push(`<h4>${mdEnLinea(x.replace(/^#{3,6}\s+/, ""))}</h4>`); i++; continue; }   // subtítulo
+    if (/^#{1,2}\s+/.test(x)){ out.push(`<h3>${mdEnLinea(x.replace(/^#{1,2}\s+/, ""))}</h3>`); i++; continue; }
+    if (/^\s*[-*]\s+/.test(x)){ const it = []; while (es(/^\s*[-*]\s+/)) it.push(`<li>${mdEnLinea(l[i++].replace(/^\s*[-*]\s+/, ""))}</li>`); out.push(`<ul>${it.join("")}</ul>`); continue; }
+    if (/^\s*\d+\.\s+/.test(x)){ const it = []; while (es(/^\s*\d+\.\s+/)) it.push(`<li>${mdEnLinea(l[i++].replace(/^\s*\d+\.\s+/, ""))}</li>`); out.push(`<ol>${it.join("")}</ol>`); continue; }
+    if (/^\|.*\|\s*$/.test(x)){ const filas = []; while (es(/^\|.*\|\s*$/)){ if (!/^\|?\s*:?-{3,}[-|:\s]*$/.test(l[i])) filas.push(l[i].trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim())); i++; }
+      out.push(`<table>${filas.map((f, k) => `<tr>${f.map(c => k ? `<td>${mdEnLinea(c) || "<br>"}</td>` : `<th>${mdEnLinea(c) || "<br>"}</th>`).join("")}</tr>`).join("")}</table>`); continue; }
+    out.push(x.trim() ? `<div>${mdEnLinea(x)}</div>` : "<div><br></div>"); i++;
+  }
+  return out.join("");
+}
+function htmlAMd(raiz){
+  const enLinea = nodo => [...nodo.childNodes].map(c => {
+    if (c.nodeType === 3) return c.nodeValue.replace(/ /g, " ");
+    if (c.nodeType !== 1) return "";
+    const t = c.tagName, d = enLinea(c), estilo = c.getAttribute("style") || "";
+    if (t === "BR") return "\n";
+    if ((t === "B" || t === "STRONG" || /font-weight:\s*(bold|[6-9]00)/.test(estilo)) && d.trim()) return `**${d.trim()}**`;
+    if ((t === "I" || t === "EM" || /font-style:\s*italic/.test(estilo)) && d.trim()) return `*${d.trim()}*`;
+    if (t === "A" && c.getAttribute("href")) return `[${d}](${c.getAttribute("href")})`;
+    if (["DIV", "P", "H1", "H2", "H3", "H4", "LI"].includes(t)) return "\n" + d + "\n";
+    return d;
+  }).join("");
+  const lineas = [];
+  for (const c of raiz.childNodes){
+    if (c.nodeType === 3){ if (c.nodeValue.trim()) lineas.push(...c.nodeValue.split("\n")); continue; }
+    if (c.nodeType !== 1) continue;
+    const t = c.tagName;
+    if (/^H[1-6]$/.test(t)) lineas.push((/^H[4-6]$/.test(t) ? "### " : "## ") + enLinea(c).replace(/\n+/g, " ").trim());
+    else if (t === "UL") for (const li of c.querySelectorAll(":scope > li")) lineas.push("- " + enLinea(li).replace(/\n+/g, " ").trim());
+    else if (t === "OL") [...c.querySelectorAll(":scope > li")].forEach((li, k) => lineas.push(`${k + 1}. ` + enLinea(li).replace(/\n+/g, " ").trim()));
+    else if (t === "TABLE") [...c.querySelectorAll("tr")].forEach((tr, k) => { const cs = [...tr.children]; lineas.push("| " + cs.map(td => enLinea(td).replace(/\|/g, "/").replace(/\n+/g, " ").trim()).join(" | ") + " |"); if (k === 0) lineas.push("|" + cs.map(() => " --- ").join("|") + "|"); });
+    else if (t === "BR") lineas.push("");
+    else lineas.push(...enLinea(c).replace(/^\n+|\n+$/g, "").split(/\n+/));
+  }
+  return lineas.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+// el textarea sigue siendo la fuente de verdad: el editor con formato solo lo pinta y lo actualiza
+let modoRico = false, desdeRico = false;
+(() => {
+  const tx = $("#eTexto"), d = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value");
+  Object.defineProperty(tx, "value", {configurable: true, get(){ return d.get.call(this); }, set(v){ d.set.call(this, v); if (!desdeRico && modoRico) $("#eRico").innerHTML = mdAHtml(v); }});
+})();
+// deshacer y rehacer propios: el teclado del móvil no siempre deja deshacer en un editor con formato
+let histRico = [], posRico = 0, tHist = 0, htmlOriginal = "";
+function reiniciarHistRico(){ histRico = [$("#eRico").innerHTML]; posRico = 0; htmlOriginal = histRico[0]; pintarBotHist(); }
+function apuntarHistRico(){ clearTimeout(tHist); const h = $("#eRico").innerHTML; if (h === histRico[posRico]) return; histRico = histRico.slice(0, posRico + 1); histRico.push(h); if (histRico.length > 150) histRico.shift(); posRico = histRico.length - 1; pintarBotHist(); }
+function irHistRico(paso){
+  apuntarHistRico(); const n = posRico + paso; if (n < 0 || n >= histRico.length) return;
+  posRico = n; $("#eRico").innerHTML = histRico[n]; desdeRico = true; $("#eTexto").value = htmlAMd($("#eRico")); desdeRico = false;
+  $("#eTexto").dispatchEvent(new Event("input", {bubbles: true})); pintarBotHist(); guardarEdicionPronto();
+}
+function pintarBotHist(){ const f = $("#eFormato"); if (!f) return; f.querySelector('[data-fmt="deshacer"]').disabled = posRico <= 0; f.querySelector('[data-fmt="rehacer"]').disabled = posRico >= histRico.length - 1; f.querySelector('[data-fmt="original"]').disabled = $("#eRico").innerHTML === htmlOriginal; }
+function ponerModoRico(on){
+  modoRico = on; const tx = $("#eTexto");
+  $("#eRico").classList.toggle("oculto", !on); tx.classList.toggle("oculto", on); $("#eFormato").classList.toggle("oculto", !on); $("#eAa").classList.toggle("on", on);
+  if (on){ $("#eRico").innerHTML = mdAHtml(tx.value); $("#eRico").dataset.ph = tx.placeholder; reiniciarHistRico(); try { document.execCommand("styleWithCSS", false, false); } catch(e){} }
+  else requestAnimationFrame(() => { tx.style.height = "auto"; tx.style.height = Math.max(80, tx.scrollHeight) + "px"; });
+}
+$("#eAa").onclick = () => { ponerModoRico(!modoRico); lsSet("chispa.formato", modoRico); (modoRico ? $("#eRico") : $("#eTexto")).focus(); };
+$("#eRico").addEventListener("input", () => { desdeRico = true; $("#eTexto").value = htmlAMd($("#eRico")); desdeRico = false; clearTimeout(tHist); tHist = setTimeout(apuntarHistRico, 400); pintarBotHist(); });
+$("#eRico").addEventListener("paste", e => { const t = e.clipboardData?.getData("text/plain"); if (t !== undefined){ e.preventDefault(); document.execCommand("insertText", false, t); } });
+// lo que se arrastra al texto con formato entra como texto plano (nada de imágenes remotas ni HTML de otra página)
+$("#eRico").addEventListener("drop", e => { const t = e.dataTransfer?.getData("text/plain"); e.preventDefault(); if (t){ const r = document.caretRangeFromPoint?.(e.clientX, e.clientY); if (r){ const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } document.execCommand("insertText", false, t); } });
+for (const ev of ["mousedown", "pointerdown"]) $("#eFormato").addEventListener(ev, e => { if (e.target.closest("[data-fmt]")) e.preventDefault(); });
+$("#eFormato").addEventListener("click", e => {
+  const b = e.target.closest("[data-fmt]"); if (!b) return; const r = $("#eRico"); r.focus();
+  const f = b.dataset.fmt, cmd = (c, v) => document.execCommand(c, false, v);
+  if (f === "deshacer") return irHistRico(-1);
+  if (f === "rehacer") return irHistRico(1);
+  if (f === "original"){ if (confirm("¿Volver al texto que tenía la nota al abrirla? Se descartan los cambios de la descripción.")){ apuntarHistRico(); r.innerHTML = htmlOriginal; r.dispatchEvent(new Event("input", {bubbles: true})); apuntarHistRico(); } return; }
+  if (f === "limpiar"){ apuntarHistRico(); cmd("removeFormat"); cmd("unlink"); if (/^h\d$/i.test(document.queryCommandValue("formatBlock"))) cmd("formatBlock", "div"); r.dispatchEvent(new Event("input", {bubbles: true})); apuntarHistRico(); return; }
+  apuntarHistRico();
+  if (f === "b") cmd("bold"); else if (f === "i") cmd("italic");
+  else if (f === "h") cmd("formatBlock", /^h3$/i.test(document.queryCommandValue("formatBlock")) ? "div" : "h3");
+  else if (f === "h2") cmd("formatBlock", /^h4$/i.test(document.queryCommandValue("formatBlock")) ? "div" : "h4");
+  else if (f === "ul") cmd("insertUnorderedList"); else if (f === "ol") cmd("insertOrderedList");
+  else if (f === "a"){
+    const s0 = getSelection(), sel = String(s0), rango = s0.rangeCount ? s0.getRangeAt(0).cloneRange() : null;
+    pedirTexto({titulo: sel ? "Enlace para «" + sel.slice(0, 40) + "»" : "Añadir enlace", icono: "enlace", url: true, marcador: "https://…", ok: "Enlazar"}).then(url => {
+      if (!url) return; r.focus(); if (rango){ const s1 = getSelection(); s1.removeAllRanges(); s1.addRange(rango); }
+      sel ? cmd("createLink", url) : cmd("insertHTML", `<a href="${esc(url)}">${esc(url)}</a>&nbsp;`);
+      r.dispatchEvent(new Event("input", {bubbles: true})); apuntarHistRico();
+    });
+    return;
+  }
+  else if (f === "tabla"){ elegirTabla(b); return; }
+  r.dispatchEvent(new Event("input", {bubbles: true})); apuntarHistRico();
+});
+
+// Tabla: una rejilla para elegir columnas y filas, como en un procesador de textos
+function htmlTabla(cols, filas){
+  return "<table><tr>" + Array.from({length: cols}, (_, i) => `<th>Columna ${i + 1}</th>`).join("") + "</tr>"
+    + Array.from({length: Math.max(1, filas - 1)}, () => "<tr>" + "<td><br></td>".repeat(cols) + "</tr>").join("") + "</table><div><br></div>";
+}
+function elegirTabla(boton){
+  document.querySelector(".tb-elegir")?.remove();
+  const s = getSelection(), rango = s.rangeCount && $("#eRico").contains(s.anchorNode) ? s.getRangeAt(0).cloneRange() : null;
+  const C = 8, F = 8, d = document.createElement("div");
+  d.className = "tb-elegir"; d.setAttribute("role", "dialog"); d.setAttribute("aria-label", "Tamaño de la tabla");
+  d.innerHTML = `<div class="tb-tit">Elige columnas × filas (la primera fila es el encabezado)</div><div class="tb-rej" style="grid-template-columns:repeat(${C},1fr)">${Array.from({length: C * F}, (_, i) => `<i data-c="${i % C + 1}" data-f="${Math.floor(i / C) + 1}"></i>`).join("")}</div>
+    <div class="tb-pie"><span id="tbTam">3 columnas × 3 filas</span><span class="esp"></span><label>Columnas <input type="number" id="tbC" min="1" max="12" value="3"></label><label>Filas <input type="number" id="tbF" min="2" max="50" value="3"></label><button class="btn" id="tbOk" type="button">Insertar</button></div>`;
+  document.body.appendChild(d);
+  const r = boton.getBoundingClientRect();
+  d.style.left = Math.max(10, Math.min(innerWidth - d.offsetWidth - 10, r.left)) + "px";
+  d.style.top = Math.min(innerHeight - d.offsetHeight - 10, r.bottom + 8) + "px";
+  const marcar = (c, f) => { d.querySelectorAll(".tb-rej i").forEach(x => x.classList.toggle("on", +x.dataset.c <= c && +x.dataset.f <= f)); $("#tbTam").textContent = `${c} ${c === 1 ? "columna" : "columnas"} × ${f} ${f === 1 ? "fila" : "filas"}`; $("#tbC").value = c; $("#tbF").value = f; };
+  marcar(3, 3);
+  const cerrar = () => { d.remove(); document.removeEventListener("pointerdown", fuera, true); document.removeEventListener("keydown", esc_, true); };
+  const insertar = (c, f) => {
+    cerrar(); const ed = $("#eRico"); ed.focus();
+    if (rango){ const sel = getSelection(); sel.removeAllRanges(); sel.addRange(rango); }
+    apuntarHistRico(); document.execCommand("insertHTML", false, htmlTabla(Math.max(1, Math.min(12, c)), Math.max(2, Math.min(50, f))));
+    ed.dispatchEvent(new Event("input", {bubbles: true})); apuntarHistRico();
+  };
+  const fuera = e => { if (!d.contains(e.target)) cerrar(); };
+  const esc_ = e => { if (e.key === "Escape"){ e.stopPropagation(); cerrar(); } else if (e.key === "Enter" && d.contains(e.target)){ e.preventDefault(); insertar(+$("#tbC").value, +$("#tbF").value); } };
+  setTimeout(() => { document.addEventListener("pointerdown", fuera, true); document.addEventListener("keydown", esc_, true); }, 0);
+  d.querySelector(".tb-rej").addEventListener("pointerover", e => { const i = e.target.closest("i"); if (i) marcar(+i.dataset.c, +i.dataset.f); });
+  d.querySelector(".tb-rej").addEventListener("click", e => { const i = e.target.closest("i"); if (i) insertar(+i.dataset.c, +i.dataset.f); });
+  for (const id of ["#tbC", "#tbF"]) d.querySelector(id).addEventListener("input", () => marcar(Math.max(1, Math.min(C, +$("#tbC").value || 1)), Math.max(1, Math.min(F, +$("#tbF").value || 1))));
+  $("#tbOk").onclick = () => insertar(+$("#tbC").value, +$("#tbF").value);
+}
+
+// ---------- etiquetas ----------
+const RX_ETQ = /(^|[\s(])#([\p{L}\p{N}_-]{2,40})/gu;
+const limpiarEtq = t => String(t || "").replace(/^#+/, "").trim().toLowerCase().replace(/\s+/g, "-").replace(/[^\p{L}\p{N}_-]/gu, "").slice(0, 40);
+// se comparan sin tildes (#garantia y #garantía son la misma) pero se muestran como se escribieron
+function etiquetasDe(n){
+  const m = new Map();
+  for (const e of [...(n.etiquetas || []), ...[...`${n.titulo || ""}\n${n.texto || ""}`.matchAll(RX_ETQ)].map(x => x[2])].map(limpiarEtq).filter(Boolean)) if (!m.has(norm(e))) m.set(norm(e), e);
+  return [...m.values()];
+}
+function todasEtiquetas(){ const m = new Map(); for (const n of deNotas()) for (const e of etiquetasDe(n)){ const k = norm(e), x = m.get(k) || [e, 0]; x[1]++; if (/[^\x00-\x7f]/.test(e)) x[0] = e; m.set(k, x); } return [...m.values()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])); }
+let eEtq = [];
+function pintarEtqEdicion(){
+  const enTexto = [...`${$("#eTitulo").value}\n${$("#eTexto").value}`.matchAll(RX_ETQ)].map(m => limpiarEtq(m[2])).filter(e => !eEtq.some(x => norm(x) === norm(e)));
+  $("#eEtq").innerHTML = eEtq.map((e, i) => `<span class="etq-c">#${esc(e)}<button type="button" data-etqx="${i}" aria-label="Quitar etiqueta">${ic("x")}</button></span>`).join("")
+    + [...new Set(enTexto)].map(e => `<span class="etq-c auto" title="Escrita en el texto">#${esc(e)}</span>`).join("");
+  $("#eEtqLista").innerHTML = todasEtiquetas().map(([e]) => `<option value="${esc(e)}">`).join("");
+}
+function anadirEtq(v){ const e = limpiarEtq(v); if (e && !eEtq.some(x => norm(x) === norm(e))){ eEtq.push(e); pintarEtqEdicion(); guardarEdicionPronto(); } $("#eEtqIn").value = ""; }
+$("#eEtqIn").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === ","){ e.preventDefault(); anadirEtq(e.target.value); } });
+$("#eEtqIn").addEventListener("change", e => anadirEtq(e.target.value));
+$("#eEtqIn").addEventListener("blur", e => { if (e.target.value.trim()) anadirEtq(e.target.value); });
+for (const id of ["#eTexto", "#eTitulo", "#eRico"]) $(id).addEventListener("input", () => { clearTimeout(pintarEtqEdicion.t); pintarEtqEdicion.t = setTimeout(pintarEtqEdicion, 300); });
+$("#eEtq").addEventListener("click", e => { const b = e.target.closest("[data-etqx]"); if (b){ eEtq.splice(+b.dataset.etqx, 1); pintarEtqEdicion(); guardarEdicionPronto(); } });
+
+// ---------- archivos adjuntos (PDF, documentos, lo que sea) ----------
+const nombreSeguro = t => String(t || "archivo").normalize("NFC").replace(/[\\/:*?"<>|#%]+/g, " ").replace(/\s+/g, " ").trim().slice(-80) || "archivo";
+const tamLegible = b => b < 1024 ? b + " B" : b < 1048576 ? Math.round(b / 1024) + " KB" : (b / 1048576).toFixed(1).replace(".", ",") + " MB";
+const extDe = t => (String(t).match(/\.([a-z0-9]{1,5})$/i)?.[1] || "doc").toLowerCase();
+$("#eAddArch").innerHTML = ic("clip") + "Archivo";
+$("#eAddArch").onclick = () => $("#eInArch").click();
+$("#eInArch").onchange = () => {
+  for (const f of $("#eInArch").files){
+    if (f.size > 50 * 1048576){ toast(`«${f.name}» pasa de 50 MB`, "alerta", 4000); continue; }
+    eAdj.nuevosArch.push({blob: f, nombre: f.name, tipo: f.type || "application/octet-stream"});
+  }
+  $("#eInArch").value = ""; pintarAdjEdicion(); guardarEdicionPronto();
+};
+function pintarArchEdicion(){
+  const fila = (a, i, nuevo) => `<div class="arch"><button class="arch" style="padding:0;background:none" data-archv="${nuevo ? "n" : "e"}${i}"><span class="ext">${esc(extDe(a.nombre))}</span><span class="an"><b>${esc(a.nombre)}</b><small>${tamLegible(a.tam ?? a.blob?.size ?? 0)}${nuevo ? " · se subirá al guardar" : ""}</small></span></button><button class="ibtn" data-archx="${nuevo ? "n" : "e"}${i}" aria-label="Quitar archivo">${ic("x")}</button></div>`;
+  $("#eArchs").innerHTML = eAdj.archivos.map((a, i) => fila(a, i, false)).join("") + eAdj.nuevosArch.map((a, i) => fila(a, i, true)).join("");
+}
+$("#eArchs").addEventListener("click", async e => {
+  const v = e.target.closest("[data-archv]"), x = e.target.closest("[data-archx]");
+  if (x){ const k = x.dataset.archx, i = +k.slice(1);
+    if (k[0] === "n") eAdj.nuevosArch.splice(i, 1);
+    else if (confirm(`¿Quitar «${eAdj.archivos[i].nombre}» de esta nota?`)){ eAdj.quitar.push(eAdj.archivos[i].ruta); eAdj.archivos.splice(i, 1); }
+    pintarAdjEdicion(); return; }
+  if (v){ const k = v.dataset.archv, i = +k.slice(1); abrirArchivo(k[0] === "n" ? eAdj.nuevosArch[i] : eAdj.archivos[i]); }
+});
+async function abrirArchivo(a){
+  try {
+    toast("Abriendo…", "clip", 1500);
+    const blob = a.blob || await idb.blob(a.ruta) || await descargarRuta(a.ruta);
+    const f = new Blob([blob], {type: a.tipo || blob.type || "application/octet-stream"});
+    if (esApp()) return await compartirArchivo(f, a.nombre, a.nombre);
+    const url = URL.createObjectURL(f);
+    if (/^(application\/pdf|image\/(png|jpe?g|gif|webp|heic)|text\/plain|video\/(mp4|webm|quicktime)|audio\/[\w.+-]+)$/i.test(f.type)) window.open(url, "_blank", "noopener");   // nunca HTML ni SVG: se ejecutarían con acceso a la app
+    else { const l = document.createElement("a"); l.href = url; l.download = a.nombre; document.body.appendChild(l); l.click(); l.remove(); }
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
+  } catch(e){ toast("No se pudo abrir el archivo", "alerta", 4000); }
+}
+// el texto de los PDF y documentos se guarda para que la búsqueda también encuentre lo de dentro
+let pdfjsP = null;
+function cargarPdfJs(){ return pdfjsP ||= new Promise((ok, ko) => { const s = document.createElement("script"); s.src = "lib/pdf-3.11.174.min.js";
+  s.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = "lib/pdf.worker-3.11.174.min.js"; ok(window.pdfjsLib); };
+  s.onerror = () => { pdfjsP = null; ko(new Error("No se pudo cargar el lector de PDF")); }; document.head.appendChild(s); }); }
+async function textoDeArchivo(blob, tipo, nombre){
+  try {
+    if (/pdf/.test(tipo) || /\.pdf$/i.test(nombre)){
+      const pdfjs = await cargarPdfJs(), doc = await pdfjs.getDocument({data: new Uint8Array(await blob.arrayBuffer()), isEvalSupported: false}).promise; let t = "";
+      for (let p = 1; p <= Math.min(doc.numPages, 60) && t.length < 40000; p++){ const c = await (await doc.getPage(p)).getTextContent(); t += c.items.map(i => i.str).join(" ") + "\n"; }
+      return t.replace(/[ \t]+/g, " ").trim().slice(0, 40000);
+    }
+    if (/^text\//.test(tipo) || /\.(txt|md|csv|json)$/i.test(nombre)) return (await blob.text()).slice(0, 40000);
+  } catch(e){ console.warn(e); }
+  return "";
+}
+async function leerArchivos(n, lista){
+  let cambio = false;
+  for (const a of lista){ let t = await textoDeArchivo(a.blob, a.tipo, a.nombre); if (!t && a.ocr?.length && ia()) t = await ocrIA(a.ocr); if (t){ n.textoArch = {...(n.textoArch || {}), [a.ruta]: t}; cambio = true; } }
+  if (cambio){ await guardarNotaLocal(n); }
+}
+
+// ---------- libretas y pilas ----------
+let libEditando = null;
+function abrirLibreta(c, padre = null){
+  libEditando = c || null;
+  $("#lbTit").textContent = c ? "Libreta" : padre ? "Nueva libreta dentro de «" + (libPorId(padre)?.nombre || "") + "»" : "Nueva libreta"; $("#lbNombre").value = c?.nombre || ""; $("#lbPila").value = c?.pila || "";
+  // se puede poner dentro de cualquier otra, salvo de sí misma o de las suyas, y sin pasar de MAX_NIVEL niveles
+  const alto = c ? Math.max(...[...descendientes(c.id)].map(id => nivelLib(libPorId(id)) - nivelLib(c) + 1)) : 1;
+  $("#lbPadre").innerHTML = `<option value="">Ninguna: es una libreta principal</option>` + arbolLibretas(c?.id).filter(({nivel}) => nivel + alto <= MAX_NIVEL).map(({c: x, nivel}) => `<option value="${esc(x.id)}">${esc(sangria(nivel) + x.nombre)}</option>`).join("");
+  $("#lbPadre").value = (c ? c.padre : padre) || "";
+  const pilaVisible = () => $("#lbPila").classList.toggle("oculto", !!$("#lbPadre").value);
+  $("#lbPadre").onchange = pilaVisible; pilaVisible();
+  $("#lbPilas").innerHTML = [...new Set(archivadores().map(x => x.pila).filter(Boolean))].map(p => `<option value="${esc(p)}">`).join("");
+  $("#lbBorrar").classList.toggle("oculto", !c);
+  lbIcono = c?.icono || ""; pintarIconosLib();
+  $("#lbUsoCaja").classList.toggle("oculto", !organizar());
+  $("#lbUso").value = c?.uso || "";
+  const ayudaUso = () => { const v = $("#lbUso").value, nom = $("#lbNombre").value;
+    const auto = c ? esConsulta({...c, uso: undefined, nombre: nom}) : NOMBRE_CONSULTA.test(nom);
+    $("#lbUsoAyuda").textContent = v === "consulta" ? "Sus notas no salen en «Dónde», «A la espera» ni al vaciar la entrada. Si alguna tiene fecha, sí aparece en Hoy."
+      : v === "tareas" ? "Sus notas entran en tu organización como cualquier otra."
+      : auto ? "Por su nombre o lo que contiene, Cuaderna la trata como libreta de consulta: no entra en tu organización." : "Cuaderna la trata como libreta de cosas que hacer.";
+  };
+  $("#lbUso").onchange = ayudaUso; ayudaUso();
+  $("#lbNombre").oninput = () => { if (!lbIcono) pintarIconosLib(); $("#lbUso").onchange?.(); };
+  const rama = c ? descendientes(c.id) : new Set();
+  $("#lbTarjetas").classList.toggle("oculto", !c || !deNotas().some(n => rama.has(n.carpeta) && (n.tarjeta || (ia() && n.fotos?.length))));
+  abrirHoja("#hLibreta"); setTimeout(() => $("#lbNombre").focus(), 250);
+}
+// Pedir un texto con una ventana de Cuaderna (en lugar del cuadro gris del sistema). Devuelve el texto o null.
+function pedirTexto({titulo, ayuda = "", valor = "", marcador = "", ok = "Aceptar", icono = "nota", url = false} = {}){
+  return new Promise(res => {
+    const fondo = document.createElement("div"); fondo.className = "elegir-coche";
+    fondo.innerHTML = `<div class="ec-caja pt-caja" role="dialog" aria-label="${esc(titulo)}"><h3>${ic(icono)} ${esc(titulo)}</h3>${ayuda ? `<p>${esc(ayuda)}</p>` : ""}
+      <form class="pt-form" novalidate><div class="pt-fila"><input class="as-campo" name="v" ${url ? `type="url" inputmode="url" autocapitalize="none" spellcheck="false"` : `type="text" autocapitalize="sentences"`} autocomplete="off" enterkeyhint="done" placeholder="${esc(marcador)}" value="${esc(valor)}">
+      ${url && navigator.clipboard?.readText ? `<button type="button" class="btn sec" data-pegar>${ic("pegar")}Pegar</button>` : ""}</div><small class="pt-err"></small>
+      <div class="on-pie"><button type="button" class="btn sec" data-x>Cancelar</button><button type="submit" class="btn">${esc(ok)}</button></div></form></div>`;
+    document.body.appendChild(fondo);
+    const inp = fondo.querySelector("input"), err = fondo.querySelector(".pt-err");
+    const fin = v => { fondo.remove(); res(v); };
+    const valida = v => { if (!v) return "Escribe algo"; if (url && !/^(https?:\/\/)?[^\s.]+\.[^\s]{2,}/i.test(v)) return "Eso no parece una dirección web"; return ""; };
+    fondo.onclick = async e => {
+      if (e.target === fondo || e.target.closest("[data-x]")) return fin(null);
+      if (e.target.closest("[data-pegar]")){ try { const t = (await navigator.clipboard.readText()).trim(); const m = t.match(/https?:\/\/\S+/); inp.value = m ? m[0] : t; err.textContent = ""; inp.focus(); } catch(x){ err.textContent = "No se pudo leer el portapapeles: mantén pulsado el cuadro y elige Pegar"; } }
+    };
+    fondo.querySelector("form").onsubmit = e => { e.preventDefault(); const v = inp.value.trim(), m = valida(v); if (m){ err.textContent = m; inp.focus(); return; } fin(url && !/^https?:\/\//i.test(v) ? "https://" + v : v); };
+    inp.addEventListener("keydown", e => { if (e.key === "Escape") fin(null); });
+    setTimeout(() => { inp.focus(); if (valor) inp.select(); }, 60);
+  });
+}
+$("#lbCerrar").onclick = () => cerrarHojas();
+$("#crEscanear").onclick = () => abrirEscaner(null);
+$("#crWeb").onclick = async () => { const u = await pedirTexto({titulo: "Guardar página web", icono: "web", url: true, marcador: "https://…", ok: "Guardar",
+  ayuda: "Pega el enlace y Cuaderna guarda el título, un resumen y la imagen de la página."}); if (u) guardarPaginaWeb(u); };
+$("#crPlantilla").onclick = () => abrirPlantillas();
+let lbIcono = "";
+function pintarIconosLib(){
+  const auto = temaLibreta({nombre: $("#lbNombre").value});
+  $("#lbIconos").innerHTML = `<button type="button" class="lb-ico auto ${lbIcono ? "" : "on"}" data-lbi="" style="--lib:${auto.color}" title="Automática, según el nombre">${auto.icono ? ic(auto.icono) : `<b>${esc(auto.letra || "A")}</b>`}<small>Auto</small></button>`
+    + TEMAS_LIB.map(([k, col]) => `<button type="button" class="lb-ico ${lbIcono === k ? "on" : ""}" data-lbi="${k}" style="--lib:${col}">${ic(k)}</button>`).join("")
+    + `<button type="button" class="lb-ico ${lbIcono === "edificio" ? "on" : ""}" data-lbi="edificio" style="--lib:#5E7C8F">${ic("edificio")}</button>`;
+}
+$("#lbIconos").onclick = e => { const b = e.target.closest("[data-lbi]"); if (!b) return; lbIcono = b.dataset.lbi; pintarIconosLib(); };
+$("#lbTarjetas").onclick = () => { const c = libEditando; cerrarHojas(); if (c) conPlus("tarjetasLote", () => libretaAContactos(c)); };
+$("#lbGuardar").onclick = async () => {
+  const nombre = $("#lbNombre").value.trim(), pila = $("#lbPila").value.trim();
+  if (!nombre){ toast("Ponle un nombre", "alerta"); $("#lbNombre").focus(); return; }
+  const padre = $("#lbPadre").value;
+  if (padre && padre !== (libEditando?.padre || "") && !esPlus()){ cerrarHojas(); abrirPlus("jerarquia"); return; }   // meter una libreta dentro de otra es Plus
+  // ¿cambia de sitio o de nombre, o es nueva, y ya hay otra igual o parecida allí?
+  const cambia = !libEditando || libEditando.nombre !== nombre || (libEditando.padre || "") !== padre;
+  const p = cambia ? parecidaEn(nombre, padre || null, libEditando?.id) : null;
+  if (p && libEditando){
+    cerrarHojas();
+    const r = await preguntarParecidas({...libEditando, nombre}, p.c, p.g, `En ${padre ? "«" + libPorId(padre).nombre + "»" : "las libretas principales"} ya está «${p.c.nombre}».`);
+    if (!r) return;
+    if (r === "fusionar"){ libEditando.nombre = nombre; const fin = await elegirNombreFusion(libEditando, p.c); if (fin) await fusionarLibretas(libEditando, p.c, fin); return; }
+    marcarDistintas(libEditando.id, p.c.id);
+  } else if (p && !libEditando){
+    if (!confirm(`Ya tienes ${p.g === 2 ? "una libreta llamada" : "una libreta parecida:"} «${p.c.nombre}»${padre ? " en ese sitio" : ""}. ¿Crear «${nombre}» de todos modos?\n\n(Pulsa Cancelar para abrir «${p.c.nombre}»)`)){ cerrarHojas(); abrirBuzon("c:" + p.c.id); return; }
+  }
+  const icono = lbIcono && ICONOS[lbIcono] ? lbIcono : "", uso = $("#lbUso").value;
+  if (libEditando){ libEditando.nombre = nombre; if (icono) libEditando.icono = icono; else delete libEditando.icono; if (uso) libEditando.uso = uso; else delete libEditando.uso; delete libEditando.color; if (padre){ libEditando.padre = padre; delete libEditando.pila; } else { delete libEditando.padre; if (pila) libEditando.pila = pila; else delete libEditando.pila; } config.carpetas = [...archivadores()]; toast("Libreta guardada", "libro"); }
+  else { const c = {id: "c" + Date.now().toString(36), nombre, ...(icono ? {icono} : {}), ...(uso ? {uso} : {}), ...(padre ? {padre} : pila ? {pila} : {})}; config.carpetas = [...archivadores(), c]; toast(`Libreta «${nombre}» creada`, "libro"); }
+  _cons.t = 0; guardarConfig(); cerrarHojas(); refrescar();
+};
+$("#lbBorrar").onclick = () => {
+  const c = libEditando; if (!c) return; cerrarHojas();
+  const pd = libPadre(c), rama = descendientes(c.id), ns = deNotas().filter(n => rama.has(n.carpeta)), subs = rama.size - 1;
+  const fondo = document.createElement("div"); fondo.className = "elegir-coche";
+  fondo.innerHTML = `<div class="ec-caja" role="dialog" aria-label="Borrar la libreta"><h3>${ic("borrar")} Borrar «${esc(c.nombre)}»</h3>
+    <button class="bl-op" data-bl="solo"><b>Borrar solo la libreta</b><small>Las notas no se borran: ${pd ? `pasan a «${esc(pd.nombre)}»` : "solo salen de la libreta"}${subs ? ", y las libretas que tiene dentro suben un nivel" : ""}.</small></button>
+    ${ns.length ? `<button class="bl-op peligro" data-bl="todo"><b>Borrar la libreta y sus ${ns.length} ${ns.length === 1 ? "nota" : "notas"} ${chipPlus("borrarLibreta")}</b><small>${subs ? (subs === 1 ? "También la libreta que tiene dentro y sus notas. " : `También las ${subs} libretas que tiene dentro y sus notas. `) : ""}Las notas van a la papelera de tu nube y puedes deshacerlo justo después.</small></button>` : ""}
+    <div class="on-pie"><button class="btn sec" data-x>Cancelar</button></div></div>`;
+  document.body.appendChild(fondo);
+  fondo.onclick = e => {
+    if (e.target === fondo || e.target.closest("[data-x]")) return fondo.remove();
+    const b = e.target.closest("[data-bl]"); if (!b) return;
+    if (b.dataset.bl === "todo") return conPlus("borrarLibreta", async () => {
+      if (!confirm(`Se borrarán ${ns.length} ${ns.length === 1 ? "nota" : "notas"}${subs ? ` y ${subs} ${subs === 1 ? "libreta" : "libretas"} más` : ""}. ¿Seguro?`)) return;
+      fondo.remove();
+      const antes = archivadores().slice();
+      config.carpetas = archivadores().filter(x => !rama.has(x.id)); guardarConfig();
+      for (const n of ns){ n._borrar = true; n._borrarEn = Date.now(); await idb.poner(n); }
+      if (buzon && rama.has(buzon.slice(2))) buzon = null;
+      refrescar(); pintarEstado(); setTimeout(() => sincronizar(true), 9000);
+      toast(`«${c.nombre}» y ${ns.length} ${ns.length === 1 ? "nota borradas" : "notas borradas"}`, "borrar", 9000, async () => {
+        config.carpetas = antes; guardarConfig();
+        for (const n of ns){ n._borrar = false; delete n._borrarEn; await idb.poner(n); }
+        refrescar(); pintarEstado(); toast("Libreta y notas recuperadas", "check");
+      });
+    });
+    fondo.remove(); borrarSoloLibreta(c);
+  };
+};
+function borrarSoloLibreta(c){
+  const pd = libPadre(c);
+  for (const h of hijasDe(c.id)){ if (pd) h.padre = pd.id; else { delete h.padre; if (c.pila && !h.pila) h.pila = c.pila; } }
+  config.carpetas = archivadores().filter(x => x.id !== c.id); guardarConfig();
+  for (const n of notas.filter(x => x.carpeta === c.id)){ if (pd) n.carpeta = pd.id; else delete n.carpeta; guardarNotaLocal(n); }
+  if (buzon === "c:" + c.id) buzon = null;
+  toast(`Libreta «${c.nombre}» borrada`, "borrar"); refrescar();
+}
+
+// ---------- búsqueda, plantillas y libretas del Cuaderno ----------
+const textoBuscable = n => norm([n.titulo, n.texto, n.transcripcion, etiquetasDe(n).map(e => "#" + e).join(" "), n.ia?.textoFotos, Object.values(n.textoArch || {}).join(" "), n.textoWeb,
+  (n.archivos || []).map(a => a.nombre).join(" "), n.para?.nombre, carpetaDe(n)?.nombre].filter(Boolean).join(" "));
+function buscarEnTodo(t){ $("#q").value = t; buzon = null; if (vista !== "notas") ver("notas"); else pintarNotas(); scrollTo(0, 0); }
+const libretaAbierta = () => buzon?.startsWith("c:") && vista === "notas" ? buzon.slice(2) : null;
+const PLANTILLAS = [
+  {k: "reunion", ic: "👥", nombre: "Reunión", d: "Asistentes, temas y acuerdos", titulo: "Reunión: ", etq: ["reunión"], texto: "## Asistentes\n- Quién asiste\n## Temas\n1. Primer tema\n## Acuerdos\n- Lo que se decide\n[ ] Enviar el resumen"},
+  {k: "viaje", ic: "🧳", nombre: "Viaje", d: "Fechas, alojamiento y maleta", titulo: "Viaje a ", etq: ["viaje"], texto: "## Fechas\n- Ida: \n- Vuelta: \n## Alojamiento\n- Hotel o casa: \n## Transporte\n- Ida y vuelta: \n[ ] DNI o pasaporte\n[ ] Cargadores\n[ ] Reservas\n[ ] Seguro de viaje"},
+  {k: "compra", ic: "🛒", nombre: "Lista de la compra", d: "Para ir tachando", titulo: "Compra", etq: ["compra"], texto: "[ ] Pan\n[ ] Leche\n[ ] Fruta\n[ ] Verdura"},
+  {k: "receta", ic: "🍳", nombre: "Receta", d: "Ingredientes y pasos", titulo: "Receta: ", etq: ["receta"], texto: "## Ingredientes\n- Ingrediente y cantidad\n## Preparación\n1. Primer paso\n## Notas\nTrucos, tiempos, para cuántos…"},
+  {k: "coche", ic: "🚗", nombre: "Revisión del coche", d: "Mantenimiento con fechas y km", titulo: "Revisiones del coche", etq: ["coche"], texto: "| Concepto | Fecha | Km | Precio |\n| --- | --- | --- | --- |\n| Aceite y filtros |  |  |  |\n| Neumáticos |  |  |  |\n| ITV |  |  |  |"},
+  {k: "proyecto", ic: "🛠️", nombre: "Proyecto o reforma", d: "Objetivo, presupuesto y tareas", titulo: "Proyecto: ", etq: ["proyecto"], texto: "## Objetivo\nQué quieres conseguir\n## Presupuesto\n| Partida | Importe |\n| --- | --- |\n|  |  |\n## Contactos\n- Nombre y teléfono\n[ ] Pedir presupuestos"},
+  {k: "diario", ic: "📔", nombre: "Diario", d: "Lo mejor del día", titulo: "", etq: ["diario"], texto: "## Lo mejor del día\n…\n## Lo que he aprendido\n…\n## Para mañana\n…"},
+];
+function usarPlantilla(p){
+  const n = notaBase(new Date());
+  n.titulo = p.k === "diario" ? "Diario · " + capital(fechaLarga(hoyISO())) : p.titulo; n.texto = p.texto;
+  if (p.etq?.length) n.etiquetas = [...p.etq]; if (!n.titulo) delete n.titulo;
+  n.ambito = "personal";
+  if (libretaAbierta()) n.carpeta = libretaAbierta();
+  abrirEdicion(n); setTimeout(() => { const t = $("#eTitulo"); if (t.value.endsWith(" ")){ t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }, 300);
+}
+$("#main").addEventListener("click", e => {
+  const m = e.target.closest("[data-libm]");
+  if (m){ e.stopPropagation(); const c = archivadores().find(x => x.id === m.dataset.libm); if (c) abrirLibreta(c); }
+});
+// hoja de plantillas
+function abrirPlantillas(){
+  const mias = config.plantillas || [];
+  $("#plaLista").innerHTML = PLANTILLAS.map(p => `<button class="plantilla" data-pla="${p.k}"><span class="pi">${p.ic}</span><b>${esc(p.nombre)}</b><small>${esc(p.d)}</small></button>`).join("")
+    + mias.map((p, i) => `<button class="plantilla mia" data-plam="${i}"><span class="pi">${ic("plantilla")}</span><b>${esc(p.nombre)}</b><small>Tu plantilla</small></button>`).join("");
+  abrirHoja("#hPlantillas");
+}
+$("#plaCerrar").onclick = () => cerrarHojas();
+$("#plaLista").addEventListener("click", e => {
+  const pl = e.target.closest("[data-pla]"), pm = e.target.closest("[data-plam]"); if (!pl && !pm) return;
+  const p = pl ? PLANTILLAS.find(x => x.k === pl.dataset.pla) : {...(config.plantillas || [])[+pm.dataset.plam], k: "mia"};
+  cerrarHojas(); setTimeout(() => usarPlantilla(p), 150);
+});
+// guardar la nota abierta como plantilla propia (desde Compartir)
+async function guardarComoPlantilla(){
+  const n = notaDelEditor(), nombre = (await pedirTexto({titulo: "Guardar como plantilla", icono: "plantilla", valor: tituloPlano(n) || "", marcador: "Nombre de la plantilla", ok: "Guardar",
+    ayuda: "Podrás empezar notas nuevas con esta misma estructura desde Anotar › Plantilla."}) || "").trim(); if (!nombre) return;
+  config.plantillas = [...(config.plantillas || []).filter(p => norm(p.nombre) !== norm(nombre)), {nombre, titulo: n.titulo || "", texto: n.texto || "", etq: n.etiquetas || []}];
+  guardarConfig(); cerrarHojaEnviar(); toast(`Plantilla «${nombre}» guardada. La tienes en Anotar › Plantilla`, "plantilla", 4000);
+}
+
+// ---------- escáner de documentos de varias páginas → PDF ----------
+const DOC = {paginas: [], filtro: "color", destino: null};
+function prepararModoTj(){
+  const doc = TJ.modo === "doc";
+  $("#tjModo").textContent = doc ? "Escanear documento" : "Tarjeta de visita";
+  $("#tjGuiaTxt").textContent = doc ? "Pon el papel sobre una superficie que contraste y hazle la foto desde arriba. No hace falta que salga recto: Cuaderna lo encuadra y lo endereza. Después puedes añadir más páginas." : "Pon la tarjeta sobre una superficie que contraste (una mesa oscura si la tarjeta es clara) y hazle la foto. No hace falta que salga recta: Cuaderna la encuadra y la endereza.";
+  $("#tjMarco").innerHTML = ic(doc ? "doc" : "user"); $("#tjMarco").classList.toggle("doc", doc);
+}
+function abrirEscaner(destino){
+  TJ.modo = "doc"; prepararModoTj(); DOC.paginas = []; DOC.filtro = "color"; DOC.destino = destino; TJ.foto = null;
+  $("#tjDocNombre").value = ""; $("#tjFiltro").querySelectorAll(".opc").forEach(b => b.classList.toggle("on", b.dataset.fil === "color"));
+  $("#tj").classList.remove("oculto"); document.documentElement.classList.add("lz-on"); pasoTarjeta("elegir");
+}
+function filtrarPagina(c, f){
+  if (f === "color") return c;
+  const o = document.createElement("canvas"); o.width = c.width; o.height = c.height; const g = o.getContext("2d"); g.drawImage(c, 0, 0);
+  const d = g.getImageData(0, 0, o.width, o.height), p = d.data;
+  for (let i = 0; i < p.length; i += 4){ let v = p[i] * .299 + p[i + 1] * .587 + p[i + 2] * .114; if (f === "bn") v = v > 150 ? 255 : Math.max(0, (v - 40) * 1.6); p[i] = p[i + 1] = p[i + 2] = v; }
+  g.putImageData(d, 0, 0); return o;
+}
+function pintarPaginasDoc(){
+  $("#tjMins").innerHTML = DOC.paginas.map((c, i) => `<div class="doc-min"><img src="${filtrarPagina(c, DOC.filtro).toDataURL("image/jpeg", .5)}" alt="Página ${i + 1}"><span>${i + 1}</span><button data-docx="${i}" aria-label="Quitar página">${ic("x")}</button></div>`).join("");
+}
+$("#tjMins").addEventListener("click", e => { const b = e.target.closest("[data-docx]"); if (b){ DOC.paginas.splice(+b.dataset.docx, 1); DOC.paginas.length ? pasoTarjeta("paginas") : pasoTarjeta("elegir"); } });
+$("#tjFiltro").addEventListener("click", e => { const b = e.target.closest("[data-fil]"); if (!b) return; DOC.filtro = b.dataset.fil; $("#tjFiltro").querySelectorAll(".opc").forEach(x => x.classList.toggle("on", x === b)); pintarPaginasDoc(); });
+$("#tjOtraPag").onclick = () => pasoTarjeta("elegir");
+$("#tjPdf").onclick = async () => {
+  if (!DOC.paginas.length) return;
+  const b = $("#tjPdf"); b.disabled = true; b.textContent = "Creando PDF…";
+  try {
+    const jsPDF = await cargarJsPdf(), paginas = DOC.paginas.map(c => filtrarPagina(c, DOC.filtro));
+    let pdf = null;
+    for (const c of paginas){
+      const hz = c.width > c.height, W = hz ? 297 : 210, H = hz ? 210 : 297;
+      if (!pdf) pdf = new jsPDF({unit: "mm", format: "a4", orientation: hz ? "landscape" : "portrait"}); else pdf.addPage("a4", hz ? "landscape" : "portrait");
+      const k = Math.min(W / c.width, H / c.height), w = c.width * k, h = c.height * k;
+      pdf.addImage(c.toDataURL("image/jpeg", DOC.filtro === "bn" ? .7 : .8), "JPEG", (W - w) / 2, (H - h) / 2, w, h);
+    }
+    const base = ($("#tjDocNombre").value.trim() || `Documento ${new Date().toLocaleDateString("es-ES")}`).replace(/[\\/:*?"<>|]+/g, "-");
+    pdf.setProperties({title: latin1(base), creator: "Cuaderna"});
+    const blob = pdf.output("blob"), nombre = base + ".pdf";
+    const ocr = paginas.slice(0, 12).map(c => { const k = Math.min(1, 1400 / Math.max(c.width, c.height)), o = document.createElement("canvas"); o.width = c.width * k; o.height = c.height * k; o.getContext("2d").drawImage(c, 0, 0, o.width, o.height); return o.toDataURL("image/jpeg", .75); });
+    const a = {blob, nombre, tipo: "application/pdf", ocr};
+    cerrarTarjeta();
+    if (DOC.destino === "editor" && editando && $("#hEditar").classList.contains("on")){ eAdj.nuevosArch.push(a); pintarAdjEdicion(); guardarEdicionPronto(); toast("Documento añadido. Pulsa Guardar para conservarlo", "doc", 4000); }
+    else {
+      const n = notaBase(new Date()); n.titulo = base; n.etiquetas = ["documento"]; if (libretaAbierta()) n.carpeta = libretaAbierta();
+      const d = new Date(n.creada), r = `Archivos/${d.getFullYear()}/${pad(d.getMonth() + 1)}/${n.id}-${Date.now().toString(36)}-${nombreSeguro(nombre)}`;
+      await idb.ponerBlob(r, blob); n.archivos = [{ruta: r, nombre, tipo: "application/pdf", tam: blob.size}];
+      await guardarNotaLocal(n, [r]); refrescar(); leerArchivos(n, [{ruta: r, ...a}]);
+      toast(`«${base}» guardado${ia() ? ". Leyendo el texto…" : ""}`, "doc", 4000); abrirEdicion(n);
+    }
+  } catch(e){ console.warn(e); toast("No se pudo crear el PDF", "alerta", 4000); }
+  finally { b.disabled = false; b.innerHTML = ic("check") + "Guardar PDF"; }
+};
+// texto de las páginas escaneadas con la IA, para poder buscarlo
+async function ocrIA(urls){
+  const partes = [];
+  for (let i = 0; i < urls.length; i += 4){
+    try { partes.push(await llamarIA([{role: "system", content: "Transcribe fielmente todo el texto legible de estas páginas escaneadas, en orden y en su idioma original. Devuelve solo el texto, sin comentarios."},
+      {role: "user", content: [{type: "text", text: `Páginas ${i + 1} a ${Math.min(urls.length, i + 4)}:`}, ...urls.slice(i, i + 4).map(u => ({type: "image_url", image_url: {url: u, detail: "high"}}))]}], {json: false, max: 3500})); }
+    catch(e){ console.warn(e); }
+  }
+  return partes.join("\n\n").trim().slice(0, 40000);
+}
+
+// ---------- guardar páginas web ----------
+async function guardarPaginaWeb(url, asunto = ""){
+  if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+  let info = {};
+  if (apiBase()){ try { toast("Leyendo la página…", "web", 3000); info = await api("web", {cuerpo: {url}}); } catch(e){ console.warn(e); } }
+  let dominio = ""; try { dominio = new URL(url).hostname.replace(/^www\./, ""); } catch(e){}
+  const titulo = (info.titulo || asunto || dominio || "Página web").trim().slice(0, 140);
+  const n = notaBase(new Date()); n.titulo = titulo; n.web = {url, dominio, imagen: info.imagen || ""};
+  n.texto = [`[${titulo}](${url})`, info.descripcion || "", info.resumen ? "## Resumen\n" + info.resumen : ""].filter(Boolean).join("\n\n");
+  if (info.texto) n.textoWeb = info.texto.slice(0, 40000);
+  n.etiquetas = ["web"]; n.ambito = ambitoSel(); if (libretaAbierta()) n.carpeta = libretaAbierta();
+  await guardarNotaLocal(n); refrescar();
+  toast(info.titulo ? "Página guardada con su resumen" : apiBase() ? "Página guardada (no se pudo leer su contenido)" : "Página guardada con su enlace", "web", 4000);
+  abrirEdicion(n);
+}
+
+// ---------- enlaces entre notas: [Título](nota:id) dentro del texto ----------
+const RX_NOTA = /\[([^\]\n]+)\]\(nota:([\w-]+)\)/g;
+const enlacesDe = t => [...String(t || "").matchAll(RX_NOTA)].map(m => m[2]);
+function pintarEnlaces(){
+  if (!editando) return;
+  const ids = [...new Set(enlacesDe($("#eTexto").value))], va = ids.map(id => notas.find(n => n.id === id && !n._borrar)).filter(Boolean);
+  const vienen = deNotas().filter(n => n.id !== editando.id && enlacesDe(n.texto).includes(editando.id));
+  const chip = (n, atras) => `<button class="nota-l ${atras ? "atras" : ""}" data-ir="${esc(n.id)}" type="button">${ic(atras ? "atras" : "nota")}<span>${esc(tituloPlano(n))}</span></button>`;
+  $("#eEnlaces").innerHTML = (va.length ? `<div class="enl-g"><small>Enlaza con</small>${va.map(n => chip(n)).join("")}</div>` : "")
+    + (vienen.length ? `<div class="enl-g"><small>Mencionada en</small>${vienen.map(n => chip(n, true)).join("")}</div>` : "")
+    + `<div><button class="enl" id="eEnlazar" type="button">${ic("mas")}Enlazar con otra nota</button></div>`;
+  $("#eEnlazar").onclick = () => abrirEnlazar(false);
+}
+for (const id of ["#eTexto", "#eRico"]) $(id).addEventListener("input", () => { clearTimeout(pintarEnlaces.t); pintarEnlaces.t = setTimeout(pintarEnlaces, 400); });
+$("#eEnlaces").addEventListener("click", async e => {
+  const b = e.target.closest("[data-ir]"); if (!b) return; e.preventDefault(); e.stopPropagation();
+  const n2 = notas.find(n => n.id === b.dataset.ir); if (!n2) return;
+  if (hayCambiosEdicion()) await guardarEdicion(); else { olvidarEdicion(); cerrarHojas(); }
+  setTimeout(() => abrirEdicion(n2), 120);
+});
+let selEnlace = null;
+function abrirEnlazar(enCursor = false){
+  if (!enCursor) selEnlace = null;
+  else if (modoRico){ const s = getSelection(); selEnlace = s.rangeCount && $("#eRico").contains(s.anchorNode) ? s.getRangeAt(0).cloneRange() : null; }
+  else { const t = $("#eTexto"); selEnlace = [t.selectionStart, t.selectionEnd]; }
+  $("#enQ").value = ""; pintarEnlazar(); $("#hEnlazar").classList.add("on"); setTimeout(() => $("#enQ").focus(), 250);
+}
+function pintarEnlazar(){
+  const q = norm($("#enQ").value).split(/\s+/).filter(Boolean);
+  const l = deNotas().filter(n => n.id !== editando?.id && !n.ancla && (!q.length || q.every(w => textoBuscable(n).includes(w))))
+    .sort((a, b) => (b.actualizada || b.creada).localeCompare(a.actualizada || a.creada)).slice(0, 40);
+  $("#enLista").innerHTML = l.length ? l.map(n => `<button class="en-it" data-enl="${esc(n.id)}"><b>${esc(tituloPlano(n))}</b><small>${esc(capital(fechaLarga(n.creada)))}${carpetaDe(n) ? " · " + esc(carpetaDe(n).nombre) : ""}</small></button>`).join("") : `<p class="ayuda-b">No hay notas con eso.</p>`;
+}
+$("#enQ").addEventListener("input", pintarEnlazar);
+$("#enCerrar").onclick = $("#enX").onclick = () => $("#hEnlazar").classList.remove("on");
+$("#enLista").addEventListener("click", e => {
+  const b = e.target.closest("[data-enl]"); if (!b) return;
+  const n = notas.find(x => x.id === b.dataset.enl), titulo = tituloPlano(n).replace(/[\[\]]/g, "");
+  $("#hEnlazar").classList.remove("on");
+  if (modoRico){
+    const r = $("#eRico"); r.focus(); const s = getSelection();
+    const enlace = `<a href="nota:${esc(n.id)}">${esc(titulo)}</a>`;
+    if (selEnlace){ s.removeAllRanges(); s.addRange(selEnlace); document.execCommand("insertHTML", false, "&nbsp;" + enlace + "&nbsp;"); }
+    else r.insertAdjacentHTML("beforeend", `<div>${enlace}</div>`); r.dispatchEvent(new Event("input", {bubbles: true}));
+  } else {
+    const t = $("#eTexto"), txt = `[${titulo}](nota:${n.id})`;
+    if (selEnlace){ const [a, z] = selEnlace; t.value = t.value.slice(0, a) + (a && !/\s$/.test(t.value.slice(0, a)) ? " " : "") + txt + " " + t.value.slice(z); }
+    else t.value = (t.value.trim() ? t.value.replace(/\s+$/, "") + "\n" : "") + txt; t.dispatchEvent(new Event("input", {bubbles: true}));
+  }
+  pintarEnlaces(); guardarEdicionPronto(); toast(`Enlazada con «${titulo}»`, "nota", 2500);
+});
+$("#eFormato").addEventListener("click", e => { if (e.target.closest('[data-fmt="nota"]')) abrirEnlazar(true); });
+
+// ---------- historial: las versiones que guarda OneDrive (pantalla completa) ----------
+let histNota = null, histVers = [], histDet = -1;
+const fmtVer = d => capital(new Date(d).toLocaleString("es-ES", {weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit"}));
+const haceVer = d => { const m = Math.round((Date.now() - new Date(d)) / 60000); return m < 1 ? "ahora" : m < 60 ? `hace ${m} min` : m < 1440 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} d`; };
+function cerrarHistorial(){ $("#vers").classList.add("oculto"); document.documentElement.classList.remove("lz-on"); if (history.state?.vers){ quitandoEstado = true; history.back(); } }
+async function abrirHistorial(n){
+  histNota = n; histVers = []; histDet = -1;
+  $("#vers").classList.remove("oculto"); document.documentElement.classList.add("lz-on");
+  try { history.pushState({vers: true, hoja: true}, ""); } catch(e){}
+  $("#hiTit").textContent = "Versiones · " + tituloPlano(n); $("#hiPie").classList.add("oculto");
+  $("#hiCuerpo").innerHTML = `<p class="hi-ayuda">Buscando las versiones en tu ${nube()}…</p>`;
+  try {
+    const it = await itemDe(`Notas/${n.id}.json`); if (!it) throw new Error(`Esta nota aún no se ha subido a tu ${nube()}. Inténtalo dentro de un momento.`);
+    histVers = await versionesDe(it);
+    histVers.sort((a, b) => b.lastModifiedDateTime.localeCompare(a.lastModifiedDateTime));
+    pintarHistorial();
+    // carga el contenido de cada versión para enseñar de qué iba (3 a la vez, como mucho 25)
+    const cola = histVers.slice(0, 25).map((v, i) => i); const trabajar = async () => { while (cola.length){ const i = cola.shift(); await contenidoVersion(i).catch(() => {}); if (histDet < 0 && !$("#vers").classList.contains("oculto")) pintarHistorial(); } };
+    await Promise.all([trabajar(), trabajar(), trabajar()]);
+  } catch(e){ $("#hiCuerpo").innerHTML = `<p class="hi-ayuda">${esc(e.message || "No se pudieron leer las versiones")}</p>`; }
+}
+async function contenidoVersion(i){
+  const v = histVers[i]; if (v.datos) return v.datos;
+  const r = await graph(urlVersion(v));
+  if (!r.ok) throw new Error("No se pudo abrir esa versión");
+  return v.datos = JSON.parse(await r.text());
+}
+function pintarHistorial(){
+  histDet = -1; $("#hiPie").classList.add("oculto"); $("#hiAtras").innerHTML = ic("x"); $("#hiAtras").setAttribute("aria-label", "Cerrar");
+  $("#hiCuerpo").innerHTML = (histVers.length > 1 ? `<p class="hi-ayuda">Tu ${nube()} guarda cada versión de esta nota. Toca una para verla y, si quieres, recuperarla.</p>` : `<p class="hi-ayuda">Todavía no hay versiones anteriores: cada vez que cambies la nota, se guardará una aquí.</p>`)
+    + histVers.map((v, i) => { const d = v.datos, p = d ? partesNota(d) : null;
+      return `<button class="hi-it" data-ver="${i}"><span class="cuando">${i === 0 ? `<span class="hi-act">Actual</span>` : ""}${esc(fmtVer(v.lastModifiedDateTime))}<small>${haceVer(v.lastModifiedDateTime)}</small></span>
+        ${d ? `<span class="tit">${esc(p.titulo || p.vacio || "Nota")}</span>${p.desc ? `<span class="res">${esc(p.desc)}</span>` : ""}` : `<span class="res">Cargando…</span>`}</button>`; }).join("");
+  $("#hiCuerpo").scrollTop = 0;
+}
+async function verVersion(i){
+  histDet = i; const v = histVers[i]; if (histVers.length > 1){ $("#hiAtras").innerHTML = ic("atras"); $("#hiAtras").setAttribute("aria-label", "Volver a todas las versiones"); }
+  $("#hiCuerpo").innerHTML = `<p class="hi-ayuda">Abriendo…</p>`;
+  try {
+    const d = await contenidoVersion(i), pl = partirLista(d.texto), et = etiquetasDe(d);
+    $("#hiCuerpo").innerHTML = `<div class="hi-det"><div class="cuando">${i === 0 ? "Versión actual · " : ""}${esc(fmtVer(v.lastModifiedDateTime))} · ${haceVer(v.lastModifiedDateTime)}</div>
+      <h2>${esc(d.titulo || partesNota(d).titulo || "Nota")}</h2>
+      <div class="md">${mdAHtml(pl.intro) || `<span style="color:var(--muted)">Sin descripción</span>`}${pl.items.length ? `<ul style="list-style:none;padding-left:4px">${pl.items.map(x => `<li>${x.hecho ? "☑" : "☐"} ${esc(x.texto)}</li>`).join("")}</ul>` : ""}</div>
+      <div class="datos">${d.fecha ? `<span>📅 ${esc(fechaLarga(d.fecha))}${d.hora ? ", " + esc(d.hora) : ""}</span>` : ""}${d.para?.nombre ? `<span>👤 ${esc(d.para.nombre)}</span>` : ""}${et.map(e => `<span>#${esc(e)}</span>`).join("")}${d.hecha ? "<span>✓ Hecha</span>" : ""}</div></div>`;
+    $("#hiPie").classList.remove("oculto"); $("#hiRecuperar").classList.toggle("oculto", i === 0);
+  } catch(e){ $("#hiCuerpo").innerHTML = `<p class="hi-ayuda">${esc(e.message)}</p>`; $("#hiPie").classList.remove("oculto"); $("#hiRecuperar").classList.add("oculto"); }
+  $("#hiCuerpo").scrollTop = 0;
+}
+$("#hiCuerpo").addEventListener("click", e => { const b = e.target.closest("[data-ver]"); if (b) verVersion(+b.dataset.ver); });
+$("#hiVolver").onclick = pintarHistorial;
+$("#hiAtras").onclick = () => histDet >= 0 && histVers.length > 1 ? pintarHistorial() : cerrarHistorial();
+$("#hiRecuperar").onclick = async () => {
+  const d = histVers[histDet]?.datos; if (!d || !confirm("¿Recuperar esta versión? La actual seguirá guardada en el historial.")) return;
+  const n = histNota; for (const k of ["titulo", "texto", "fecha", "hora", "tipo", "para", "etiquetas", "carpeta", "importante"]) if (d[k] === undefined) delete n[k]; else n[k] = d[k];
+  cerrarHistorial(); olvidarEdicion(); cerrarHojas(); await guardarNotaLocal(n); refrescar(); toast("Versión recuperada", "deshacer", 3000); setTimeout(() => abrirEdicion(n), 200);
+};
+// botón «atrás» del móvil: primero vuelve a la lista, luego cierra
+addEventListener("popstate", () => {
+  if ($("#vers").classList.contains("oculto")) return;
+  if (histDet >= 0 && histVers.length > 1){ pintarHistorial(); try { history.pushState({vers: true, hoja: true}, ""); } catch(e){} }
+  else { $("#vers").classList.add("oculto"); document.documentElement.classList.remove("lz-on"); }
+}, true);
+
+// ---------- exportarlo todo: Markdown legible + adjuntos, en un ZIP ----------
+let jszipP = null;
+function cargarJsZip(){ return jszipP ||= new Promise((ok, ko) => { const s = document.createElement("script"); s.src = "lib/jszip-3.10.1.min.js"; s.onload = () => ok(window.JSZip); s.onerror = () => { jszipP = null; ko(new Error("No se pudo preparar el ZIP")); }; document.head.appendChild(s); }); }
+async function exportarTodo(){
+  const lista = notas.filter(n => !n._borrar); if (!lista.length){ toast("Aún no hay notas", "alerta"); return; }
+  const conAdj = confirm(`Vas a exportar ${lista.length} notas en Markdown (se abren con cualquier editor).\n\n¿Incluir también fotos, audios y archivos? Tarda más si hay muchos.\n\nAceptar = con adjuntos · Cancelar = solo el texto`);
+  try {
+    toast("Preparando la exportación…", "subir", 60000);
+    const JSZip = await cargarJsZip(), zip = new JSZip(), usados = new Set(), limpio = t => String(t || "").replace(/[\\/:*?"<>|\n\r#%]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
+    const titulos = new Map(lista.map(n => [n.id, tituloPlano(n)]));
+    let hechos = 0, adj = 0;
+    for (const n of lista){
+      const carp = carpetaDe(n) ? rutaLib(carpetaDe(n)).map(x => limpio(x.nombre) || "Libreta").join("/") : "Sin libreta"; let nombre = `${isoDia(new Date(n.creada))} ${limpio(tituloPlano(n)) || "Nota"}`, k = 2;
+      while (usados.has(carp + "/" + nombre)) nombre = `${nombre.replace(/ \(\d+\)$/, "")} (${k++})`; usados.add(carp + "/" + nombre);
+      const rutas = [n.audio, ...(n.fotos || []), ...(n.archivos || []).map(a => a.ruta)].filter(Boolean);
+      const cab = ["---", `titulo: ${tituloPlano(n)}`, `creada: ${n.creada}`, n.fecha ? `fecha: ${n.fecha}${n.hora ? " " + n.hora : ""}` : "", etiquetasDe(n).length ? `etiquetas: ${etiquetasDe(n).join(", ")}` : "",
+        carpetaDe(n) ? `libreta: ${carpetaDe(n).nombre}` : "", n.para?.nombre ? `para: ${n.para.nombre}` : "", `hecha: ${n.hecha ? "sí" : "no"}`, n.web?.url ? `web: ${n.web.url}` : "", "---", ""].filter(x => x !== "");
+      const cuerpo = String(n.texto || "").replace(RX_NOTA, (m, t, id) => `[[${titulos.get(id) || t}]]`);
+      const pie = rutas.length ? `\n\n## Adjuntos\n${rutas.map(r => `- ${conAdj ? `[${r.split("/").pop()}](../Adjuntos/${r})` : r.split("/").pop()}`).join("\n")}` : "";
+      zip.file(`Notas/${carp}/${nombre}.md`, cab.join("\n") + `\n# ${tituloPlano(n)}\n\n${cuerpo}${n.transcripcion && n.transcripcion !== n.texto ? `\n\n> Dictado: ${n.transcripcion}` : ""}${pie}\n`);
+      if (conAdj) for (const r of rutas){ try { zip.file(`Adjuntos/${r}`, await idb.blob(r) || await descargarRuta(r)); adj++; } catch(e){} }
+      if (++hechos % 20 === 0) toast(`Exportando ${hechos} de ${lista.length}…`, "subir", 60000);
+    }
+    zip.file("cuaderna.json", JSON.stringify(lista.map(n => Object.fromEntries(Object.entries(n).filter(([k]) => !k.startsWith("_")))), null, 1));
+    zip.file("LEEME.txt", `Exportación de Cuaderna del ${new Date().toLocaleString("es-ES")}.\n\nNotas/: una nota por fichero Markdown (.md), en carpetas por libreta. Se abren con cualquier editor de texto, Obsidian, Notion, Word…\nAdjuntos/: fotos, audios y archivos.\ncuaderna.json: todos los datos, para volver a importarlos.\n`);
+    const blob = await zip.generateAsync({type: "blob", compression: "DEFLATE"}), nombreZip = `Cuaderna ${hoyISO()}.zip`;
+    lsSet("chispa.ultExport", Date.now());
+    toast(`Exportadas ${lista.length} notas${conAdj ? ` y ${adj} adjuntos` : ""}`, "check", 4000);
+    if (esApp()) return compartirArchivo(blob, nombreZip, "Exportación de Cuaderna");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = nombreZip; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+  } catch(e){ console.warn(e); toast(e.message || "No se pudo exportar", "alerta", 5000); }
+}
+
+// ---------- importar desde Evernote (.enex) ----------
+async function importarEnex(file, reanudar = false){
+  if (IMP.trabajando) return toast("Ya hay una importación en marcha", "alerta");
+  let xml;
+  try { xml = new DOMParser().parseFromString(await file.text(), "application/xml"); } catch(e){ toast("No se pudo leer el archivo", "alerta"); return; }
+  const nx = [...xml.getElementsByTagName("note")]; if (!nx.length){ toast("Ese archivo no tiene notas de Evernote", "alerta", 4000); return; }
+  const hijo = (el, t) => el.getElementsByTagName(t)[0]?.textContent || "";
+  // cada nota se reconoce por su título, fechas y comienzo: así, si se vuelve a importar el mismo archivo, no se duplica
+  const clave = el => { const t = [hijo(el, "title"), hijo(el, "created"), hijo(el, "updated"), hijo(el, "content").slice(0, 400)].join("|"); let h = 2166136261; for (let i = 0; i < t.length; i++){ h ^= t.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return "en:" + h.toString(36) + t.length.toString(36); };
+  const ya = new Set(notas.filter(n => n.importada === "evernote" && !n._borrar).map(n => n.origen)), faltan = nx.filter(el => !ya.has(clave(el))).length;
+  const previo = impPlan();
+  let lib = reanudar && previo?.tipo === "evernote" ? archivadores().find(c => c.id === previo.lib) : null;
+  if (!faltan){ toast(`Las ${nx.length} notas de este archivo ya están en Cuaderna`, "check", 5000); if (previo?.tipo === "evernote"){ previo.estado = "fin"; impGuardar(previo); impBarra(); } return; }
+  if (!lib){
+    const nombreLib = (await pedirTexto({titulo: "Importar de Evernote", icono: "libro", valor: file.name.replace(/\.enex$/i, ""), ok: "Importar", marcador: "Nombre de la libreta",
+      ayuda: `${nx.length.toLocaleString("es")} notas${nx.length - faltan ? ` (${(nx.length - faltan).toLocaleString("es")} ya estaban y no se duplican; faltan ${faltan.toLocaleString("es")})` : ""}. Se importan por tandas y, si se corta, puedes seguir eligiendo otra vez el archivo. ¿En qué libreta las guardo?`}) || "").trim(); if (!nombreLib) return;
+    lib = archivadores().find(c => norm(c.nombre) === norm(nombreLib));
+    if (!lib){ lib = {id: "c" + Date.now().toString(36), nombre: nombreLib, pila: "Evernote"}; config.carpetas = [...archivadores(), lib]; guardarConfig(); }
+  }
+  const fecha = t => { const m = String(t).match(/(\d{4})(\d\d)(\d\d)T(\d\d)(\d\d)(\d\d)/); return m ? new Date(Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6])) : new Date(); };
+  let hechas = nx.length - faltan, fallos = 0; const paraLeer = [];
+  const j = {tipo: "evernote", estado: "en curso", archivo: file.name, lib: lib.id, total: nx.length, hechas, inicio: new Date().toISOString()};
+  impGuardar(j); IMP.trabajando = true; IMP.parar = false; IMP.motivo = null; impBarra();
+  try {
+  for (const el of nx){
+    if (IMP.parar) break;
+    const k = clave(el); if (ya.has(k)) continue;
+    try {
+      const cuando = fecha(hijo(el, "created")), n = notaBase(cuando);
+      n.id = n.id + Math.random().toString(36).slice(2, 4);   // muchas notas pueden tener la misma hora
+      n.titulo = hijo(el, "title").trim() || undefined; if (!n.titulo) delete n.titulo;
+      const doc = new DOMParser().parseFromString(hijo(el, "content"), "text/html");
+      // en HTML las etiquetas de Evernote no se cierran solas: lo que va detrás queda dentro; se saca fuera
+      doc.querySelectorAll("en-todo").forEach(t => t.replaceWith(doc.createTextNode(t.getAttribute("checked") === "true" ? "☑ " : "☐ "), ...t.childNodes));
+      doc.querySelectorAll("en-media, en-crypt").forEach(t => t.replaceWith(...t.childNodes));
+      const raiz = doc.querySelector("en-note") || doc.body;
+      n.texto = htmlAMd(raiz).replace(/\n{3,}/g, "\n\n").trim();
+      const tags = [...el.getElementsByTagName("tag")].map(t => limpiarEtq(t.textContent)).filter(Boolean); if (tags.length) n.etiquetas = [...new Set(tags)];
+      const fuente = el.getElementsByTagName("source-url")[0]?.textContent; if (fuente && /^https?:/.test(fuente)) n.web = {url: fuente, dominio: (() => { try { return new URL(fuente).hostname.replace(/^www\./, ""); } catch(e){ return ""; } })()};
+      n.carpeta = lib.id; n.ambito = "personal"; n.tipo = "nota"; n.importada = "evernote"; n.origen = k;
+      const rutas = [], carpeta = `${cuando.getFullYear()}/${pad(cuando.getMonth() + 1)}`;
+      for (const [i, res] of [...el.getElementsByTagName("resource")].entries()){
+        const b64 = hijo(res, "data").replace(/\s+/g, ""); if (!b64) continue;
+        const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0)), mime = hijo(res, "mime") || "application/octet-stream";
+        let blob = new Blob([bytes], {type: mime}), nombre = hijo(res, "file-name") || `adjunto-${i + 1}.${(mime.split("/")[1] || "bin").replace(/[^a-z0-9]/g, "")}`;
+        if (/^image\/(jpe?g|png|webp|gif|heic)/.test(mime)){
+          try { blob = await reducirFoto(blob); } catch(e){}
+          const r = `Fotos/${carpeta}/${n.id}-${i}.jpg`; await idb.ponerBlob(r, blob); (n.fotos ||= []).push(r); rutas.push(r);
+        } else {
+          const r = `Archivos/${carpeta}/${n.id}-${i}-${nombreSeguro(nombre)}`; await idb.ponerBlob(r, blob); (n.archivos ||= []).push({ruta: r, nombre, tipo: mime, tam: blob.size}); rutas.push(r);
+          if (/pdf|text/.test(mime) && blob.size < 15 * 1048576) paraLeer.push([n, {ruta: r, blob, tipo: mime, nombre}]);
+        }
+      }
+      n.actualizada = new Date().toISOString(); n._pend = true; n._subir = rutas;
+      await idb.poner(n); notas.push(n); ya.add(k); hechas++;
+      j.hechas = hechas; impGuardar(j); impBarra();
+      if (hechas % 25 === 0){ refrescar(); sincronizar(true); }
+    } catch(e){ fallos++; console.warn("Nota de Evernote no importada", e); }
+  }
+  } finally { IMP.trabajando = false; }
+  ordenar(); refrescar(); pintarEstado(); setTimeout(() => sincronizar(true), 200);
+  if (IMP.parar){ j.estado = "pausa"; j.motivo = "archivo"; impGuardar(j); return impBarra(); }
+  j.estado = "fin"; impGuardar(j); impBarra();
+  toast(hechas === nx.length ? `Importación terminada: las ${nx.length.toLocaleString("es")} notas están en «${lib.nombre}». Se suben a tu nube poco a poco` : `Importadas ${hechas.toLocaleString("es")} de ${nx.length.toLocaleString("es")} notas en «${lib.nombre}». ${nx.length - hechas} no se pudieron leer; si vuelves a importar el archivo, se reintentan sin duplicar`, hechas === nx.length ? "check" : "alerta", 9000);
+  (async () => { for (const [n, a] of paraLeer) await leerArchivos(n, [a]); })();
+}
+
+
+/* ================= Importar de OneNote (Microsoft Graph, solo lectura) ================= */
+// Las páginas van directas de OneNote a la nube del usuario: nunca pasan por el servidor de Cuaderna.
+const ON_SCOPES = "openid offline_access Notes.Read";
+const ON_API = "https://graph.microsoft.com/v1.0/me/onenote";
+const onMsPropio = () => !!token && !esGoogle() && !lsGet("chispa.local");
+async function tokenOneNote(){
+  if (onMsPropio() && lsGet("chispa.permNotas")) return accessToken();
+  const t = lsGet("chispa.onTok");
+  if (t?.access && Date.now() < t.exp) return t.access;
+  if (t?.refresh){
+    const r = await fetch(`${AUTH}/token`, {method: "POST", headers: {"Content-Type": "application/x-www-form-urlencoded"},
+      body: new URLSearchParams({client_id: CLIENT_ID, scope: ON_SCOPES, grant_type: "refresh_token", refresh_token: t.refresh, redirect_uri: REDIRECT})});
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.access_token){ lsSet("chispa.onTok", {access: j.access_token, refresh: j.refresh_token || t.refresh, exp: Date.now() + (j.expires_in - 120) * 1000}); return j.access_token; }
+    localStorage.removeItem("chispa.onTok");
+  }
+  return null;
+}
+async function pedirTokenOneNote(code, verifier){
+  const r = await fetch(`${AUTH}/token`, {method: "POST", headers: {"Content-Type": "application/x-www-form-urlencoded"},
+    body: new URLSearchParams({client_id: CLIENT_ID, scope: ON_SCOPES, grant_type: "authorization_code", code, code_verifier: verifier, redirect_uri: REDIRECT})});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.access_token) throw new Error(j.error_description || j.error || "No se pudo conectar con OneNote");
+  lsSet("chispa.onTok", {access: j.access_token, refresh: j.refresh_token, exp: Date.now() + (j.expires_in - 120) * 1000});
+}
+// Pide el permiso de lectura de OneNote. Con cuenta de Microsoft se añade al de siempre; con Google o sin cuenta, se entra con Microsoft solo para esto.
+async function permisoOneNote(){
+  lsSet("chispa.tras", "onenote");
+  if (onMsPropio()){ lsSet("chispa.permNotas", true); return irALogin(false, "ms"); }
+  const verifier = aleatorio(48), state = aleatorio(16);
+  const challenge = b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier)));
+  lsSet("chispa.pkce", {verifier, state, prov: "onenote"});
+  const p = new URLSearchParams({client_id: CLIENT_ID, response_type: "code", redirect_uri: REDIRECT, response_mode: "query", scope: ON_SCOPES, state,
+    code_challenge: challenge, code_challenge_method: "S256", prompt: "select_account"});
+  location.href = `${AUTH}/authorize?${p}`;
+}
+async function onGraph(url, binario = false, intento = 0){
+  const t = await tokenOneNote(); if (!t) throw Object.assign(new Error("Falta el permiso de OneNote"), {permiso: true});
+  const r = await fetch(url, {headers: {Authorization: "Bearer " + t}});
+  if ((r.status === 429 || r.status >= 500) && intento < 6){   // OneNote limita las lecturas por minuto: se espera lo que pide
+    const s = +r.headers.get("Retry-After"); await esperar(s ? Math.min(90, s) * 1000 : 3000 * 2 ** intento); return onGraph(url, binario, intento + 1);
+  }
+  if (r.status === 401 || r.status === 403){ if (onMsPropio()) lsSet("chispa.permNotas", false); else localStorage.removeItem("chispa.onTok"); throw Object.assign(new Error("OneNote no dio permiso"), {permiso: true}); }
+  if (!r.ok) throw new Error(`OneNote respondió ${r.status}`);
+  return binario === "texto" ? r.text() : binario ? r.blob() : r.json();
+}
+async function onTodas(url){ const out = []; while (url){ const j = await onGraph(url); out.push(...(j.value || [])); url = j["@odata.nextLink"]; } return out; }
+async function abrirOneNote(){
+  if (!(await tokenOneNote().catch(() => null))){
+    if (confirm("Para importar de OneNote hay que entrar con tu cuenta de Microsoft y dar permiso de solo lectura a tus blocs de notas. Cuaderna nunca cambia ni borra nada en OneNote. ¿Seguimos?")) permisoOneNote();
+    return;
+  }
+  const fondo = document.createElement("div"); fondo.className = "elegir-coche";
+  fondo.innerHTML = `<div class="ec-caja on-caja" role="dialog" aria-label="Importar de OneNote"><h3>Importar de OneNote</h3><p>Buscando tus blocs de notas…</p></div>`;
+  document.body.appendChild(fondo);
+  const cerrar = () => fondo.remove();
+  fondo.addEventListener("click", e => { if (e.target === fondo) cerrar(); });
+  let secciones;
+  let grupos = [];
+  try {
+    secciones = await onTodas(`${ON_API}/sections?$select=id,displayName&$expand=parentNotebook($select=id,displayName),parentSectionGroup($select=id,displayName)&$top=100`);
+    try { grupos = await onTodas(`${ON_API}/sectionGroups?$select=id,displayName&$expand=parentSectionGroup($select=id),parentNotebook($select=id,displayName)&$top=100`); } catch(e){}
+  }
+  catch(e){ cerrar(); if (e.permiso){ if (confirm("OneNote no ha dado permiso. ¿Lo pedimos otra vez?")) permisoOneNote(); } else toast("No se pudo leer OneNote: " + e.message, "alerta", 6000); return; }
+  if (!secciones.length){ fondo.querySelector("p").textContent = "No hemos encontrado blocs de notas en esta cuenta de OneNote."; fondo.querySelector(".ec-caja").insertAdjacentHTML("beforeend", `<button class="btn sec" data-x>Cerrar</button>`); fondo.querySelector("[data-x]").onclick = cerrar; return; }
+  // ruta de grupos de secciones de cada sección (OneNote permite grupos dentro de grupos)
+  const gPorId = new Map(grupos.map(g => [g.id, g]));
+  const rutaGrupos = sc => { const r = []; let g = sc.parentSectionGroup && gPorId.get(sc.parentSectionGroup.id) || sc.parentSectionGroup; while (g && r.length < 8){ r.unshift({id: g.id, nombre: g.displayName || "Grupo"}); g = g.parentSectionGroup && gPorId.get(g.parentSectionGroup.id); } return r; };
+  for (const sc of secciones) sc._grupos = rutaGrupos(sc);
+  const blocs = new Map(); for (const sc of secciones){ const b = sc.parentNotebook?.displayName || "OneNote"; if (!blocs.has(b)) blocs.set(b, []); blocs.get(b).push(sc); }
+  fondo.querySelector(".ec-caja").innerHTML = `<h3>Importar de OneNote</h3><p>Elige qué secciones traer. Cada sección se guarda como una libreta de Cuaderna dentro de una pila con el nombre del bloc; los grupos de secciones se convierten en libretas que contienen otras.</p>
+    <div class="on-lista">${[...blocs].map(([b, l]) => `<div class="on-bloc"><label class="on-b"><input type="checkbox" data-bloc="${esc(b)}"> <b>${esc(b)}</b></label>${l.map(sc => `<label class="on-s"><input type="checkbox" data-sec="${esc(sc.id)}" data-de="${esc(b)}"> ${sc._grupos.length ? `<small class="on-g">${esc(sc._grupos.map(g => g.nombre).join(" › "))} ›</small> ` : ""}${esc(sc.displayName || "Sección")}</label>`).join("")}</div>`).join("")}</div>
+    <div class="on-pie"><button class="btn sec" data-x>Cancelar</button><button class="btn" data-onok disabled>Importar</button></div>`;
+  const caja = fondo.querySelector(".ec-caja"), ok = caja.querySelector("[data-onok]");
+  const marcadas = () => [...caja.querySelectorAll("[data-sec]:checked")];
+  caja.addEventListener("change", e => {
+    const b = e.target.dataset.bloc; if (b !== undefined) caja.querySelectorAll(`[data-de="${CSS.escape(b)}"]`).forEach(x => x.checked = e.target.checked);
+    const n = marcadas().length; ok.disabled = !n; ok.textContent = n ? `Importar ${n} ${n === 1 ? "sección" : "secciones"}` : "Importar";
+  });
+  caja.querySelector("[data-x]").onclick = cerrar;
+  ok.onclick = () => { const elegidas = marcadas().map(x => secciones.find(sc => sc.id === x.dataset.sec)).filter(Boolean); cerrar(); importarOneNote(elegidas); };
+}
+// ---------- Importaciones grandes: recuento previo, por tandas, reanudables y con recuento final ----------
+// El plan se guarda en el dispositivo: si se corta la conexión, se cierra la app o falla algo, se retoma donde se quedó sin duplicar nada.
+const IMP_K = "chispa.importacion";
+const IMP = {trabajando: false, parar: false};
+const impPlan = () => lsGet(IMP_K);
+const impGuardar = j => lsSet(IMP_K, j);
+function impBarra(){
+  const j = impPlan(); let b = $("#impBarra");
+  if (!j || j.estado === "fin"){ b?.remove(); return; }
+  if (!b){ b = document.createElement("div"); b.id = "impBarra"; b.setAttribute("role", "status"); document.body.appendChild(b); }
+  const hechas = j.hechas || 0, pc = j.total ? Math.round(hechas / j.total * 100) : 0, nombre = j.tipo === "onenote" ? "OneNote" : "Evernote";
+  const pausa = j.estado === "pausa", motivo = j.motivo === "conexion" ? "sin conexión: seguirá sola al volver" : j.motivo === "permiso" ? "hace falta volver a dar permiso" : j.motivo === "archivo" ? "vuelve a elegir el archivo para seguir" : j.motivo === "app" ? "se cerró la app" : "en pausa";
+  b.innerHTML = `<div class="imp-txt">${ic("archivo")}<span><b>${pausa ? `Importación de ${nombre} a medias` : `Importando de ${nombre}`}</b><small>${hechas.toLocaleString("es")} de ${j.total.toLocaleString("es")}${pausa ? " · " + motivo : ""}</small></span></div><div class="imp-barra"><i style="width:${pc}%"></i></div>
+    <div class="imp-bot">${pausa ? `<button class="btn" data-imp="seguir">${j.motivo === "permiso" ? "Dar permiso" : j.motivo === "archivo" ? "Elegir el archivo" : "Continuar"}</button><button class="btn sec" data-imp="descartar">Dejarla así</button>` : `<button class="btn sec" data-imp="pausar">Pausar</button>`}</div>`;
+  b.onclick = e => { const a = e.target.closest("[data-imp]")?.dataset.imp; if (!a) return;
+    if (a === "pausar") impPausar("usuario");
+    if (a === "seguir") reanudarImportacion(true);
+    if (a === "descartar" && confirm("¿Dejar la importación como está? Lo ya importado se queda; lo que falta no se traerá (puedes volver a importar más tarde sin duplicar).")){ const p = impPlan(); p.estado = "fin"; impGuardar(p); impBarra(); } };
+}
+function impPausar(motivo){ const j = impPlan(); if (!j) return; j.estado = "pausa"; j.motivo = motivo; impGuardar(j); IMP.parar = true; IMP.motivo = motivo; impBarra(); }
+async function reanudarImportacion(aMano = false){
+  const j = impPlan(); if (!j || j.estado === "fin" || IMP.trabajando) return;
+  if (j.tipo === "evernote"){
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".enex,application/xml,text/xml";
+    inp.onchange = () => { const f = inp.files[0]; if (f) importarEnex(f, true); }; if (aMano) inp.click(); else { j.estado = "pausa"; j.motivo = "archivo"; impGuardar(j); impBarra(); } return;
+  }
+  if (!navigator.onLine){ impPausar("conexion"); return; }
+  if (!(await tokenOneNote().catch(() => null))){ if (aMano){ lsSet("chispa.tras", "onenote"); permisoOneNote(); } else impPausar("permiso"); return; }
+  importarPaginasOneNote();
+}
+addEventListener("online", () => { const j = impPlan(); if (j?.estado === "pausa" && j.motivo === "conexion") setTimeout(() => reanudarImportacion(), 3000); });
+addEventListener("offline", () => { if (IMP.trabajando) impPausar("conexion"); });
+// Al abrir la app: si quedó una importación a medias, se avisa y, si no la pausó la persona, sigue sola
+setTimeout(() => { const j = impPlan(); if (!j || j.estado === "fin") return; if (j.estado === "en curso"){ j.estado = "pausa"; j.motivo = j.tipo === "evernote" ? "archivo" : "app"; impGuardar(j); }
+  impBarra(); if (j.tipo === "onenote" && j.motivo !== "usuario" && navigator.onLine) setTimeout(() => reanudarImportacion(), 4000); }, 8000);
+
+// OneNote, paso 1: contar todo lo elegido y enseñar el plan antes de empezar
+async function importarOneNote(secciones){
+  if (IMP.trabajando) return toast("Ya hay una importación en marcha", "alerta");
+  toast("Contando las páginas de OneNote…", "archivo", 120000);
+  const paginas = [], sinLeer = [];
+  for (const sc of secciones){
+    let pags = null;
+    for (let i = 0; i < 3 && !pags; i++){ try { pags = await onTodas(`${ON_API}/sections/${encodeURIComponent(sc.id)}/pages?$select=id,title,createdDateTime&$top=100`); } catch(e){ if (e.permiso) return toast("OneNote no ha dado permiso", "alerta", 5000); await esperar(2000 * (i + 1)); } }
+    if (!pags){ sinLeer.push(sc.displayName || "Sección"); continue; }
+    for (const pg of pags) paginas.push({id: pg.id, t: (pg.title || "").slice(0, 120), c: pg.createdDateTime, s: sc.id});
+  }
+  $("#toast").classList.remove("ver");
+  if (!paginas.length) return toast(sinLeer.length ? "No se pudieron leer las secciones de OneNote" : "Esas secciones no tienen páginas", "alerta", 5000);
+  const yaEstan = new Set(notas.filter(n => n.importada === "onenote" && !n._borrar).map(n => n.origen)), faltan = paginas.filter(p => !yaEstan.has(p.id)).length;
+  const fondo = document.createElement("div"); fondo.className = "elegir-coche";
+  fondo.innerHTML = `<div class="ec-caja" role="dialog" aria-label="Importar de OneNote"><h3>${ic("archivo")} Importar de OneNote</h3>
+    <p><b>${paginas.length.toLocaleString("es")} páginas</b> en ${secciones.length - sinLeer.length} ${secciones.length - sinLeer.length === 1 ? "sección" : "secciones"}.${paginas.length - faltan ? ` ${(paginas.length - faltan).toLocaleString("es")} ya estaban en Cuaderna y no se duplican.` : ""}</p>
+    ${sinLeer.length ? `<p class="hi-ayuda">No se pudieron leer: ${esc(sinLeer.join(", "))}. Puedes volver a intentarlo después.</p>` : ""}
+    <p>${faltan ? `Faltan <b>${faltan.toLocaleString("es")}</b>. Se importan por tandas mientras sigues usando Cuaderna; si se corta la conexión o cierras la app, seguirá donde se quedó. Al final te diremos si han entrado todas.` : "Ya está todo importado."}</p>
+    <div class="on-pie"><button class="btn sec" data-x>${faltan ? "Cancelar" : "Cerrar"}</button>${faltan ? `<button class="btn" data-ok-imp>Empezar</button>` : ""}</div></div>`;
+  document.body.appendChild(fondo);
+  fondo.onclick = e => {
+    if (e.target === fondo || e.target.closest("[data-x]")) return fondo.remove();
+    if (!e.target.closest("[data-ok-imp]")) return;
+    fondo.remove();
+    impGuardar({tipo: "onenote", estado: "en curso", inicio: new Date().toISOString(), total: paginas.length, hechas: paginas.length - faltan, paginas,
+      secciones: secciones.map(sc => ({id: sc.id, nombre: sc.displayName || "OneNote", bloc: sc.parentNotebook?.displayName || "OneNote", grupos: sc._grupos || []})), fallos: {}});
+    importarPaginasOneNote();
+  };
+}
+// OneNote, paso 2: página a página, guardando el avance; se puede parar y seguir en cualquier momento
+async function importarPaginasOneNote(){
+  let j = impPlan(); if (!j || j.tipo !== "onenote" || IMP.trabajando) return;
+  IMP.trabajando = true; IMP.parar = false; IMP.motivo = null; j.estado = "en curso"; delete j.motivo; impGuardar(j); impBarra();
+  const paraLeer = [];
+  const libDe = (origen, nombre, padre, pila) => {
+    let c = archivadores().find(x => x.origen === origen)
+      || archivadores().find(x => !x.origen && norm(x.nombre) === norm(nombre) && (padre ? x.padre === padre.id : !x.padre && (x.pila || "") === pila));
+    if (!c){ c = {id: "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), nombre, origen, ...(padre ? {padre: padre.id} : {pila})}; config.carpetas = [...archivadores(), c]; guardarConfig(); }
+    else if (!c.origen){ c.origen = origen; guardarConfig(); }
+    return c;
+  };
+  const libSeccion = new Map();
+  const libretaDe = scId => { if (libSeccion.has(scId)) return libSeccion.get(scId); const sc = j.secciones.find(x => x.id === scId); if (!sc) return null;
+    let padre = null; for (const g of sc.grupos.slice(0, MAX_NIVEL - 1)) padre = libDe("on-g:" + g.id, g.nombre, padre, sc.bloc);
+    const lib = libDe("on-s:" + sc.id, sc.nombre, padre, sc.bloc); libSeccion.set(scId, lib); return lib; };
+  let desde = Date.now();
+  try {
+    for (const pg of j.paginas){
+      if (IMP.parar) break;
+      if (notas.some(x => x.importada === "onenote" && x.origen === pg.id && !x._borrar)) continue;
+      if ((j.fallos[pg.id] || 0) >= 3) continue;   // ya se intentó varias veces: se repasa al final
+      if (!navigator.onLine){ impPausar("conexion"); break; }
+      try { const lib = libretaDe(pg.s); if (lib && await importarPaginaOneNote(pg, lib, paraLeer)){ j.hechas = (j.hechas || 0) + 1; } else j.total = Math.max(j.hechas, j.total - 1);   // páginas vacías: no cuentan
+        delete j.fallos[pg.id]; }
+      catch(e){
+        if (e.permiso){ impPausar("permiso"); break; }
+        if (!navigator.onLine || e instanceof TypeError){ impPausar("conexion"); break; }   // corte de red: se espera a que vuelva
+        j.fallos[pg.id] = (j.fallos[pg.id] || 0) + 1; await esperar(1500 * j.fallos[pg.id]);
+      }
+      impGuardar(j); impBarra();
+      if (Date.now() - desde > 20000){ desde = Date.now(); refrescar(); sincronizar(true); }   // cada poco se ve y se sube lo importado
+    }
+  } finally { IMP.trabajando = false; }
+  ordenar(); refrescar(); pintarEstado(); setTimeout(() => sincronizar(true), 200);
+  (async () => { for (const [n, a] of paraLeer) await leerArchivos(n, [a]); })();
+  if (IMP.parar){ j.estado = "pausa"; j.motivo = IMP.motivo || "usuario"; impGuardar(j); return impBarra(); }
+  // recuento final: ¿están todas?
+  const dentro = new Set(notas.filter(n => n.importada === "onenote" && !n._borrar).map(n => n.origen));
+  const faltan = j.paginas.filter(p => !dentro.has(p.id) && (j.fallos[p.id] || 0) >= 3);
+  if (faltan.length && !j.reintentado){ j.reintentado = true; for (const p of faltan) j.fallos[p.id] = 0; impGuardar(j); IMP.trabajando = false; return importarPaginasOneNote(); }   // una segunda vuelta para las que fallaron
+  j.estado = "fin"; impGuardar(j); impBarra();
+  const traidas = j.paginas.filter(p => dentro.has(p.id)).length;
+  if (!faltan.length) toast(`Importación terminada: ${traidas.toLocaleString("es")} páginas de OneNote, todas dentro. Se suben a tu nube poco a poco`, "check", 9000);
+  else { toast(`Importadas ${traidas.toLocaleString("es")} de ${j.total.toLocaleString("es")} páginas. ${faltan.length} no se pudieron leer`, "alerta", 12000, () => alert("Páginas de OneNote que no se pudieron traer:\n\n" + faltan.map(p => "· " + (p.t || "(sin título)")).join("\n") + "\n\nPuedes volver a importar esas secciones más tarde: lo que ya está no se duplica."), "Ver cuáles"); }
+}
+async function importarPaginaOneNote(pg, lib, paraLeer){
+  const cuando = new Date(pg.c || Date.now()), n = notaBase(cuando);
+  n.id = n.id + Math.random().toString(36).slice(2, 5);
+  if (pg.t?.trim()) n.titulo = pg.t.trim().slice(0, 300);
+  const html = await onGraph(`${ON_API}/pages/${encodeURIComponent(pg.id)}/content`, "texto");
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  doc.querySelectorAll("title,script,style").forEach(x => x.remove());
+  doc.querySelectorAll("[data-tag]").forEach(x => { const t = x.getAttribute("data-tag") || ""; if (/^to-do/.test(t)) x.prepend(doc.createTextNode(/completed/.test(t) ? "☑ " : "☐ ")); });
+  const imgs = [...doc.querySelectorAll("img")], objs = [...doc.querySelectorAll("object[data]")];
+  imgs.forEach(x => x.remove()); objs.forEach(x => x.remove());
+  n.texto = htmlAMd(doc.body).replace(/\n{3,}/g, "\n\n").trim();
+  n.carpeta = lib.id; n.ambito = "personal"; n.tipo = "nota"; n.importada = "onenote"; n.origen = pg.id;
+  n.etiquetas = [limpiarEtq("onenote")].filter(Boolean);
+  const rutas = [], carpeta = `${cuando.getFullYear()}/${pad(cuando.getMonth() + 1)}`;
+  for (const [i, im] of imgs.entries()){
+    const src = im.getAttribute("data-fullres-src") || im.getAttribute("src") || "";
+    if (!/^https:\/\/graph\.microsoft\.com\//.test(src)) continue;   // solo recursos de la propia cuenta
+    let blob = null; for (let k = 0; k < 3 && !blob; k++){ try { blob = await onGraph(src, true); } catch(e){ if (e.permiso || !navigator.onLine) throw e; await esperar(1500 * (k + 1)); } }
+    if (!blob) throw new Error("No se pudo traer una imagen");   // mejor reintentar la página entera que dejarla incompleta
+    try { blob = await reducirFoto(blob); } catch(e){}
+    const r = `Fotos/${carpeta}/${n.id}-${i}.jpg`; await idb.ponerBlob(r, blob); (n.fotos ||= []).push(r); rutas.push(r);
+  }
+  for (const [i, ob] of objs.entries()){
+    const src = ob.getAttribute("data") || ""; if (!/^https:\/\/graph\.microsoft\.com\//.test(src)) continue;
+    let blob = null; for (let k = 0; k < 3 && !blob; k++){ try { blob = await onGraph(src, true); } catch(e){ if (e.permiso || !navigator.onLine) throw e; await esperar(1500 * (k + 1)); } }
+    if (!blob) throw new Error("No se pudo traer un adjunto");
+    const nombre = ob.getAttribute("data-attachment") || `adjunto-${i + 1}`, tipo = ob.getAttribute("type") || blob.type || "application/octet-stream";
+    const r = `Archivos/${carpeta}/${n.id}-a${i}-${nombreSeguro(nombre)}`; await idb.ponerBlob(r, blob); (n.archivos ||= []).push({ruta: r, nombre, tipo, tam: blob.size}); rutas.push(r);
+    if (/pdf|text/.test(tipo) && blob.size < 15 * 1048576) paraLeer.push([n, {ruta: r, blob, tipo, nombre}]);
+  }
+  if (!n.texto && !n.fotos?.length && !n.archivos?.length && !n.titulo) return false;
+  n.actualizada = new Date().toISOString(); n._pend = true; n._subir = rutas;
+  await idb.poner(n); notas.push(n); return true;
+}
+
+/* ================= App Android (Capacitor) ================= */
+const CAP = window.Capacitor;
+const esApp = () => !!(CAP && CAP.isNativePlatform && CAP.isNativePlatform());
+const nativo = nombre => { try { return CAP?.Plugins?.[nombre] || (CAP?.registerPlugin ? CAP.registerPlugin(nombre) : null); } catch(e){ return null; } };
+let infoApp = null;
+async function iniciarApp(){
+  if (!esApp()) return;
+  document.documentElement.classList.add("app-nativa");
+  const nat = nativo("ChispaNativo"), ln = nativo("LocalNotifications");
+  try { infoApp = await nat.info(); } catch(e){}
+  try { await nat.addListener("entrada", d => procesarEntrada(d)); } catch(e){}
+  try { await ln.addListener("localNotificationActionPerformed", ev => { const id = ev?.notification?.extra?.nota, n = notas.find(x => x.id === id); if (n){ ver("hoy"); abrirEdicion(n); } }); } catch(e){}
+  try { const p = await ln.checkPermissions(); if (p.display !== "granted") await ln.requestPermissions(); } catch(e){}
+  programarAvisos();
+  setTimeout(buscarVersionApp, 4000);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") buscarVersionApp(); });
+}
+// Lo que llega desde el widget, un aviso o «Compartir con Cuaderna»
+async function procesarEntrada(d){
+  if (!d || !d.accion) return;
+  cerrarHojas();
+  if (d.accion === "voz"){ ver("anotar"); if (d.quien) deLlamada(d); tocado = true; if (!rec) empezarVoz(); }
+  else if (d.accion === "llamada"){ ver("anotar"); deLlamada(d); setTimeout(() => $("#cTexto").focus(), 250); }
+  else if (d.accion === "sueno" || d.accion === "sueno_voz"){
+    ver("anotar"); borrador.sueno = true; tocado = true; pintarDetectado(); toast("Para tu buzón Sueños", "luna", 2500);
+    if (d.accion === "sueno_voz"){ if (!rec) empezarVoz(); } else setTimeout(() => $("#cTexto").focus(), 250);
+  }
+  else if (d.accion === "ancla"){
+    ver("anotar"); anclaAbierta = null;
+    // si hay un ancla vacía de hace menos de 2 minutos, se reutiliza en vez de crear otra
+    const reciente = deNotas().filter(n => n.ancla && !n.texto && !n.titulo && Date.now() - new Date(n.creada) < 120000).at(-1);
+    if (reciente){ anclaActual = reciente; $("#aTitulo").innerHTML = ic("ancla") + `Ancla de las ${hora(reciente.creada)}`; $("#aPalabra").value = ""; abrirHoja("#hAncla"); }
+    else guardarAncla(new Date(), true);
+  }
+  else if (d.accion === "anotar"){ ver("anotar"); setTimeout(() => $("#cTexto").focus(), 250); }
+  else if (d.accion === "nota"){ const n = notas.find(x => x.id === d.nota); if (n){ ver("hoy"); abrirEdicion(n); } }
+  else if (d.accion === "compartir"){
+    // un enlace compartido desde el navegador se guarda como página web
+    const url = (d.texto || "").match(/https?:\/\/\S+/)?.[0];
+    if (url && !(d.imagenes || []).length && (d.texto || "").replace(url, "").trim().length < 160){ guardarPaginaWeb(url, d.asunto || (d.texto || "").replace(url, "").trim()); return; }
+    ver("anotar");
+    if (d.asunto && !$("#cTitulo").value){ $("#cTitulo").value = d.asunto; crecerTitulo($("#cTitulo")); }
+    if (d.texto) $("#cTexto").value = ($("#cTexto").value ? $("#cTexto").value + "\n" : "") + d.texto;
+    for (const u of d.imagenes || []){ try { borrador.fotos.push(await reducirFoto(await (await fetch(u)).blob())); } catch(e){} }
+    tocado = true; autoAlto(); pintarAdjuntos(); pintarDetectado();
+    toast("Recibido. Revisa y pulsa ✓ para guardarlo", "spark", 4000);
+  }
+}
+// Nota que nace de una llamada: título «Llamada con X» y, si X es un contacto conocido, «para quién»
+function deLlamada(d){
+  const quien = (d.quien || "").trim();
+  if (!$("#cTitulo").value){ $("#cTitulo").value = quien ? `Llamada con ${quien}` : "Llamada"; crecerTitulo($("#cTitulo")); }
+  if (quien && /[a-záéíóúñ]/i.test(quien)){
+    const cont = config.contactos || {}, cat = LISTAS.find(c => (cont[c] || []).some(x => norm(x) === norm(quien)));
+    borrador.para = {categoria: cat || "", nombre: quien};
+  }
+  if (d.duracion) borrador.duracionLlamada = d.duracion;
+  tocado = true;
+}
+// La app de Android se actualiza solo desde Google Play (Google no permite que una app se instale versiones por fuera de la tienda).
+// Lo que cambia en la web (casi todo) llega solo al abrirla; aquí ya no se busca ni se avisa de versiones de GitHub.
+const PLAY = "https://play.google.com/store/apps/details?id=es.astillerosoftware.cuaderna";
+const appNueva = null;
+const CORREO_PRUEBA = "mailto:hola@astillerosoftware.es?subject=" + encodeURIComponent("Quiero probar Cuaderna en Android") + "&body=" + encodeURIComponent("Hola, tengo Cuaderna instalada desde la web y quiero pasarme a Google Play. Mi correo de Google (Gmail) es: ");
+// Quien instaló el APK de la web (GitHub) recibe un aviso para pasarse a Google Play.
+// Las apps nuevas dicen quién las instaló («com.android.vending» = Google Play); las antiguas no lo dicen,
+// así que a esas también se les avisa y pueden marcar «Ya la tengo de Google Play».
+const instaladaFueraDePlay = () => esApp() && infoApp && infoApp.instalador !== "com.android.vending";
+let avisoPlayVisto = false;
+async function buscarVersionApp(){
+  if (avisoPlayVisto || !instaladaFueraDePlay() || lsGet("cuaderna.playYa")) return;
+  const luego = lsGet("cuaderna.playLuego"); if (luego && Date.now() < luego) return;
+  if (document.querySelector(".hoja.on")) return;   // no interrumpir lo que esté haciendo
+  avisoPlayVisto = true;
+  $("#playLocal").hidden = !modoLocal();
+  abrirHoja("#hPlay");
+  window.cuadernaEvento?.("aviso_play");
+}
+function abrirExterno(url){
+  const nat = nativo("ChispaNativo");
+  Promise.resolve(nat?.abrirUrl ? nat.abrirUrl({url}) : Promise.reject()).catch(() => { location.href = url; });
+}
+$("#playPedir").onclick = () => abrirExterno(CORREO_PRUEBA);
+$("#playAbrir").onclick = () => abrirExterno(PLAY);
+$("#playConectar").onclick = () => { cerrarHojas(); setTimeout(conectarCuenta, 120); };
+$("#playYa").onclick = () => { lsSet("cuaderna.playYa", true); cerrarHojas(); toast("Perfecto, no te lo volvemos a preguntar"); };
+$("#playLuego").onclick = () => { lsSet("cuaderna.playLuego", Date.now() + 3 * 864e5); cerrarHojas(); };
+function actualizarApp(){
+  const nat = nativo("ChispaNativo");
+  Promise.resolve(nat?.abrirUrl ? nat.abrirUrl({url: PLAY}) : Promise.reject()).catch(() => { location.href = PLAY; });
+}
+// Ajustes del teléfono: aviso al colgar, modo coche y versión de la app
+async function pintarTelefono(){
+  const caja = $("#kTelefono"); if (!caja || !esApp()) return;
+  const nat = nativo("ChispaNativo"); let a = {};
+  try { a = await nat.ajustes(); } catch(e){ caja.innerHTML = `<div class="ajuste"><div class="lbl">Actualiza la app para usar estas opciones.<small>Desde Google Play</small></div><button class="btn sec" id="kBajar">${ic("subir")}Google Play</button></div>`; $("#kBajar").onclick = actualizarApp; return; }
+  caja.innerHTML = `
+    <div class="ajuste">${ic("user")}<div class="lbl">Contactos de la agenda<small>${a.permisoContactos ? "Se sugieren al escribir «Para quién». No se copian a OneDrive" : "Sugerirlos al escribir «Para quién». Pide permiso una vez"}</small></div><select id="kAgenda"><option value="0">No</option><option value="1">Sí</option></select></div>
+    <div class="ajuste">${ic("tel")}<div class="lbl">Aviso al colgar<small>Al terminar una llamada te pregunta si quieres anotar algo</small></div><select id="kLlam"><option value="0">No</option><option value="1">Sí</option></select><button class="btn sec" id="kLlamProbar">Probar</button></div>
+    <div class="ajuste">${ic("coche")}<div class="lbl">Modo coche<small>${a.coche ? (a.enCoche ? "Ahora estás en el coche" : `Se activa al conectar con ${esc(a.cocheNombre || "el coche")}`) : "Elige el Bluetooth de tu coche"}</small></div><select id="kCoche"><option value="">Desactivado</option>${a.cocheDir ? `<option value="${esc(a.cocheDir)}">${esc(a.cocheNombre || a.cocheDir)}</option>` : ""}<option value="?">Elegir otro…</option></select>${a.coche ? `<button class="btn sec" id="kCocheProbar">${a.enCoche ? "Salir" : "Probar"}</button>` : ""}</div>`;
+  $("#kLlam").value = a.llamadas ? "1" : "0"; $("#kAgenda").value = a.permisoContactos && lsGet("chispa.agendaSug") !== false ? "1" : "0";
+  $("#kAgenda").onchange = async () => {
+    if ($("#kAgenda").value === "1"){
+      const ok = (await nat.pedirPermiso({tipo: "contactos"}).catch(() => ({}))).concedido;
+      if (!ok){ toast("Sin el permiso de contactos no puedo sugerirlos", "alerta", 4000); } else { lsSet("chispa.agendaSug", true); await cargarAgenda(true); toast(`${agenda?.length || 0} contactos disponibles para sugerir`, "user"); }
+    } else { lsSet("chispa.agendaSug", false); agenda = null; }
+    pintarTelefono();
+  }; $("#kCoche").value = a.coche ? a.cocheDir : "";
+  $("#kLlam").onchange = async () => {
+    let on = $("#kLlam").value === "1";
+    if (on && !(await nat.pedirPermiso({tipo: "llamadas"}).catch(() => ({}))).concedido){ on = false; toast("Sin el permiso de llamadas no puedo avisarte al colgar", "alerta", 4500); }
+    await nat.guardarAjustes({llamadas: on}).catch(() => {}); if (on) toast("Te preguntaré al colgar cada llamada", "tel"); pintarTelefono();
+  };
+  $("#kLlamProbar").onclick = () => nat.probarLlamada().catch(() => {});
+  $("#kCoche").onchange = async () => {
+    const v = $("#kCoche").value;
+    if (v !== "?"){ await nat.guardarAjustes({cocheDir: v, cocheNombre: v ? a.cocheNombre : ""}).catch(() => {}); pintarTelefono(); return; }
+    if (!(await nat.pedirPermiso({tipo: "bluetooth"}).catch(() => ({}))).concedido){ toast("Sin el permiso de Bluetooth no puedo saber cuándo vas en el coche", "alerta", 4500); pintarTelefono(); return; }
+    let lista = [];
+    try { lista = (await nat.dispositivos()).dispositivos || []; } catch(e){}
+    if (!lista.length){ toast("No hay dispositivos Bluetooth emparejados. Empareja antes el coche", "alerta", 4500); pintarTelefono(); return; }
+    abrirElegirCoche(lista, async d => { await nat.guardarAjustes({cocheDir: d.dir, cocheNombre: d.nombre}).catch(() => {}); toast(`Modo coche con ${d.nombre}`, "coche"); pintarTelefono(); }, pintarTelefono);
+  };
+  if ($("#kCocheProbar")) $("#kCocheProbar").onclick = async () => { await nat.probarCoche({dentro: !a.enCoche}).catch(() => {}); pintarTelefono(); };
+}
+// Resumen diario también desde la web (PC o al abrir la app): mismo correo y la misma marca diaria que el móvil
+function seccionesResumen(ns, ambito){
+  const ahora = new Date(), hoy = isoDia(ahora), ayer = masDias(-1), semana = masDias(7);
+  const s = {hoy: [], atrasado: [], proximos: [], ayer: [], anclas: [], sinFecha: 0};
+  for (const n of ns){
+    if (ambito && (n.ambito || "trabajo") !== ambito) continue;
+    if (n.archivada) continue;
+    const f = n.fecha || "";
+    if (n.ancla && !n.hecha && !n.texto && !n.titulo){ s.anclas.push(n); continue; }
+    if (!n.hecha && f){ if (f === hoy) s.hoy.push(n); else if (f < hoy) s.atrasado.push(n); else if (f <= semana) s.proximos.push(n); }
+    else if (!n.hecha) s.sinFecha++;
+    if (!n.hecha && isoDia(new Date(n.creada)) === ayer && (!f || f > semana)) s.ayer.push(n);
+  }
+  const ord = (a, b) => ((a.fecha || "") + (a.hora || "99")).localeCompare((b.fecha || "") + (b.hora || "99"));
+  s.hoy.sort(ord); s.atrasado.sort(ord); s.proximos.sort(ord);
+  s.hay = s.hoy.length + s.atrasado.length + s.proximos.length + s.ayer.length + s.anclas.length > 0;
+  return s;
+}
+function htmlResumen(s, nombre, prueba){
+  const e = t => esc(String(t || "")).replace(/\n/g, "<br>");
+  const fc = f => new Date(f + "T12:00").toLocaleDateString("es-ES", {weekday: "short", day: "numeric", month: "short"});
+  const bloque = (t, l, conFecha, rojo) => !l.length ? "" : `<h3 style="margin:24px 4px 8px;font-size:16px;color:${rojo ? "#C2412D" : "#2B1D14"}">${e(t)} <span style="color:#A3ACBD;font-weight:400">${l.length}</span></h3><div style="border:1px solid #E4E8EF;border-radius:14px;overflow:hidden">`
+    + l.slice(0, 25).map((n, i) => { const p = partesNota(n), it = partirLista(n.texto).items.filter(x => !x.hecho), meta = [];
+        if (conFecha) meta.push(fc(n.fecha) + (n.hora ? " " + n.hora : "")); if (n.para?.nombre) meta.push(n.para.nombre); if (n.tipo && n.tipo !== "nota") meta.push(TIPOS[n.tipo]?.[0] || n.tipo);
+        return `<div style="padding:11px 14px;border-top:${i ? "1px solid #EEF1F6" : "0"}"><div style="font-weight:600"><a href="${REDIRECT}?nota=${encodeURIComponent(n.id)}" style="color:#2B1D14;text-decoration:none">${e(p.titulo || p.vacio || "Nota")} <span style="color:#A8322D">›</span></a></div>`
+          + (p.desc ? `<div style="color:#4A5670;font-size:14px;margin-top:2px">${e(p.desc.slice(0, 240))}</div>` : "")
+          + (it.length ? `<ul style="margin:6px 0 0;padding-left:20px;font-size:14px;color:#4A5670">${it.slice(0, 8).map(x => `<li>${e(x.texto)}</li>`).join("")}</ul>` : "")
+          + (meta.length ? `<div style="color:#66728A;font-size:13px;margin-top:3px">${e(meta.join(" · "))}</div>` : "") + "</div>"; }).join("")
+    + (l.length > 25 ? `<div style="padding:10px 14px;color:#66728A">y ${l.length - 25} más…</div>` : "") + "</div>";
+  const fecha = new Date().toLocaleDateString("es-ES", {weekday: "long", day: "numeric", month: "long"});
+  return `<div style="font-family:Segoe UI,Roboto,Arial,sans-serif;max-width:640px;margin:0 auto;color:#2B1D14">
+    <div style="background:#2B1D14;color:#FBF3E4;border-radius:16px;padding:18px 22px"><div style="font-size:21px;font-weight:700;font-family:Georgia,serif"><span style="display:inline-block;width:24px;height:24px;border-radius:50%;background:#A8322D;color:#FBF3E4;text-align:center;font-family:Georgia,serif;font-size:15px;line-height:24px;vertical-align:2px">C</span> Cuaderna${nombre ? " · " + nombre : ""}</div><div style="opacity:.8;margin-top:4px">${capital(fecha)}</div></div>
+    ${bloque("Para hoy", s.hoy, true)}${bloque("Atrasado", s.atrasado, true, true)}${bloque("Próximos 7 días", s.proximos, true)}${bloque("Anotado ayer", s.ayer)}${bloque("Anclas por completar", s.anclas)}
+    ${!s.hay ? `<p style="margin:22px 4px">No tienes nada pendiente. ¡Buen día!</p>` : ""}
+    ${s.sinFecha ? `<p style="margin:18px 4px;color:#66728A">Además tienes ${s.sinFecha} ${s.sinFecha === 1 ? "nota pendiente" : "notas pendientes"} sin fecha.</p>` : ""}
+    <p style="margin:24px 4px"><a href="${REDIRECT}" style="background:#A8322D;color:#FBF3E4;text-decoration:none;font-weight:700;padding:11px 18px;border-radius:12px;display:inline-block">Abrir Cuaderna</a></p>
+    <p style="font-size:12px;color:#A3ACBD;margin:18px 4px">Resumen automático de Cuaderna${prueba ? " (prueba)" : ""}. Solo se envía si hay algo que contar.</p></div>`;
+}
+function asuntoResumen(s, nombre, prueba){
+  const p = [];
+  if (s.hoy.length) p.push(`${s.hoy.length} para hoy`);
+  if (s.atrasado.length) p.push(`${s.atrasado.length} ${s.atrasado.length === 1 ? "atrasada" : "atrasadas"}`);
+  if (!p.length && s.proximos.length) p.push(`${s.proximos.length} esta semana`);
+  if (!p.length && s.ayer.length) p.push(`${s.ayer.length} ${s.ayer.length === 1 ? "idea de ayer" : "ideas de ayer"}`);
+  return `${prueba ? "[Prueba] " : ""}Cuaderna${nombre ? " · " + nombre : ""}: ${p.length ? p.join(", ") : s.hay ? "tu resumen" : "nada pendiente"}`;
+}
+async function enviarResumenWeb(prueba = false){
+  const anotar = r => { lsSet("chispa.resumenUltimo", `${new Date().toLocaleString("es-ES", {day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"})} · ${r}`); return r; };
+  if (!lsGet("chispa.permCorreo")) return anotar("Falta dar permiso para enviar correo");
+  try {
+    if (!prueba && config.resumenActivo === false) return "Resumen desactivado";
+    const ahora = new Date(), hoy = isoDia(ahora), hm = `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+    if (!prueba && hm < (config.resumenHora || "07:30")) return "Todavía no es la hora";
+    let marca = null;
+    if (!prueba){
+      const pid = await asegurarCarpeta("Configuracion/Envios");
+      const r = await graph(`${DRIVE}/items/${pid}:/${hoy}.json:/content?@microsoft.graph.conflictBehavior=fail`, {method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify({estado: "enviando", desde: disp.terminal})});
+      if (r.status === 409){ lsSet("chispa.resumenHecho", hoy); return anotar("El resumen de hoy ya se envió"); }
+      if (!r.ok) throw await errorDe(r, "al marcar el envío del día");
+      marca = (await r.json()).id;
+    }
+    const cuenta = lsGet("chispa.usuario") || "";
+    let aT = (config.correoTrabajo || "").trim(), aP = (config.correoPersonal || "").trim();
+    if (!aT && !aP) aP = cuenta;
+    const envios = aT && aP ? [[aT, "trabajo", "Trabajo"], [aP, "personal", "Personal"]] : [[aT || aP, null, ""]];
+    const hechos = [];
+    try {
+      for (const [para, amb, nombre] of envios){
+        const sec = seccionesResumen(deNotas(), amb);
+        if (!sec.hay && !prueba) continue;
+        const r = await graph("https://graph.microsoft.com/v1.0/me/sendMail", {method: "POST", headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({message: {subject: asuntoResumen(sec, nombre, prueba), body: {contentType: "HTML", content: htmlResumen(sec, nombre, prueba)}, toRecipients: [{emailAddress: {address: para}}]}, saveToSentItems: true})});
+        if (r.status === 403 || r.status === 401){ lsSet("chispa.permCorreo", false); throw new Error("Microsoft no ha dado permiso para enviar correo. Vuelve a pulsar «Dar permiso»"); }
+        if (!r.ok) throw await errorDe(r, "al enviar el correo a " + para);
+        hechos.push(nombre ? nombre.toLowerCase() : "todo a " + para);
+      }
+    } catch(e){ if (marca) await graph(`${DRIVE}/items/${marca}`, {method: "DELETE"}).catch(() => {}); throw e; }
+    if (marca) await graph(`${DRIVE}/items/${marca}/content`, {method: "PUT", headers: {"Content-Type": "application/json"}, body: JSON.stringify({estado: "enviado", envios: hechos.join(", "), desde: disp.terminal})}).catch(() => {});
+    if (!prueba) lsSet("chispa.resumenHecho", hoy);
+    return anotar(hechos.length ? `Enviado (${hechos.join(", ")})` : "Sin novedades: no se envió nada");
+  } catch(e){ return anotar("Error: " + (e.message || e)); }
+}
+// Calendario de Outlook: las notas pendientes con fecha y hora aparecen como citas (las gestiona un solo dispositivo)
+const calActivo = () => !esGoogle() && lsGet("chispa.permCal") && config.calendario !== false && config.calendarioDispositivo === disp.terminal;
+async function sincronizarCalendario(){
+  if (!calActivo() || !navigator.onLine || sincronizarCalendario.en) return;
+  sincronizarCalendario.en = true;
+  const API = "https://graph.microsoft.com/v1.0/me/events";
+  try {
+    for (const n of deNotas()){
+      const quiere = !!(n.fecha && n.hora && !n.hecha && !enArchivo(n));
+      const firma = quiere ? [n.fecha, n.hora, tituloPlano(n), n.para?.nombre || "", partesNota(n).desc.slice(0, 200)].join("|") : "";
+      if ((quiere && n.evento?.firma === firma) || (!quiere && !n.evento)) continue;
+      try {
+        if (!quiere){ await graph(`${API}/${n.evento.id}`, {method: "DELETE"}); delete n.evento; await guardarNotaLocal(n); continue; }
+        const ini = new Date(`${n.fecha}T${n.hora}:00`), fin = new Date(ini.getTime() + 30 * 60000), p = partesNota(n);
+        const cuerpo = {subject: (tituloPlano(n) || "Nota de Cuaderna").slice(0, 120),
+          body: {contentType: "text", content: [p.desc, ...partirLista(n.texto).items.filter(i => !i.hecho).map(i => "• " + i.texto), n.para?.nombre ? "Para: " + n.para.nombre : "", "", "Creado desde Cuaderna"].filter(x => x !== undefined).join("\n")},
+          start: {dateTime: ini.toISOString().replace("Z", ""), timeZone: "UTC"}, end: {dateTime: fin.toISOString().replace("Z", ""), timeZone: "UTC"},
+          isReminderOn: true, reminderMinutesBeforeStart: 15, showAs: "free"};
+        let r = n.evento?.id ? await graph(`${API}/${n.evento.id}`, {method: "PATCH", headers: {"Content-Type": "application/json"}, body: JSON.stringify(cuerpo)}) : null;
+        if (!r || r.status === 404) r = await graph(API, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(cuerpo)});
+        if (r.status === 401 || r.status === 403){ lsSet("chispa.permCal", false); toast("El calendario perdió el permiso. Vuelve a darlo en Ajustes", "alerta", 6000); return; }
+        if (!r.ok) continue;
+        n.evento = {id: (await r.json()).id || n.evento?.id, firma}; await guardarNotaLocal(n);
+      } catch(e){}
+    }
+  } finally { sincronizarCalendario.en = false; }
+}
+// tras cada sincronización: si ya es la hora y nadie lo ha enviado hoy, lo envía este dispositivo
+async function resumenSiToca(){
+  if (!conMS()) return;
+  if (!lsGet("chispa.permCorreo") || !navigator.onLine || lsGet("chispa.resumenHecho") === hoyISO()) return;
+  const ahora = new Date(), hm = `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+  if (config.resumenActivo === false || hm < (config.resumenHora || "07:30")) return;
+  if (resumenSiToca.enMarcha) return; resumenSiToca.enMarcha = true;
+  try { const r = await enviarResumenWeb(false); if (r.startsWith("Enviado")) toast("Resumen del día enviado por correo", "mail", 4000); } finally { resumenSiToca.enMarcha = false; }
+}
+// Resumen diario: la app del móvil entra en la cuenta con permiso para enviar correo
+async function pintarCorreo(){
+  const caja = $("#kCorreo"); if (!caja || !esApp()) return;
+  const nat = nativo("ChispaNativo"); let e;
+  try { e = await nat.correoEstado(); }
+  catch(x){ caja.innerHTML = `<div class="ajuste">${ic("mail")}<div class="lbl">Envío desde este móvil<small>Actualiza la app para activarlo</small></div><button class="btn sec" id="kBajar2">${ic("subir")}Actualizar</button></div>`; $("#kBajar2").onclick = actualizarApp; return; }
+  caja.innerHTML = e.conectado
+    ? `<div class="ajuste">${ic("nubeok")}<div class="lbl">Envío desde este móvil<small>${esc(e.cuenta || "Conectado")}${e.ultimo ? " · Último: " + esc(e.ultimo) : ""}</small></div></div>
+       <div class="ajuste"><button class="btn sec" id="kResProbar">${ic("mail")}Enviar prueba ahora</button><button class="btn sec" id="kResDesc">Desconectar</button></div>`
+    : `<div class="ajuste">${ic("mail")}<div class="lbl">Envío desde este móvil<small>Da permiso una vez para enviar el resumen desde tu correo de Microsoft</small></div><button class="btn" id="kResCon">Conectar</button></div>`;
+  if ($("#kResCon")) $("#kResCon").onclick = async () => {
+    try { const {url} = await nat.conectarCorreo({pista: lsGet("chispa.usuario") || ""}); location.href = url; }
+    catch(x){ toast("No se pudo abrir la conexión con Microsoft", "alerta", 4000); }
+  };
+  if ($("#kResProbar")) $("#kResProbar").onclick = async () => {
+    const b = $("#kResProbar"); b.disabled = true; b.textContent = "Enviando…";
+    if (lsGet("chispa.cfgPend") || notas.some(n => n._pend)) await sincronizar(true);
+    await subirAgenda().catch(() => {});
+    try { const r = await nat.enviarResumen({prueba: true}); toast(r.resultado, r.resultado.startsWith("Error") ? "alerta" : "mail", 6000); }
+    catch(x){ toast("No se pudo enviar", "alerta"); }
+    pintarCorreo();
+  };
+  if ($("#kResDesc")) $("#kResDesc").onclick = async () => { await nat.desconectarCorreo().catch(() => {}); pintarCorreo(); };
+}
+async function pintarSuenos(cambios){
+  const caja = $("#kSuenos"); if (!caja || !esApp()) return;
+  const nat = nativo("ChispaNativo"); let e;
+  try { e = await nat.suenos(cambios || {}); }
+  catch(x){ caja.innerHTML = `<div class="ajuste">${ic("luna")}<div class="lbl">«¿Has pensado esta noche en algo?»<small>Actualiza la app para activarlo</small></div><button class="btn sec" id="kBajar3">${ic("subir")}Actualizar</button></div>`; $("#kBajar3").onclick = actualizarApp; return; }
+  const hm = ms => new Date(ms).toLocaleTimeString("es-ES", {hour: "2-digit", minute: "2-digit"}), cuando = ms => { const d = isoDia(new Date(ms)); return d === hoyISO() ? "hoy" : d === masDias(1) ? "mañana" : fechaLarga(d); };
+  const fija = !!e.soloFija;
+  const estado = !e.activo ? "Desactivada" : e.proximo ? `Próxima: ${cuando(e.proximo)} a las ${hm(e.proximo)}${fija ? " (hora fija)" : e.despertador ? ` (${e.minutos} min después de la alarma de las ${hm(e.despertador)}, si suena tras dormir)` : " (hora de respaldo: no hay alarma puesta)"}` : "Sin alarma ni hora de respaldo";
+  caja.innerHTML = `<div class="ajuste">${ic("luna")}<div class="lbl">«¿Has pensado esta noche en algo?»<small>${esc(estado)}</small></div><select id="kSuAct"><option value="1">Sí</option><option value="0">No</option></select></div>
+    ${e.reglas ? `<div class="ajuste">${ic("alarma")}<div class="lbl">Cuándo preguntar<small>${fija ? "Siempre a la hora que elijas, sin mirar las alarmas" : "Con la primera alarma que suene después de dormir, una vez cada 12 horas. Las alarmas que suenan mientras usas el móvil (pastillas, recordatorios…) no cuentan" + (e.saltadas ? `. Ya ha ignorado ${e.saltadas} ${e.saltadas === 1 ? "alarma" : "alarmas"} así` : "")}</small></div><select id="kSuFija"><option value="0">Tras dormir</option><option value="1">Hora fija</option></select></div>` : ""}
+    ${fija ? "" : `<div class="ajuste">${ic("cal")}<div class="lbl">Minutos después de la alarma</div><input type="number" id="kSuMin" min="0" max="120" step="5" value="${e.minutos}" style="max-width:90px"></div>`}
+    <div class="ajuste">${ic("sun")}<div class="lbl">${fija ? "Hora" : "Hora si no hay alarma"}<small>${fija ? "Te pregunta cada día a esta hora" : "Déjala vacía para no preguntar esos días"}</small></div><input type="time" id="kSuResp" value="${esc(e.respaldo || "")}"><button class="btn sec" id="kSuProbar">Probar</button></div>`;
+  $("#kSuAct").value = e.activo ? "1" : "0";
+  $("#kSuAct").onchange = () => pintarSuenos({activo: $("#kSuAct").value === "1"});
+  if ($("#kSuFija")){ $("#kSuFija").value = fija ? "1" : "0"; $("#kSuFija").onchange = () => pintarSuenos({soloFija: $("#kSuFija").value === "1"}); }
+  if ($("#kSuMin")) $("#kSuMin").onchange = () => pintarSuenos({minutos: Math.max(0, Math.min(120, +$("#kSuMin").value || 15))});
+  $("#kSuResp").onchange = () => pintarSuenos({respaldo: $("#kSuResp").value || ""});
+  $("#kSuProbar").onclick = () => { nat.probarSueno().catch(() => {}); toast("Mira las notificaciones", "luna"); };
+}
+function pintarCalendario(){
+  const caja = $("#kCal"); if (!caja) return;
+  const mio = lsGet("chispa.permCal") && config.calendarioDispositivo === disp.terminal, otro = config.calendarioDispositivo && config.calendarioDispositivo !== disp.terminal;
+  caja.innerHTML = mio
+    ? `<div class="ajuste">${ic("cal")}<div class="lbl">Notas con fecha y hora en tu calendario<small>Se crean como citas con aviso 15 minutos antes en el calendario de ${esc(lsGet("chispa.usuario") || "tu cuenta")}. Al marcarlas hechas se quitan</small></div><select id="kCalAct"><option value="1">Sí</option><option value="0">No</option></select></div>`
+    : `<div class="ajuste">${ic("cal")}<div class="lbl">Pasar las notas con fecha y hora al calendario<small>${otro ? `Ahora lo gestiona «${esc(config.calendarioDispositivo)}». Si lo activas aquí, pasará a este dispositivo` : "Citas con aviso en el calendario de tu cuenta de Microsoft. Pide permiso una vez"}</small></div><button class="btn" id="kCalPermiso">Activar</button></div>`;
+  if ($("#kCalAct")){ $("#kCalAct").value = config.calendario === false ? "0" : "1"; $("#kCalAct").onchange = () => { config.calendario = $("#kCalAct").value === "1"; guardarConfig(); if (config.calendario) sincronizarCalendario(); }; }
+  if ($("#kCalPermiso")) $("#kCalPermiso").onclick = () => { config.calendarioDispositivo = disp.terminal; config.calendario = true; lsSet("chispa.config", config); lsSet("chispa.cfgPend", true); lsSet("chispa.permCal", true); irALogin(false); };
+}
+function pintarCorreoWeb(){
+  const caja = $("#kCorreoWeb"); if (!caja) return;
+  const ok = lsGet("chispa.permCorreo"), ult = lsGet("chispa.resumenUltimo");
+  caja.innerHTML = ok
+    ? `<div class="ajuste">${ic(esApp() ? "nube" : "movil")}<div class="lbl">Envío al abrir Cuaderna${esApp() ? "" : " en este equipo"}<small>Si a la hora del resumen nadie lo ha enviado, lo envía este dispositivo${ult ? " · Último: " + esc(ult) : ""}</small></div></div>
+       <div class="ajuste"><button class="btn sec" id="kWebProbar">${ic("mail")}Enviar prueba desde aquí</button></div>`
+    : `<div class="ajuste">${ic("mail")}<div class="lbl">Envío al abrir Cuaderna${esApp() ? "" : " en este equipo"}<small>${esApp() ? "Respaldo por si el móvil no lo envía en segundo plano." : "El PC envía el resumen cuando abres Cuaderna después de la hora."} Pide permiso a Microsoft una vez</small></div><button class="btn" id="kWebPermiso">Dar permiso</button></div>`;
+  if ($("#kWebPermiso")) $("#kWebPermiso").onclick = () => { lsSet("chispa.permCorreo", true); irALogin(false); };
+  if ($("#kWebProbar")) $("#kWebProbar").onclick = async () => {
+    const b = $("#kWebProbar"); b.disabled = true; b.textContent = "Enviando…";
+    const r = await enviarResumenWeb(true); toast(r, r.startsWith("Error") || r.startsWith("Falta") ? "alerta" : "mail", 7000); pintarCorreoWeb();
+  };
+}
+function abrirElegirCoche(lista, elegir, cancelar){
+  const fondo = document.createElement("div"); fondo.className = "elegir-coche";
+  fondo.innerHTML = `<div class="ec-caja" role="dialog" aria-label="Elige tu coche"><h3>¿Cuál es tu coche?</h3><p>Elige el Bluetooth al que se conecta el móvil en el coche.</p>
+    <div class="ec-lista">${lista.map((d, i) => `<button data-i="${i}">${ic("coche")}<span>${esc(d.nombre)}</span></button>`).join("")}</div>
+    <button class="btn sec" data-x>Cancelar</button></div>`;
+  document.body.appendChild(fondo);
+  const cerrar = () => fondo.remove();
+  fondo.onclick = e => { const b = e.target.closest("[data-i]"); if (b){ cerrar(); elegir(lista[+b.dataset.i]); } else if (e.target === fondo || e.target.closest("[data-x]")){ cerrar(); cancelar(); } };
+}
+// Avisos del sistema a la hora de cada recordatorio, aunque la app esté cerrada
+const idAviso = s => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h) % 2000000000; };
+let tAvisos = 0;
+function programarAvisos(){
+  if (!esApp()) return;
+  clearTimeout(tAvisos);
+  tAvisos = setTimeout(async () => {
+    const ln = nativo("LocalNotifications"); if (!ln) return;
+    try {
+      const pend = await ln.getPending();
+      if (pend?.notifications?.length) await ln.cancel({notifications: pend.notifications.map(n => ({id: n.id}))});
+      const ahora = Date.now(), lista = [];
+      for (const n of deNotas()){
+        if (n.hecha || !n.fecha || !n.hora) continue;
+        const t = new Date(`${n.fecha}T${n.hora}:00`).getTime();
+        if (!(t > ahora) || t - ahora > 60 * 864e5) continue;
+        lista.push({id: idAviso(n.id), title: tituloPlano(n), body: `${n.hora}${n.para?.nombre ? ", " + n.para.nombre : ""}`,
+          schedule: {at: new Date(t), allowWhileIdle: true}, extra: {nota: n.id}, smallIcon: "ic_stat_chispa", iconColor: "#A8322D"});
+      }
+      lista.sort((a, b) => a.schedule.at - b.schedule.at);
+      if (lista.length) await ln.schedule({notifications: lista.slice(0, 60)});
+    } catch(e){ console.warn("No se pudieron programar los avisos", e); }
+  }, 1000);
+}
+
+/* ================= Avisos dentro de la app ================= */
+async function pedirPermisoAvisos(){ try { if ("Notification" in window && Notification.permission === "default") await Notification.requestPermission(); } catch(e){} }
+async function revisarAvisos(){
+  if (document.visibilityState !== "visible" && esApp()) return;   // en la app, con la pantalla apagada avisa Android (ya programado)
+  const ahora = new Date(), hoy = isoDia(ahora), hm = `${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`, avisadas = lsGet("chispa.avisadas") || {};
+  for (const n of deNotas()){
+    if (n.hecha || n.fecha !== hoy || !n.hora || n.hora > hm || avisadas[n.id] === n.fecha + n.hora) continue;
+    avisadas[n.id] = n.fecha + n.hora; lsSet("chispa.avisadas", avisadas);
+    const titulo = tituloPlano(n) || "Recordatorio de Cuaderna";
+    toast(`${n.hora}: ${titulo}`, "campana", 8000); vibrar([80, 60, 80]);
+    if (!esApp()) try { if (Notification.permission === "granted"){ const reg = await navigator.serviceWorker?.getRegistration(); reg ? reg.showNotification("Cuaderna", {body: `${n.hora} · ${titulo}`, icon: "icon-192.png", tag: n.id}) : new Notification("Cuaderna", {body: titulo}); } } catch(e){}
+  }
+}
+setInterval(revisarAvisos, 30000);
+
+/* ================= Navegación ================= */
+const VISTAS = [["anotar", "spark", "Anotar"], ["hoy", "sun", "Hoy"], ["notas", "libro", "Cuaderno"], ["estad", "grafico", "Estadísticas"], ["ajustes", "ajustes", "Ajustes"], ["ayuda", "ayuda", "Ayuda"]];
+// Barra de navegación (la administración está en el portal interno de Astillero, no en la app)
+function pintarNav(){
+  const boton = ([v, i, t]) => `<button data-v="${v}">${ic(i)}<span>${t}</span>${v === "hoy" ? '<span class="badge oculto"></span>' : ""}</button>`;
+  $("#sideNav").innerHTML = VISTAS.map(boton).join("");
+  $("#tabs").innerHTML = [["anotar", "spark", "Anotar"], ["hoy", "sun", "Hoy"], ["notas", "libro", "Cuaderno"], ["ajustes", "ajustes", "Más"]].map(boton).join("");
+  document.querySelectorAll("#sideNav button,#tabs button").forEach(b => b.onclick = () => { if (b.dataset.v === "notas" && vista === "notas" && (buzon || $("#q").value)){ $("#q").value = ""; abrirBuzon(null); } ver(b.dataset.v); });
+  document.querySelectorAll("#sideNav button,#tabs button").forEach(b => b.classList.toggle("activo", b.dataset.v === vista || (b.closest("#tabs") && b.dataset.v === "ajustes" && (vista === "estad" || vista === "ayuda"))));
+  pintarBadges?.();
+}
+let vista = "anotar";
+pintarNav();
+function ver(v){
+  // Estadísticas y Ayuda se abren desde Ajustes: el «atrás» del móvil vuelve a Ajustes
+  if ((v === "estad" || v === "ayuda") && vista === "ajustes" && esMovil()) try { history.pushState({sub: true}, ""); } catch(e){}
+  vista = v;
+  document.querySelectorAll("#sideNav button,#tabs button").forEach(b => b.classList.toggle("activo", b.dataset.v === v || (b.closest("#tabs") && b.dataset.v === "ajustes" && (v === "estad" || v === "ayuda"))));
+  document.querySelectorAll("#main>section").forEach(s => s.classList.toggle("oculto", s.dataset.v !== v));
+  if (v === "anotar"){ prepararTeclado(); requestAnimationFrame(() => { ajustarLienzo(); crecerTitulo($("#cTitulo")); }); if (!esMovil()) setTimeout(() => $("#cTexto").focus(), 50); }
+  refrescar(); scrollTo(0, 0);
+}
+// (los botones se enganchan en pintarNav)
+document.addEventListener("click", e => { const b = e.target.closest("[data-volver]"); if (!b) return; if (history.state?.sub) history.back(); else ver(b.dataset.volver); });
+addEventListener("popstate", () => { if ((vista === "estad" || vista === "ayuda") && !document.querySelector(".hoja.on")) ver("ajustes"); });
+function refrescar(){ if (vista === "hoy" || vista === "notas") setTimeout(revisarCompartidas, 400); ({anotar: () => {}, hoy: pintarHoy, notas: pintarNotas, estad: pintarEstad, ajustes: pintarAjustes, ayuda: pintarAyuda})[vista]?.(); pintarEstado(); pintarBadges(); }
+function pintarBadges(){
+  const hoy = hoyISO(), n = deNotas().filter(x => !x.hecha && (x.ancla || (x.fecha && x.fecha <= hoy))).length;
+  document.querySelectorAll(".badge").forEach(b => { b.textContent = n; b.classList.toggle("oculto", !n); });
+}
+const cab = (titulo, sub = "", volver = "") => `<div class="cab">${volver ? `<button class="cab-volver" type="button" data-volver="${volver}" aria-label="Volver a Ajustes" title="Volver a Ajustes">${ic("atras")}</button>` : ""}<div><h1>${titulo}</h1>${sub ? `<div class="sub">${sub}</div>` : ""}</div><div class="esp"></div><button class="sync cab-sync" data-sync></button></div>`;
+const seccion = (cls, icono, titulo, lista, opts = {}) => lista.length ? `<div class="seccion ${cls}"><h3>${ic(icono)}${titulo}<span class="c">${lista.length}</span></h3><div class="lista">${lista.map(n => fila(n, opts)).join("")}</div></div>` : "";
+
+function pintarHoy(){
+  const hoy = hoyISO(), en7 = masDias(7), ayer = masDias(-1);
+  const todas = deNotas().filter(n => !esAlgunDia(n)), pend = todas.filter(n => !n.hecha);
+  const anclas = pend.filter(n => n.ancla), vencidas = pend.filter(n => !n.ancla && n.fecha && n.fecha < hoy), deHoy = pend.filter(n => !n.ancla && n.fecha === hoy);
+  const nocturnas = todas.filter(n => n.nocturna && !n.ancla && isoDia(new Date(n.creada)) >= ayer && !(n.fecha && n.fecha <= hoy));
+  const clave = n => (n.fecha || "") + (n.hora || "99");
+  const proximas = pend.filter(n => n.fecha && n.fecha > hoy && n.fecha <= en7).sort((a, b) => clave(a).localeCompare(clave(b)));
+  deHoy.sort((a, b) => clave(a).localeCompare(clave(b)));
+  const capturadas = todas.filter(n => isoDia(new Date(n.creada)) === hoy && !n.ancla && !(n.fecha && n.fecha <= en7) && !n.nocturna);
+  const h = new Date().getHours(), saludo = h < 14 ? "Buenos días" : h < 21 ? "Buenas tardes" : "Buenas noches";
+  const nada = !anclas.length && !vencidas.length && !deHoy.length;
+  // Las píldoras de arriba son filtros: tocar una enseña solo eso; tocarla otra vez (o «Todo») vuelve a la vista completa
+  let f = lsGet("chispa.filtroHoy") || "";
+  // «Dónde»: lo pendiente que se hace en cada sitio (con o sin fecha), si está activado «Ayúdame a organizarme»
+  const enSitio = k => pend.filter(n => n.donde === k && !n.ancla && !notaConsulta(n)).sort((a, b) => a.fecha && b.fecha ? clave(a).localeCompare(clave(b)) : a.fecha ? -1 : b.fecha ? 1 : b.creada.localeCompare(a.creada));
+  const esperas = organizar() ? todas.filter(n => esperaDe(n) && !notaConsulta(n)).sort((a, b) => String(esperaDe(a).desde).localeCompare(String(esperaDe(b).desde))) : [];
+  const reclamar = esperas.filter(n => diasDesde(esperaDe(n).desde) >= ESPERA_AVISO && !(n.fecha && n.fecha >= hoyISO()));
+  const porAclarar = organizar() ? todas.filter(sinAclarar) : [];
+  const sitios = organizar() ? Object.keys(DONDE).map(k => [k, enSitio(k)]).filter(([, l]) => l.length) : [];
+  if (f === "vencidas" && !vencidas.length || f === "anclas" && !anclas.length || f === "capturado" && !capturadas.length || f === "noche" && !nocturnas.length) f = "";
+  if (f.startsWith("d:") && !sitios.some(([k]) => "d:" + k === f)) f = "";
+  if (f === "esperando" && !esperas.length) f = "";
+  const pild = (k, n, txt, cls = "") => `<button type="button" class="pildora filtro ${cls} ${f === k ? "on" : ""}" data-fhoy="${k}" aria-pressed="${f === k}"><b>${n}</b> ${txt}</button>`;
+  const ver = k => !f || f === k;
+  $("#vHoy").innerHTML = cab("Hoy", `${saludo}. ${capital(fechaLarga(hoy))}`)
+    + `<div class="resumen" role="group" aria-label="Filtrar">
+        ${f ? `<button type="button" class="pildora filtro todo" data-fhoy="">${ic("x")}Ver todo</button>` : ""}
+        ${pild("hoy", deHoy.length, "para hoy")}
+        ${vencidas.length ? pild("vencidas", vencidas.length, vencidas.length === 1 ? "vencida" : "vencidas", "alerta") : ""}
+        ${pild("semana", proximas.length, "esta semana")}
+        ${anclas.length ? pild("anclas", anclas.length, "por recordar") : ""}
+        ${capturadas.length ? pild("capturado", capturadas.length, capturadas.length === 1 ? "capturada hoy" : "capturadas hoy") : ""}
+        ${nocturnas.length ? pild("noche", nocturnas.length, nocturnas.length === 1 ? "idea de anoche" : "ideas de anoche") : ""}
+        ${esperas.length ? pild("esperando", esperas.length, "a la espera", reclamar.length ? "alerta" : "") : ""}
+      </div>`
+    + (porAclarar.length && !f ? `<button class="aclarar" data-vaciar>${ic("bandeja")}<span><b>${porAclarar.length} ${porAclarar.length === 1 ? "nota por aclarar" : "notas por aclarar"}</b><small>Decide en un momento qué es cada una</small></span><span class="ir">Vaciar</span></button>` : "")
+    + (sitios.length ? `<div class="resumen sitios" role="group" aria-label="Dónde"><span class="r-lbl">${ic("pin")}Dónde</span>${sitios.map(([k, l]) => `<button type="button" class="pildora filtro sitio ${f === "d:" + k ? "on" : ""}" data-fhoy="d:${k}" aria-pressed="${f === "d:" + k}">${ic(DONDE[k][1])}<b>${l.length}</b> ${DONDE[k][0].toLowerCase()}</button>`).join("")}</div>` : "")
+    + (nada && !f ? `<div class="vacio-grande"><div class="halo">${ic("sun")}</div><b>Nada pendiente para hoy</b><span>Lo que anotes con fecha aparecerá aquí el día que toque.</span></div>` : "")
+    + (f === "hoy" && !deHoy.length ? `<div class="vacio-grande"><div class="halo">${ic("sun")}</div><b>Nada para hoy</b><span>Toca «Ver todo» para ver el resto.</span></div>` : "")
+    + (f === "semana" && !proximas.length ? `<div class="vacio-grande"><div class="halo">${ic("cal")}</div><b>Nada en los próximos 7 días</b><span>Toca «Ver todo» para ver el resto.</span></div>` : "")
+    + (ver("anclas") ? seccion("anclas", "ancla", "Por recordar", anclas, {resolver: true}) : "")
+    + (ver("vencidas") ? seccion("vencidas", "alerta", "Vencidas", vencidas) : "")
+    + (ver("hoy") ? seccion("", "cal", "Para hoy", deHoy) : "")
+    + (ver("capturado") ? seccion("", "spark", "Capturado hoy", capturadas, {hora: true}) : "")
+    + (!f && reclamar.length ? seccion("", "alarma", "Hace días que esperas", reclamar) : "")
+    + (f === "esperando" ? seccion("", "alarma", "A la espera de otros", esperas) : "")
+    + (ver("noche") ? seccion("noche", "luna", "Ideas de anoche", nocturnas, {hora: true}) : "")
+    + (ver("semana") ? seccion("", "lista", "Próximos días", proximas) : "")
+    + sitios.filter(([k]) => f === "d:" + k).map(([k, l]) => seccion("", DONDE[k][1], DONDE[k][2], l)).join("")
+    + `<div class="correo"><button class="btn sec" id="mailT">${ic("mail")}Resumen de trabajo</button><button class="btn sec" id="mailP">${ic("mail")}Resumen personal</button></div>`;
+  $("#mailT").onclick = () => prepararCorreo("trabajo"); $("#mailP").onclick = () => prepararCorreo("personal");
+  $("#vHoy").querySelectorAll("[data-fhoy]").forEach(b => b.onclick = () => { const k = b.dataset.fhoy; lsSet("chispa.filtroHoy", k && k !== f ? k : ""); pintarHoy(); });
+  cargarMinis($("#vHoy"));
+}
+function prepararCorreo(ambito){
+  const hoy = hoyISO(), dest = ambito === "trabajo" ? config.correoTrabajo : config.correoPersonal, del = deNotas().filter(n => n.ambito === ambito);
+  const vence = del.filter(n => !n.hecha && n.fecha && n.fecha <= hoy), nuevas = del.filter(n => isoDia(new Date(n.creada)) === hoy);
+  if (!vence.length && !nuevas.length){ toast(`Hoy no hay nada ${ambito === "trabajo" ? "de trabajo" : "personal"} que enviar`, "mail"); return; }
+  const linea = n => `- ${n.ancla ? "(ancla de las " + hora(n.creada) + ") " + (n.texto || "") : (n.titulo ? n.titulo + (n.texto ? ": " + n.texto : "") : n.texto)}${n.para?.nombre ? " [" + n.para.nombre + "]" : ""}${n.fecha ? " (" + fechaCorta(n.fecha) + ")" : ""}`;
+  let cuerpo = `Resumen de Cuaderna, ${fechaLarga(hoy)}\n\n`;
+  if (vence.length) cuerpo += `Para hoy y vencidas\n${vence.map(linea).join("\n")}\n\n`;
+  if (nuevas.length) cuerpo += `Capturado hoy\n${nuevas.map(linea).join("\n")}\n`;
+  location.href = `mailto:${encodeURIComponent(dest || "")}?subject=${encodeURIComponent("Cuaderna: " + (ambito === "trabajo" ? "trabajo" : "personal") + ", " + fechaCorta(hoy))}&body=${encodeURIComponent(cuerpo)}`;
+}
+
+// Notas: buscador y filtros desplegables (una o varias opciones en cada uno; ninguna marcada = todas)
+const GRUPOS = [
+  {k: "estado", et: "Estado", todos: "Todas", ops: [["pend", "Pendientes"], ["hecha", "Hechas"]]},
+  {k: "ambito", et: "Ámbito", todos: "Todos", ops: [["trabajo", "Trabajo"], ["personal", "Personal"]]},
+  {k: "tipo", et: "Tipo", todos: "Todos", ops: [["nota", "Notas"], ["tarea", "Tareas"], ["idea", "Ideas"], ["recordatorio", "Recordatorios"], ["ancla", "Anclas"]]},
+  {k: "cat", et: "Para quién", todos: "Todos", get ops(){ return [...catsVisibles().map(c => [c[0], c[2]]), ["", "Sin indicar"]]; }}];
+let filtro = (() => { const g = lsGet("chispa.filtros"), f = {}; for (const x of GRUPOS) f[x.k] = Array.isArray(g?.[x.k]) ? g[x.k] : (x.k === "estado" ? ["pend"] : []); return f; })();
+let grupoAbierto = null;
+const resumenGrupo = g => { const sel = filtro[g.k]; if (!sel.length || sel.length === g.ops.length) return g.todos; if (sel.length === 1) return g.ops.find(o => o[0] === sel[0])?.[1] || g.todos; return g.ops.filter(o => sel.includes(o[0])).map(o => o[1]).join(", "); };
+const filtroActivo = g => filtro[g.k].length > 0 && filtro[g.k].length < g.ops.length;
+function pintarFiltros(){
+  const hay = GRUPOS.some(g => g.k !== "estado" ? filtroActivo(g) : (norm($("#q").value).trim() || buzon === "todas") && !(filtro.estado.length === 1 && filtro.estado[0] === "pend"));
+  const usarEstado = norm($("#q").value).trim() || buzon === "todas";
+  $("#filtros").innerHTML = GRUPOS.filter(g => g.k !== "estado" || usarEstado).map(g => `<button class="desp ${filtroActivo(g) ? "on" : ""} ${grupoAbierto === g.k ? "abierto" : ""}" data-g="${g.k}" aria-haspopup="true" aria-expanded="${grupoAbierto === g.k}">
+      <span class="d-et">${g.et}</span><span class="d-val">${esc(resumenGrupo(g))}</span>${ic("abajo")}</button>`).join("")
+    + (hay ? `<button class="desp-limpiar" id="fLimpiar">${ic("x")}Quitar filtros</button>` : "");
+  if ($("#fLimpiar")) $("#fLimpiar").onclick = () => { for (const g of GRUPOS) filtro[g.k] = g.k === "estado" ? ["pend"] : []; guardarFiltros(); cerrarDesp(); pintarNotas(); };
+}
+function guardarFiltros(){ lsSet("chispa.filtros", filtro); }
+function cerrarDesp(){ grupoAbierto = null; $("#despPanel").classList.add("oculto"); document.querySelectorAll(".desp.abierto").forEach(b => { b.classList.remove("abierto"); b.setAttribute("aria-expanded", "false"); }); }
+function abrirDesp(k, boton){
+  const g = GRUPOS.find(x => x.k === k), panel = $("#despPanel");
+  grupoAbierto = k; document.querySelectorAll(".desp").forEach(b => { const on = b.dataset.g === k; b.classList.toggle("abierto", on); b.setAttribute("aria-expanded", on); });
+  const sel = new Set(filtro[k]), todos = !sel.size || sel.size === g.ops.length;
+  panel.setAttribute("aria-label", g.et);
+  panel.innerHTML = `<div class="dp-tit">${g.et}</div>
+    <label class="dp-op dp-todos"><input type="checkbox" data-todos ${todos ? "checked" : ""}><span class="caja-ck">${ic("check")}</span>${g.todos}</label>
+    ${g.ops.map(([v, t]) => `<label class="dp-op"><input type="checkbox" data-v="${v}" ${!todos && sel.has(v) ? "checked" : ""}><span class="caja-ck">${ic("check")}</span>${t}<small>${contarOpcion(k, v)}</small></label>`).join("")}
+    <button class="btn dp-ok">Listo</button>`;
+  const r = boton.getBoundingClientRect(), cont = $("#vNotas").getBoundingClientRect();
+  panel.style.top = (r.bottom - cont.top + 6) + "px";
+  panel.style.left = Math.max(0, Math.min(r.left - cont.left, cont.width - 260)) + "px";
+  panel.classList.remove("oculto");
+  panel.querySelector("[data-todos]").onchange = e => { if (e.target.checked){ filtro[k] = []; panel.querySelectorAll("[data-v]").forEach(c => c.checked = false); } else e.target.checked = true; aplicar(); };
+  panel.querySelectorAll("[data-v]").forEach(c => c.onchange = () => {
+    const marcados = [...panel.querySelectorAll("[data-v]:checked")].map(x => x.dataset.v);
+    filtro[k] = marcados.length === g.ops.length ? [] : marcados;
+    panel.querySelector("[data-todos]").checked = !filtro[k].length;
+    if (!filtro[k].length) panel.querySelectorAll("[data-v]").forEach(x => x.checked = false);
+    aplicar();
+  });
+  panel.querySelector(".dp-ok").onclick = cerrarDesp;
+  function aplicar(){ guardarFiltros(); pintarNotas(); }
+}
+function contarOpcion(k, v){ return deNotas().filter(n => valorFiltro(n, k) === v).length || ""; }
+function valorFiltro(n, k){
+  if (k === "estado") return n.hecha ? "hecha" : "pend";
+  if (k === "ambito") return n.ambito || "trabajo";
+  if (k === "tipo") return n.ancla ? "ancla" : (n.tipo || "nota");
+  return n.para?.categoria || "";
+}
+$("#filtros").addEventListener("click", e => { const b = e.target.closest("[data-g]"); if (!b) return; grupoAbierto === b.dataset.g ? cerrarDesp() : abrirDesp(b.dataset.g, b); });
+document.addEventListener("pointerdown", e => { if (grupoAbierto && !e.target.closest("#despPanel,[data-g]")) cerrarDesp(); });
+$("#q").addEventListener("input", () => pintarNotas());
+function etiquetaDia(iso){ const d = isoDia(new Date(iso)); if (d === hoyISO()) return "Hoy"; if (d === masDias(-1)) return "Ayer"; return capital(fechaLarga(d)); }
+// Buzones: dónde está cada nota (la estrella y los archivadores propios son aparte)
+const DIAS_ARCHIVO = 7;
+const hechaHace = n => Date.now() - new Date(n.hechaEn || n.actualizada || n.creada).getTime();
+const enArchivo = n => !!n.archivada || (n.hecha && hechaHace(n) > DIAS_ARCHIVO * 864e5);
+const esAlgunDia = n => !!n.algunDia && !n.fecha;
+// «A la espera»: lo que depende de otra persona (marcado a mano o una nota que le pasaste y aún no ha terminado)
+const ESPERA_AVISO = 5;   // días esperando a partir de los cuales Hoy propone reclamar
+const esperaDe = n => {
+  if (n.hecha) return null;
+  if (n.esperando?.quien) return {quien: n.esperando.quien, desde: n.esperando.desde || n.creada, propia: true};
+  if (n.asignada && n.asignada.estado !== "hecha") return {quien: n.asignada.a?.n || n.asignada.a?.e || n.asignada.a?.tel || "alguien", desde: n.asignada.en || n.creada};
+  return null;
+};
+const diasDesde = d => Math.max(0, Math.floor((Date.now() - new Date(d)) / 864e5));
+const haceDias = d => { const x = diasDesde(d); return x === 0 ? "desde hoy" : x === 1 ? "desde ayer" : `hace ${x} días`; };
+// Sin aclarar: anotado y aún sin decidir qué es (ni fecha, ni dónde, ni libreta, ni algún día, ni a la espera)
+const sinAclarar = n => !n.hecha && !n._borrar && !enArchivo(n) && !esAlgunDia(n) && !esperaDe(n) && !n.fecha && !n.donde && !n.carpeta && n.tipo !== "idea" && !n.sueno && !n.nocturna && !n.ancla;
+// Sugerencia de «dónde» por las primeras palabras, para preseleccionar al vaciar la entrada
+const dondeSugerido = n => { const t = (partesNota(n).titulo + " " + (n.texto || "")).toLowerCase().slice(0, 200);
+  return /\b(llamar|llama|telefonear|hablar con|preguntar a)\b/.test(t) ? "llamar" : /\b(correo|email|e-mail|presupuesto|factura|enviar|mandar|pedido|oferta|excel|documento|web)\b/.test(t) ? "ordenador" : /\b(comprar|recoger|llevar|ir a|visitar|pasar por|visita)\b/.test(t) ? "fuera" : ""; };
+const conPlazo = n => !!n.fecha || n.tipo === "tarea" || n.tipo === "recordatorio";
+const BUZONES = [
+  {k: "importantes", t: "Importantes", ic: "estrella", d: "Las que marcas con estrella", f: n => n.importante && !enArchivo(n)},
+  {k: "entrada", t: "Entrada", ic: "bandeja", d: "Anotado y aún sin clasificar", f: n => organizar() ? sinAclarar(n) : !n.hecha && !enArchivo(n) && !n.carpeta && !conPlazo(n) && n.tipo !== "idea" && !n.sueno && !n.nocturna && !esAlgunDia(n)},
+  {k: "porhacer", t: "Por hacer", ic: "tarea", d: "Tareas y notas con fecha", f: n => !n.hecha && !enArchivo(n) && conPlazo(n) && !esAlgunDia(n)},
+  {k: "esperando", t: "A la espera", ic: "alarma", d: "Lo que depende de otra persona", f: n => !enArchivo(n) && !!esperaDe(n) && !notaConsulta(n), soloOrg: true},
+  {k: "algundia", t: "Algún día", ic: "nube", d: "Lo que no toca ahora, sin fecha y fuera de Hoy", f: n => !n.hecha && !enArchivo(n) && esAlgunDia(n), soloOrg: true},
+  {k: "ideas", t: "Ideas", ic: "idea", d: "Para pensarlas con calma", f: n => !n.hecha && !enArchivo(n) && n.tipo === "idea" && !n.fecha && !n.sueno && !n.nocturna},
+  {k: "suenos", t: "Sueños", ic: "luna", d: "Lo que piensas de noche y al despertar", f: n => (n.sueno || n.nocturna) && !enArchivo(n)},
+  {k: "compartidas", t: "Compartidas", ic: "flecha", d: "Las que pasas a otros y las que te pasan", f: n => (n.asignada || n.recibida) && !enArchivo(n)},
+  {k: "completadas", t: "Completadas", ic: "check", d: `Hechas en los últimos ${DIAS_ARCHIVO} días`, f: n => n.hecha && !enArchivo(n)},
+  {k: "archivo", t: "Archivo", ic: "archivo", d: "Lo antiguo, por meses", f: enArchivo},
+  {k: "todas", t: "Todas", ic: "lista", d: "Con todos los filtros", f: () => true}];
+const archivadores = () => config.carpetas || [];
+const carpetaDe = n => n.carpeta && archivadores().find(c => c.id === n.carpeta);
+// Jerarquía de libretas: cada libreta puede estar dentro de otra (campo «padre»), hasta MAX_NIVEL niveles
+const MAX_NIVEL = 6;
+const libPorId = id => id && archivadores().find(c => c.id === id);
+const libPadre = c => c?.padre && c.padre !== c.id ? libPorId(c.padre) : null;
+function rutaLib(c){ const r = []; let x = c; while (x && r.length < 12 && !r.includes(x)){ r.unshift(x); x = libPadre(x); } return r; }
+const nivelLib = c => rutaLib(c).length;
+const pilaDe = c => rutaLib(c)[0]?.pila || "";
+const ordenNombre = (a, b) => a.nombre.localeCompare(b.nombre, "es", {numeric: true, sensitivity: "base"});
+const hijasDe = id => archivadores().filter(c => id ? c.padre === id : !libPadre(c)).sort(ordenNombre);
+// Libretas de consulta (tarjetas, recetas, manuales, facturas…): guardan cosas, no tareas, y no entran en «Ayúdame a organizarme».
+// Cada libreta puede decirlo a mano (uso: "consulta" | "tareas"); si no, lo hereda de la de arriba o se deduce del nombre y del contenido.
+const NOMBRE_CONSULTA = /tarjeta|contacto|receta|contrase|claves?\b|manual|garant[ií]a|factura|documentaci|plantilla|referencia|cat[aá]logo|ficha|apuntes|lectura|libros?\b|pel[ií]cula|art[ií]culo|recuerdo|fotos?\b|archivo/i;
+function consultaAuto(c){
+  if (NOMBRE_CONSULTA.test(c.nombre || "")) return true;
+  const ns = deNotas().filter(n => n.carpeta === c.id);
+  return ns.length >= 3 && ns.filter(n => n.tarjeta || n.contacto).length / ns.length >= .6;
+}
+function esConsulta(c){
+  const ruta = rutaLib(c).reverse();
+  const marcada = ruta.find(x => x.uso === "consulta" || x.uso === "tareas");
+  if (marcada) return marcada.uso === "consulta";
+  return ruta.some(consultaAuto);
+}
+let _cons = {t: 0, m: new Map()};   // se recalcula como mucho cada 3 s: en Hoy se pregunta por cada nota
+const notaConsulta = n => {
+  if (!n.carpeta) return false;
+  if (Date.now() - _cons.t > 3000) _cons = {t: Date.now(), m: new Map()};
+  if (!_cons.m.has(n.carpeta)){ const c = carpetaDe(n); _cons.m.set(n.carpeta, !!c && esConsulta(c)); }
+  return _cons.m.get(n.carpeta);
+};
+function descendientes(id){ const out = new Set([id]); let crece = true; while (crece){ crece = false; for (const c of archivadores()) if (c.padre && out.has(c.padre) && !out.has(c.id)){ out.add(c.id); crece = true; } } return out; }
+// Todas en orden de árbol, para los desplegables: [{c, nivel}]
+function arbolLibretas(excluir){
+  const fuera = excluir ? descendientes(excluir) : new Set(), out = [];
+  const bajar = (id, nivel) => { for (const c of hijasDe(id)) if (!fuera.has(c.id)){ out.push({c, nivel}); if (nivel < 12) bajar(c.id, nivel + 1); } };
+  bajar(null, 1); return out;
+}
+const sangria = nivel => "\u2003".repeat(Math.max(0, nivel - 1)) + (nivel > 1 ? "› " : "");
+let buzon = lsGet("chispa.buzon") || null;   // null = ver los buzones
+let busquedaGlobal = false;   // al buscar dentro de una libreta, etiqueta o vista, se busca solo ahí salvo que se pida lo contrario
+// ---------- Imagen de cada libreta: una ilustración y un color según su nombre (o la que elija la persona) ----------
+const TEMAS_LIB = [
+  ["casa", "#B5603A", "casa hogar piso vivienda mudanza comunidad vecinos alquiler hipoteca personal domestico limpieza"],
+  ["herramienta", "#8A6A3F", "reforma reformas obra obras bricolaje arreglo arreglos taller reparacion reparaciones mantenimiento averia averias fontanero pintura"],
+  ["coche", "#3D6F9E", "coche coches vehiculo vehiculos moto motos itv garaje furgoneta seguro coche gasolina"],
+  ["avion", "#2F86A6", "viaje viajes vacaciones vuelo vuelos escapada escapadas lisboa paris roma londres turismo hotel hoteles"],
+  ["olla", "#C0632E", "receta recetas cocina comida comidas menu menus cena cenas postre postres cocinar"],
+  ["carrito", "#4C8A4A", "compra compras super supermercado mercadona lista lidl carrefour despensa"],
+  ["euro", "#2E7D5B", "factura facturas gasto gastos banco bancos dinero cuentas impuestos hacienda presupuesto presupuestos nomina nominas ahorro inversion inversiones pagos cobros renta"],
+  ["salud", "#C2413A", "salud medico medicos medicina medicinas farmacia hospital analisis citas medicas dentista pastillas tratamiento"],
+  ["pesa", "#D0782A", "deporte deportes gimnasio gym correr running entreno entrenamiento futbol padel bici ciclismo"],
+  ["birrete", "#5B5BA6", "estudio estudios clase clases universidad examen examenes curso cursos formacion apuntes master oposicion oposiciones colegio instituto"],
+  ["libro", "#7A5A3A", "libro libros lectura lecturas leer biblioteca novela novelas"],
+  ["maletin", "#34557A", "trabajo oficina reunion reuniones proyecto proyectos empresa negocio tareas laboral"],
+  ["grupo", "#6E5AA0", "cliente clientes visita visitas comercial ventas equipo companeros proveedores proveedor familia hijos ninos padres amigos"],
+  ["huella", "#9A6B3F", "perro perros gato gatos mascota mascotas veterinario"],
+  ["hoja", "#4E8A3C", "jardin plantas huerto campo flores naturaleza"],
+  ["musica", "#A64D79", "musica canciones cancion guitarra piano concierto conciertos"],
+  ["camara", "#4F6B8A", "foto fotos fotografia imagenes"],
+  ["regalo", "#C24E6E", "regalo regalos cumpleanos navidad reyes"],
+  ["copa", "#A0782C", "boda bodas fiesta fiestas evento eventos celebracion comunion bautizo"],
+  ["cal", "#3E7FA8", "agenda citas planificacion calendario semana planning"],
+  ["tarjetaId", "#3F6E8C", "tarjeta tarjetas contacto contactos tarjetas de visita"],
+  ["doc", "#5D6B7A", "documento documentos papeles garantia garantias contrato contratos seguro seguros escrituras tramites"],
+  ["claqueta", "#5C4A86", "cine pelicula peliculas serie series"],
+  ["pantalla", "#2D7F8C", "informatica ordenador web webs app apps software codigo programacion astillero cuaderna tecnologia"],
+  ["rayo", "#D39B1E", "electricidad electrico electrica material electrico cable cables instalacion instalaciones luz energia sumelex sumelan cuadros"],
+  ["idea", "#C9962A", "idea ideas inspiracion proyectos personales ocurrencias"],
+  ["luna", "#4B4E8F", "suenos sueno noche"],
+];
+const LUGARES_LIB = "alava albacete alicante almeria asturias avila badajoz barcelona burgos caceres cadiz cantabria castellon ciudad real cordoba coruña cuenca girona granada guadalajara guipuzcoa huelva huesca jaen leon lleida lugo madrid malaga murcia navarra ourense palencia palmas pontevedra rioja salamanca segovia sevilla soria tarragona tenerife teruel toledo valencia valladolid vizcaya bilbao zamora zaragoza ceuta melilla mallorca ibiza menorca canarias andalucia extremadura galicia cataluña aragon castilla mairena cortegana aljarafe dos hermanas jerez marbella merida plasencia portugal francia";
+const COLORES_LIB = ["#B5603A", "#3D6F9E", "#4C8A4A", "#C2413A", "#5B5BA6", "#2D7F8C", "#A0782C", "#A64D79", "#5D6B7A"];
+function temaLibreta(c){
+  if (c?.icono && ICONOS[c.icono]) return {icono: c.icono, color: c.color || (TEMAS_LIB.find(t => t[0] === c.icono) || [])[1] || COLORES_LIB[0], auto: false};
+  const n = " " + norm(c?.nombre || "").replace(/[^a-z0-9ñ ]+/g, " ") + " ";
+  let mejor = null, largo = 0;
+  for (const [icono, color, claves] of TEMAS_LIB) for (const k of claves.split(" ").concat(claves.includes(" de ") ? [] : [])){ if (k.length > 2 && n.includes(" " + k + " ") && k.length > largo){ mejor = {icono, color}; largo = k.length; } }
+  if (!mejor && LUGARES_LIB.split(" ").some(l => l.length > 3 && n.includes(" " + norm(l) + " "))) mejor = {icono: "edificio", color: "#5E7C8F"};
+  if (mejor) return {...mejor, color: c?.color || mejor.color, auto: true};
+  let h = 0; for (const ch of norm(c?.nombre || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return {icono: null, color: c?.color || COLORES_LIB[h % COLORES_LIB.length], auto: true, letra: (c?.nombre || "?").trim().charAt(0).toUpperCase()};
+}
+// La ilustración grande y suave, integrada en la tarjeta; si no hay tema, la inicial con la letra de los títulos
+const arteLibreta = t => t.icono ? `<span class="lib-arte" aria-hidden="true">${ic(t.icono)}</span>` : `<span class="lib-arte letra" aria-hidden="true">${esc(t.letra)}</span>`;
+// ---------- Libretas parecidas: «01 Badajoz», «BADAJOZ» y «Badajoz clientes» pueden ser la misma ----------
+const RELLENO_LIB = new Set("de del la las el los lo y e o en para con mis mi tus notas nota libreta libretas carpeta carpetas varios varias otros otras cosas".split(" "));
+function claveLib(nombre){
+  return norm(nombre).replace(/^\s*\d+\s*[\s._\-)·:]+\s*/, "").replace(/^\s*\d+\s+/, "").replace(/[^a-z0-9ñ]+/g, " ").trim().split(/\s+/).filter(w => w && !RELLENO_LIB.has(w)).join(" ");
+}
+function distanciaTxt(a, b){ const m = a.length, n = b.length; let prev = Array.from({length: n + 1}, (_, j) => j);
+  for (let i = 1; i <= m; i++){ const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; } return prev[n]; }
+// 2: mismo nombre; 1: parecidas; 0: distintas
+function parecidaLib(a, b){
+  if (norm(a).trim() === norm(b).trim()) return 2;
+  const ka = claveLib(a), kb = claveLib(b); if (!ka || !kb) return 0;
+  if (ka === kb) return 1;
+  const cifras = t => (t.match(/\d+/g) || []).join(",");
+  const wa = ka.split(" "), wb = kb.split(" "), [corto, largo] = wa.length <= wb.length ? [wa, wb] : [wb, wa];
+  if (corto.join("").length >= 4 && corto.every(w => largo.includes(w))) return 1;   // «Badajoz» dentro de «Badajoz clientes»
+  if (cifras(ka) !== cifras(kb)) return 0;   // «Facturas 2024» y «Facturas 2025» son distintas
+  if (Math.min(ka.length, kb.length) >= 5 && distanciaTxt(ka, kb) <= Math.max(1, Math.floor(Math.max(ka.length, kb.length) * .15))) return 1;   // erratas
+  return 0;
+}
+const parLib = (a, b) => [a, b].sort().join("|");
+const sonDistintas = (a, b) => (config.libDistintas || []).includes(parLib(a, b));
+function marcarDistintas(a, b){ config.libDistintas = [...new Set([...(config.libDistintas || []), parLib(a, b)])].slice(-500); guardarConfig(); }
+// ¿Hay ya en ese sitio (dentro de «padre», o entre las principales) una libreta igual o parecida?
+function parecidaEn(nombre, padreId, excluirId){
+  const hermanas = hijasDe(padreId || null).filter(x => x.id !== excluirId);
+  let mejor = null;
+  for (const h of hermanas){ const g = parecidaLib(nombre, h.nombre); if (g && !(excluirId && sonDistintas(excluirId, h.id)) && (!mejor || g > mejor.g)) mejor = {c: h, g}; }
+  return mejor;
+}
+// Pregunta qué hacer con dos libretas que parecen la misma. Devuelve "fusionar", "distintas" o null (cancelar)
+const cuantasNotas = c => { const n = deNotas().filter(x => descendientes(c.id).has(x.carpeta)).length; return n === 1 ? "1 nota" : `${n} notas`; };
+function preguntarParecidas(x, y, g, contexto){
+  return new Promise(ok => {
+    const fondo = document.createElement("div"); fondo.className = "elegir-coche";
+    const ruta = c => rutaLib(c).map(r => r.nombre).join(" › ");
+    fondo.innerHTML = `<div class="ec-caja" role="dialog" aria-label="Libretas parecidas"><h3>${ic("libro")} ${g === 2 ? "Ya hay una libreta con ese nombre" : "Estas libretas se parecen"}</h3>
+      <p>${esc(contexto)}</p>
+      <div class="fu-par"><div><b>${esc(x.nombre)}</b><small>${esc(ruta(x))} · ${cuantasNotas(x)}</small></div><div><b>${esc(y.nombre)}</b><small>${esc(ruta(y))} · ${cuantasNotas(y)}</small></div></div>
+      <button class="bl-op" data-r="fusionar"><b>Fusionar</b><small>Las notas y libretas de «${esc(x.nombre)}» pasan a «${esc(y.nombre)}» y queda una sola. Luego eliges el nombre.</small></button>
+      <button class="bl-op" data-r="distintas"><b>No, son distintas</b><small>Se quedan las dos${g === 2 ? ` (a la que mueves se le añade un «2» al nombre)` : ""} y no te lo volveremos a preguntar.</small></button>
+      <div class="on-pie"><button class="btn sec" data-r="">Cancelar</button></div></div>`;
+    document.body.appendChild(fondo);
+    fondo.onclick = e => { if (e.target === fondo) { fondo.remove(); ok(null); return; } const b = e.target.closest("[data-r]"); if (!b) return; fondo.remove(); ok(b.dataset.r || null); };
+  });
+}
+function elegirNombreFusion(x, y){
+  return new Promise(ok => {
+    const fondo = document.createElement("div"); fondo.className = "elegir-coche";
+    fondo.innerHTML = `<div class="ec-caja" role="dialog" aria-label="Nombre de la libreta"><h3>¿Con qué nombre se queda?</h3>
+      <label class="fu-op"><input type="radio" name="fuN" value="y" checked> «${esc(y.nombre)}» <small>la que ya estaba</small></label>
+      <label class="fu-op"><input type="radio" name="fuN" value="x"> «${esc(x.nombre)}» <small>la que mueves</small></label>
+      <label class="fu-op"><input type="radio" name="fuN" value="otro"> Otro: <input type="text" id="fuOtro" class="as-campo" placeholder="Escribe el nombre"></label>
+      <div class="on-pie"><button class="btn sec" data-x>Cancelar</button><button class="btn" data-ok-f>Fusionar</button></div></div>`;
+    document.body.appendChild(fondo);
+    fondo.querySelector("#fuOtro").onfocus = () => { fondo.querySelector('[value="otro"]').checked = true; };
+    fondo.onclick = e => { if (e.target === fondo || e.target.closest("[data-x]")){ fondo.remove(); ok(null); return; }
+      if (!e.target.closest("[data-ok-f]")) return;
+      const v = fondo.querySelector("[name=fuN]:checked").value, otro = fondo.querySelector("#fuOtro").value.trim();
+      if (v === "otro" && !otro) return toast("Escribe el nombre", "alerta");
+      fondo.remove(); ok(v === "x" ? x.nombre : v === "y" ? y.nombre : otro); };
+  });
+}
+// Pasa todo lo de «x» a «y» y borra «x». Se puede deshacer
+async function fusionarLibretas(x, y, nombre){
+  const antes = JSON.parse(JSON.stringify(archivadores())), movidas = notas.filter(n => n.carpeta === x.id);
+  for (const h of hijasDe(x.id)) h.padre = y.id;
+  for (const n of movidas){ n.carpeta = y.id; await guardarNotaLocal(n); }
+  if (!y.icono && x.icono) y.icono = x.icono;
+  y.nombre = nombre;
+  config.carpetas = archivadores().filter(c => c.id !== x.id); guardarConfig();
+  if (buzon === "c:" + x.id) buzon = "c:" + y.id;
+  refrescar();
+  toast(`Fusionadas en «${nombre}»: ${movidas.length} ${movidas.length === 1 ? "nota" : "notas"} movidas`, "check", 8000, async () => {
+    config.carpetas = antes; guardarConfig(); for (const n of movidas){ n.carpeta = x.id; await guardarNotaLocal(n); } refrescar(); toast("Fusión deshecha", "deshacer"); });
+}
+// Mover una libreta (arrastrando o desde su ficha), comprobando si en el destino ya hay otra igual o parecida
+async function moverLibreta(c, destino){   // destino: {padre: id} o {pila: "…"} (principal)
+  const padre = destino.padre || null;
+  if (padre){
+    if (descendientes(c.id).has(padre)) return toast("No se puede meter una libreta dentro de sí misma", "alerta");
+    const alto = Math.max(...[...descendientes(c.id)].map(id => nivelLib(libPorId(id)) - nivelLib(c) + 1));
+    if (nivelLib(libPorId(padre)) + alto > MAX_NIVEL) return toast(`Como mucho ${MAX_NIVEL} niveles de libretas`, "alerta");
+    if (!esPlus()) return abrirPlus("jerarquia");
+  }
+  if ((c.padre || null) === padre && (padre || (c.pila || "") === (destino.pila || ""))) return;
+  const p = parecidaEn(c.nombre, padre, c.id);
+  if (p){
+    const dest = padre ? `«${libPorId(padre).nombre}»` : "las libretas principales";
+    const r = await preguntarParecidas(c, p.c, p.g, `Vas a mover «${c.nombre}» a ${dest}, donde ya está «${p.c.nombre}».`);
+    if (!r) return;
+    if (r === "fusionar"){ const nombre = await elegirNombreFusion(c, p.c); if (nombre) await fusionarLibretas(c, p.c, nombre); return; }
+    marcarDistintas(c.id, p.c.id); if (p.g === 2) c.nombre = c.nombre + " 2";
+  }
+  if (padre){ c.padre = padre; delete c.pila; } else { delete c.padre; if (destino.pila) c.pila = destino.pila; else delete c.pila; }
+  config.carpetas = [...archivadores()]; guardarConfig(); refrescar();
+  toast(`«${c.nombre}» movida a ${padre ? "«" + libPorId(padre).nombre + "»" : destino.pila ? "la pila «" + destino.pila + "»" : "las libretas principales"}`, "libro");
+}
+// Todas las parejas parecidas (para la Revisión de Cuaderna)
+function libretasParecidas(){
+  const l = archivadores(), out = [];
+  for (let i = 0; i < l.length; i++) for (let k = i + 1; k < l.length; k++){
+    const a = l[i], b = l[k]; if (sonDistintas(a.id, b.id) || descendientes(a.id).has(b.id) || descendientes(b.id).has(a.id)) continue;
+    const g = parecidaLib(a.nombre, b.nombre); if (g) out.push({a, b, g});
+  }
+  return out.slice(0, 50);
+}
+// Arrastrar libretas con el ratón (ordenador): sobre otra libreta la mete dentro; sobre una pila o la ruta de arriba, la lleva allí
+(() => {
+  let arrastrada = null;
+  const destinoDe = el => { const t = el?.closest?.(".libreta[data-libid], .pila[data-pila], .bz-ruta [data-buzon^='c:'], [data-soltar-raiz]"); if (!t) return null;
+    if (t.matches(".libreta")) return t.dataset.libid !== arrastrada ? {el: t, padre: t.dataset.libid} : null;
+    if (t.matches(".pila")) return {el: t, pila: t.dataset.pila};
+    if (t.matches("[data-soltar-raiz]")) return {el: t, pila: ""};
+    return {el: t, padre: t.dataset.buzon.slice(2)}; };
+  document.addEventListener("dragstart", e => { const c = e.target.closest?.(".libreta[data-libid]"); if (!c) return; arrastrada = c.dataset.libid; e.dataTransfer.setData("text/plain", c.querySelector("b")?.textContent || ""); e.dataTransfer.effectAllowed = "move"; c.classList.add("arrastrando"); });
+  document.addEventListener("dragend", () => { arrastrada = null; document.querySelectorAll(".arrastrando,.soltar").forEach(x => x.classList.remove("arrastrando", "soltar")); });
+  document.addEventListener("dragover", e => { if (!arrastrada) return; const d = destinoDe(e.target); document.querySelectorAll(".soltar").forEach(x => x !== d?.el && x.classList.remove("soltar"));
+    if (!d || (d.padre && descendientes(arrastrada).has(d.padre))) return; e.preventDefault(); e.dataTransfer.dropEffect = "move"; d.el.classList.add("soltar"); });
+  document.addEventListener("drop", e => { if (!arrastrada) return; const d = destinoDe(e.target); if (!d) return; e.preventDefault(); const c = libPorId(arrastrada); arrastrada = null;
+    document.querySelectorAll(".arrastrando,.soltar").forEach(x => x.classList.remove("arrastrando", "soltar")); if (c) moverLibreta(c, d.padre ? {padre: d.padre} : {pila: d.pila}); });
+})();
+function tarjetaLibreta(c, ns = deNotas()){
+  const ids = descendientes(c.id), propias = ns.filter(n => n.carpeta === c.id), todas = ns.filter(n => ids.has(n.carpeta)), subs = ids.size - 1;
+  const p = todas.filter(n => !n.hecha && !enArchivo(n)).length;
+  const t = temaLibreta(c);
+  return `<div class="libreta" data-libid="${esc(c.id)}"${matchMedia("(pointer:fine)").matches ? ` draggable="true" title="Arrastra para moverla dentro de otra libreta"` : ""} style="--lib:${t.color}">${arteLibreta(t)}<button class="lib-abrir" data-buzon="c:${esc(c.id)}"><span class="lib-ic">${ic(t.icono || (subs ? "carpeta" : "libro"))}</span><b>${esc(c.nombre)}</b><small>${todas.length} nota${todas.length === 1 ? "" : "s"}${subs ? ` · ${subs} ${subs === 1 ? "libreta dentro" : "libretas dentro"}` : ""}${p ? ` · ${p} pendiente${p > 1 ? "s" : ""}` : ""}</small></button><button class="ibtn lib-menu" data-libm="${esc(c.id)}" aria-label="Editar la libreta">${ic("puntos")}</button></div>`;
+}
+function abrirBuzon(k){ buzon = k; busquedaGlobal = false; lsSet("chispa.buzon", k); cerrarDesp(); pintarNotas(); scrollTo(0, 0); }
+function buzonDeNota(n){ if (enArchivo(n)) return "Archivo"; const c = carpetaDe(n); if (c && !n.hecha) return c.nombre; const b = BUZONES.find(x => x.k !== "importantes" && x.k !== "todas" && x.f(n)); return b?.t || ""; }
+function pintarNotas(){
+  const q = norm($("#q").value).split(/\s+/).filter(Boolean);
+  const car = buzon?.startsWith("c:") ? archivadores().find(c => "c:" + c.id === buzon) : null;
+  if (buzon?.startsWith("c:") && !car) buzon = null;
+  const etq = buzon?.startsWith("e:") ? buzon.slice(2) : null;
+  const col = car || (etq ? {etq, nombre: "#" + etq} : null);   // una libreta o una etiqueta
+  if (!q.length && (buzon === "personas" || buzon?.startsWith("p:"))){ $("#filtros").classList.add("oculto"); buzon === "personas" ? pintarPersonas() : pintarFicha(buzon.slice(2)); return; }
+  const bz = BUZONES.find(x => x.k === buzon);
+  const ctxNombre = col ? col.nombre : bz && bz.k !== "todas" ? (bz.k === "completadas" ? "Hechas" : bz.t) : "";
+  const enContexto = q.length > 0 && !!ctxNombre && !busquedaGlobal;
+  $("#q").placeholder = ctxNombre && !busquedaGlobal ? `Buscar en ${ctxNombre}` : "Buscar en todo: textos, fotos, PDF y #etiquetas";
+  // --- portada del Cuaderno: buscar, vistas rápidas, crear, libretas, etiquetas y personas
+  if (!q.length && !bz && !col){
+    $("#filtros").classList.add("oculto"); $("#buzonCab").innerHTML = "";
+    const ns = deNotas(), libs = hijasDe(null), etqs = todasEtiquetas();
+    const vistas = BUZONES.filter(b => !b.soloOrg || organizar() || ns.some(b.f)).map(b => { const n = b.k === "todas" ? ns.length : ns.filter(b.f).length; return `<button class="vista ${b.k === "entrada" && n ? "dest" : ""}" data-buzon="${b.k}">${ic(b.ic)}${esc(b.k === "completadas" ? "Hechas" : b.t)}${n && b.k !== "completadas" && b.k !== "archivo" ? `<b>${n}</b>` : ""}</button>`; }).join("");
+    const pilas = [...new Set(libs.map(c => c.pila || ""))].sort((a, b) => (a === "") - (b === "") || a.localeCompare(b));
+    const tarjeta = c => tarjetaLibreta(c, ns);
+    const gente = personas().slice(0, 8);
+    $("#listaNotas").innerHTML = `<button class="preguntar" id="bzPreguntar">${ic("spark")}<span><b>Pregúntale a tus notas</b><small>${ia() ? "«¿Qué tengo esta semana?», «¿Qué hablé con el fontanero?»" : "Actívalo en Ajustes con tu clave de IA"}</small></span></button>
+      <div class="dia">Vistas rápidas</div><div class="vistas">${vistas}</div>
+      <div class="dia" data-soltar-raiz>Libretas <span class="c">${archivadores().length}</span></div>
+      ${pilas.map(p => { const l = libs.filter(c => (c.pila || "") === p); return `<div class="pila" data-pila="${esc(p)}">${p || pilas.length > 1 ? `<div class="pila-t">${ic("carpeta")}${esc(p || "Sin pila")}<span class="c">${l.length}</span></div>` : ""}<div class="libretas">${l.map(tarjeta).join("")}</div></div>`; }).join("")}
+      ${libs.length ? "" : `<p class="ayuda-b">Crea libretas para lo que quieras guardar: recetas, facturas, un viaje… Dentro de cada una puedes crear otras, y agruparlas en pilas.</p>`}
+      <button class="btn sec" id="bNuevaLib">${ic("mas")}Nueva libreta</button>
+      <div class="dia">Etiquetas <span class="c">${etqs.length}</span></div>
+      ${etqs.length ? `<div class="etq-nube">${etqs.map(([e, c]) => `<button class="etq" data-buzon="e:${esc(e)}">#${esc(e)}<i>${c}</i></button>`).join("")}</div>` : `<p class="ayuda-b">Escribe #algo en cualquier nota, o añádelas en el editor (Detalles › Etiquetas), y aparecerán aquí.</p>`}
+      ${gente.length ? `<div class="dia">Personas y asuntos</div><div class="gente">${gente.map(tarjetaPersona).join("")}<button class="persona-c ver-todas" data-buzon="personas">${ic("user")}<span><b>Ver todos</b><small>${personas().length}</small></span></button></div>` : ""}`;
+    $("#bzPreguntar").onclick = () => abrirPregunta();
+    $("#bNuevaLib").onclick = () => abrirLibreta(null);
+    return;
+  }
+
+  // --- dentro de un buzón (o buscando en todos)
+  $("#filtros").classList.remove("oculto");
+  if (!grupoAbierto) pintarFiltros(); else document.querySelectorAll(".desp").forEach(b => { const g = GRUPOS.find(x => x.k === b.dataset.g); b.querySelector(".d-val").textContent = resumenGrupo(g); b.classList.toggle("on", filtroActivo(g)); });
+  const titulo = enContexto ? `Resultados en ${ctxNombre}` : q.length ? "Resultados en todas las notas" : col ? col.nombre : bz.t;
+  const ruta = car ? rutaLib(car) : [];
+  $("#buzonCab").innerHTML = (car && (ruta.length > 1 || pilaDe(car)) ? `<nav class="bz-ruta" aria-label="Dónde estás">${pilaDe(car) ? `<span>${esc(pilaDe(car))}</span>${ic("adelante")}` : ""}${ruta.slice(0, -1).map(x => `<button data-buzon="c:${esc(x.id)}">${esc(x.nombre)}</button>${ic("adelante")}`).join("")}</nav>` : "")
+    + `<div class="bz-cab"><button class="ibtn" id="bzVolver" aria-label="Volver a los buzones">${ic("atras")}</button>
+    <div class="bz-tit"${car && !q.length ? ` style="--lib:${temaLibreta(car).color}"` : ""}>${car && !q.length ? `<span class="lib-ic">${ic(temaLibreta(car).icono || "libro")}</span>` : ic(q.length && !enContexto ? "buscar" : car ? "libro" : etq ? "tag" : bz.ic)}<span>${esc(titulo)}</span></div>
+    ${car ? `<button class="ibtn" id="bzMenu" aria-label="Opciones de la libreta">${ic("puntos")}</button>` : ""}</div>
+    ${car && !q.length ? `<div class="bz-nuevas"><button class="btn sec" id="bzNuevaEn">${ic("mas")}Nueva nota en esta libreta</button>${nivelLib(car) < MAX_NIVEL ? `<button class="btn sec" id="bzSubLib">${ic("carpeta")}Nueva libreta dentro ${chipPlus("jerarquia")}</button>` : ""}</div>` : ""}
+    ${q.length && ctxNombre ? `<button class="enl bz-alcance" id="bzAlcance">${ic("buscar")}${enContexto ? "Buscar en todas las notas" : `Buscar solo en ${esc(ctxNombre)}`}</button>` : ""}`;
+  if ($("#bzAlcance")) $("#bzAlcance").onclick = () => { busquedaGlobal = !busquedaGlobal; pintarNotas(); };
+  $("#bzVolver").onclick = () => { $("#q").value = ""; const pd = car && libPadre(car); abrirBuzon(pd ? "c:" + pd.id : null); };   // dentro de una libreta, se sube un nivel
+  $("#buzonCab").querySelectorAll(".bz-ruta [data-buzon]").forEach(b => b.onclick = () => { $("#q").value = ""; abrirBuzon(b.dataset.buzon); });
+  if ($("#bzSubLib")) $("#bzSubLib").onclick = () => conPlus("jerarquia", () => abrirLibreta(null, car.id));
+  if ($("#bzMenu")) $("#bzMenu").onclick = () => abrirLibreta(car);
+  if ($("#bzNuevaEn")) $("#bzNuevaEn").onclick = () => { const n = notaBase(new Date()); n.carpeta = car.id; abrirEdicion(n); };
+  const usarEstado = q.length || bz?.k === "todas";
+  const subLibs = car ? descendientes(car.id) : new Set();   // al buscar dentro de una libreta, también en las que tiene dentro
+  const hijasHtml = car && !q.length && hijasDe(car.id).length ? `<div class="dia">Libretas dentro <span class="c">${hijasDe(car.id).length}</span></div><div class="libretas">${hijasDe(car.id).map(c => tarjetaLibreta(c)).join("")}</div>${"" }` : "";
+  let lista = deNotas().filter(n => {
+    if (!q.length || enContexto){ if (car ? (q.length ? !subLibs.has(n.carpeta) : n.carpeta !== car.id) : etq ? !etiquetasDe(n).some(e => norm(e) === norm(etq)) : !bz.f(n)) return false; }
+    for (const g of GRUPOS){ if (g.k === "estado" && !usarEstado) continue; if (filtro[g.k].length && !filtro[g.k].includes(valorFiltro(n, g.k))) return false; }
+    if (q.length){ const h = norm([n.titulo, n.texto, n.transcripcion, etiquetasDe(n).map(e => "#" + e).join(" "), n.ia?.textoFotos, Object.values(n.textoArch || {}).join(" "), n.textoWeb, (n.archivos || []).map(a => a.nombre).join(" "), n.para?.nombre, CAT[n.para?.categoria], TIPOS[n.tipo]?.[0], n.terminal, fechaLarga(n.creada), n.fecha ? fechaLarga(n.fecha) : "", n.nocturna ? "noche nocturna" : "", n.ancla ? "ancla" : "", carpetaDe(n)?.nombre, n.importante ? "importante estrella" : "", n.ia?.textoFotos, n.ia?.resumen].join(" ")); if (!q.every(p => h.includes(p))) return false; }
+    return true;
+  });
+  if (!lista.length && hijasHtml){ $("#listaNotas").innerHTML = hijasHtml + `<p class="ayuda-b">Esta libreta no tiene notas sueltas: están en las libretas de dentro.</p>`; return; }
+  if (!lista.length){
+    $("#listaNotas").innerHTML = `<div class="vacio-grande"><div class="halo">${ic(q.length ? "buscar" : car ? "libro" : etq ? "tag" : bz.ic)}</div><b>${q.length ? "No hay notas con eso" : col ? (car ? "Libreta vacía" : "Sin notas con esa etiqueta") : "Nada por aquí"}</b><span>${q.length ? "Prueba con otra palabra o quita algún filtro." : car ? "Desde una nota, en Detalles › Libreta, elige esta libreta." : bz.d + "."}</span></div>`;
+    return;
+  }
+  // agrupación según el buzón
+  const hoy = hoyISO(), manana = masDias(1), semana = masDias(7), mes = iso => capital(new Date(iso).toLocaleDateString("es-ES", {month: "long", year: "numeric"}));
+  let grupoDe = n => etiquetaDia(n.creada), opciones = {hora: true};
+  if (bz?.k === "porhacer"){
+    lista.sort((a, b) => ((a.fecha || "9999") + (a.hora || "99")).localeCompare((b.fecha || "9999") + (b.hora || "99")));
+    grupoDe = n => !n.fecha ? "Sin fecha" : n.fecha < hoy ? "Atrasadas" : n.fecha === hoy ? "Hoy" : n.fecha === manana ? "Mañana" : n.fecha <= semana ? "Esta semana" : "Más adelante"; opciones = {};
+  } else if (bz?.k === "archivo"){ lista.sort((a, b) => (b.hechaEn || b.creada).localeCompare(a.hechaEn || a.creada)); grupoDe = n => mes(n.hechaEn || n.creada); }
+  else if (bz?.k === "completadas"){ lista.sort((a, b) => (b.hechaEn || b.creada).localeCompare(a.hechaEn || a.creada)); grupoDe = n => "Hechas " + etiquetaDia(n.hechaEn || n.creada).toLowerCase(); }
+  else if (col){ const orden = n => enArchivo(n) ? 2 : n.hecha ? 1 : 0; lista.sort((a, b) => orden(a) - orden(b) || b.creada.localeCompare(a.creada)); grupoDe = n => ["Pendientes", "Hechas", "Archivadas"][orden(n)]; }
+  else if (q.length && !enContexto){ grupoDe = n => buzonDeNota(n) || "Otras"; const pos = t => { const i = BUZONES.findIndex(b => b.t === t); return i < 0 ? 50 : i; }; lista.sort((a, b) => pos(buzonDeNota(a)) - pos(buzonDeNota(b)) || b.creada.localeCompare(a.creada)); }
+  lista = lista.slice(0, 400);
+  let html = `<div class="cuenta">${lista.length} ${lista.length === 1 ? "nota" : "notas"}${bz && !q.length ? ` · ${bz.d.toLowerCase()}` : ""}</div>${bz?.k === "entrada" && organizar() && lista.length && !q.length ? `<button class="aclarar" data-vaciar>${ic("bandeja")}<span><b>Vaciar la entrada</b><small>Decide qué es cada una, de una en una</small></span><span class="ir">Empezar</span></button>` : ""}`, grupo = null, abierto = false;
+  for (const n of lista){
+    const g = grupoDe(n);
+    if (g !== grupo){ if (abierto) html += "</div>"; html += `<div class="dia ${g === "Atrasadas" ? "venc" : ""}">${esc(g)}</div><div class="lista">`; grupo = g; abierto = true; }
+    html += fila(n, {...opciones, sinCarpeta: !!car});
+  }
+  $("#listaNotas").innerHTML = hijasHtml + (hijasHtml ? `<div class="dia">Notas</div>` : "") + html + (abierto ? "</div>" : "");
+  cargarMinis($("#listaNotas"));
+}
+$("#listaNotas").addEventListener("click", e => { const b = e.target.closest("[data-buzon]"); if (b) abrirBuzon(b.dataset.buzon); });
+// ---------- Ficha por cliente o contacto: todo lo hablado con esa persona
+function personas(){
+  const m = new Map(), cont = config.contactos || {};
+  const meter = (nombre, cat) => { const k = norm(nombre.trim()); if (!k) return null; if (!m.has(k)) m.set(k, {nombre: nombre.trim(), cat: cat || "", notas: [], ultima: ""}); const p = m.get(k); if (!p.cat && cat) p.cat = cat; return p; };
+  for (const c of LISTAS) for (const x of cont[c] || []) meter(x, c);
+  for (const n of deNotas()) if (n.para?.nombre){ const p = meter(n.para.nombre, n.para.categoria); p.notas.push(n); if (n.creada > p.ultima) p.ultima = n.creada; }
+  return [...m.values()].sort((a, b) => (b.ultima || "").localeCompare(a.ultima || "") || a.nombre.localeCompare(b.nombre));
+}
+const iniciales = t => t.split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0]).join("").toUpperCase();
+const esLlamada = n => /^llamada con /i.test(n.titulo || "");
+function tarjetaPersona(p){
+  const pend = p.notas.filter(n => !n.hecha && !enArchivo(n)).length;
+  return `<button class="persona-c" data-buzon="p:${esc(p.nombre)}"><i class="avatar av-${CAT[p.cat] ? p.cat : "otro"}">${esc(iniciales(p.nombre))}</i><span><b>${esc(p.nombre)}</b><small>${pend ? `${pend} pendiente${pend > 1 ? "s" : ""}` : p.notas.length ? `${p.notas.length} nota${p.notas.length > 1 ? "s" : ""}` : "Sin notas aún"}${p.ultima ? " · " + fechaRelativaCorta(p.ultima) : ""}</small></span></button>`;
+}
+function fechaRelativaCorta(iso){ const d = Math.round((new Date(isoDia(new Date())) - new Date(isoDia(new Date(iso)))) / 864e5); return d <= 0 ? "hoy" : d === 1 ? "ayer" : d < 7 ? `hace ${d} días` : d < 60 ? `hace ${Math.round(d / 7)} sem.` : `hace ${Math.round(d / 30)} meses`; }
+function cabFicha(titulo, icono){
+  $("#buzonCab").innerHTML = `<div class="bz-cab"><button class="ibtn" id="bzVolver" aria-label="Volver">${ic("atras")}</button><div class="bz-tit">${icono}<span>${esc(titulo)}</span></div></div>`;
+  $("#bzVolver").onclick = () => abrirBuzon(buzon?.startsWith("p:") && lsGet("chispa.desdePersonas") ? "personas" : null);
+}
+function pintarPersonas(){
+  cabFicha("Personas y asuntos", ic("user")); lsSet("chispa.desdePersonas", true);
+  const ps = personas(), grupos = [...catsVisibles().map(c => [c[0], c[2]]), ["", "Otros"]];
+  $("#listaNotas").innerHTML = ps.length ? grupos.map(([c, t]) => { const l = ps.filter(p => (p.cat || "") === c); return l.length ? `<div class="dia">${t} <span class="c">${l.length}</span></div><div class="gente">${l.map(tarjetaPersona).join("")}</div>` : ""; }).join("")
+    : `<div class="vacio-grande"><div class="halo">${ic("user")}</div><b>Aún no hay contactos</b><span>Cuando asignes una nota a alguien (Para quién) o anotes tras una llamada, aparecerá aquí.</span></div>`;
+}
+function pintarFicha(nombre){
+  const p = personas().find(x => norm(x.nombre) === norm(nombre)) || {nombre, cat: "", notas: []};
+  cabFicha(p.nombre, `<i class="avatar av-${CAT[p.cat] ? p.cat : "otro"}">${esc(iniciales(p.nombre))}</i>`);
+  const vivas = p.notas.filter(n => !enArchivo(n)), pend = vivas.filter(n => !n.hecha), llamadas = p.notas.filter(esLlamada);
+  const hoy = hoyISO(), conFecha = pend.filter(n => n.fecha).sort((a, b) => (a.fecha + (a.hora || "")).localeCompare(b.fecha + (b.hora || ""))), sinFecha = pend.filter(n => !n.fecha);
+  const historia = [...p.notas].sort((a, b) => b.creada.localeCompare(a.creada));
+  const mes = iso => capital(new Date(iso).toLocaleDateString("es-ES", {month: "long", year: "numeric"}));
+  let html = `<div class="ficha-cab">
+      <div class="ficha-datos"><span>${p.cat ? CAT[p.cat] : "Contacto"}</span><span><b>${pend.length}</b> pendiente${pend.length === 1 ? "" : "s"}</span><span><b>${llamadas.length}</b> llamada${llamadas.length === 1 ? "" : "s"} anotada${llamadas.length === 1 ? "" : "s"}</span>${p.ultima ? `<span>Último contacto ${fechaRelativaCorta(p.ultima)}</span>` : ""}</div>
+      <div class="ficha-acc"><button class="btn" id="fNueva">${ic("pluma")}Nueva nota</button><button class="btn sec" id="fVoz">${ic("mic")}Dictar</button>${p.notas.length ? `<button class="btn sec" id="fPdf">${ic("compartir")}Informe PDF</button>` : ""}${p.notas.length && ia() ? `<button class="btn sec" id="fPreg">${ic("spark")}Preguntar</button>` : ""}</div></div>`;
+  const bloque = (t, l, cls = "") => l.length ? `<div class="dia ${cls}">${t} <span class="c">${l.length}</span></div><div class="lista">${l.map(n => fila(n, {sinPersona: true})).join("")}</div>` : "";
+  html += bloque("Atrasado", conFecha.filter(n => n.fecha < hoy), "venc") + bloque("Próximo", conFecha.filter(n => n.fecha >= hoy)) + bloque("Pendiente sin fecha", sinFecha);
+  if (historia.length){
+    html += `<div class="dia">Historial</div>`; let g = null;
+    for (const n of historia){ const m = mes(n.creada); if (m !== g){ if (g) html += "</div>"; html += `<div class="sub-mes">${m}</div><div class="lista linea">`; g = m; } html += fila(n, {hora: false, sinPersona: true}); }
+    html += "</div>";
+  } else html += `<div class="vacio-grande"><div class="halo">${ic("user")}</div><b>Sin notas todavía</b><span>Lo que anotes para ${esc(p.nombre)} aparecerá aquí, ordenado en el tiempo.</span></div>`;
+  $("#listaNotas").innerHTML = html; cargarMinis($("#listaNotas"));
+  const nuevaPara = voz => { ver("anotar"); borrador.para = {categoria: p.cat || "", nombre: p.nombre}; tocado = true; pintarDetectado(); toast(`Nota para ${p.nombre}`, "user", 2500); if (voz){ if (!rec) empezarVoz(); } else setTimeout(() => $("#cTexto").focus(), 250); };
+  $("#fNueva").onclick = () => nuevaPara(false); if ($("#fPreg")) $("#fPreg").onclick = () => abrirPregunta(p.nombre); $("#fVoz").onclick = () => nuevaPara(true);
+  if ($("#fPdf")) $("#fPdf").onclick = async () => { const b = $("#fPdf"); b.disabled = true; try { await compartirArchivo(await fichaEnPdf(p), `Cuaderna - ${p.nombre.replace(/[\\/:*?"<>|]+/g, " ")} - ${hoyISO()}.pdf`, `Seguimiento de ${p.nombre}`); } catch(e){ toast(e.message || "No se pudo preparar el PDF", "alerta"); } finally { b.disabled = false; } };
+}
+// Informe de seguimiento de una persona: lo pendiente y el historial, en un PDF
+async function fichaEnPdf(p){
+  const jsPDF = await cargarJsPdf(), doc = new jsPDF({unit: "mm", format: "a4"}), W = 210, H = 297, M = 18, AN = W - 2 * M, TINTA = [43, 29, 20], GRIS = [122, 102, 82];
+  let y = 0;
+  const cab = () => { doc.setFillColor(...TINTA); doc.rect(0, 0, W, 20, "F"); doc.setFillColor(168, 50, 45); doc.circle(M + 3.6, 10, 3.9, "F"); doc.setTextColor(251, 243, 228); doc.setFont("times", "bold"); doc.setFontSize(10); doc.text("C", M + 3.6, 11.5, {align: "center"});
+    doc.setTextColor(255, 255, 255); doc.setFont("times", "bold"); doc.setFontSize(15); doc.text("Cuaderna", M + 9.5, 12.8); doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(222, 205, 180); doc.text("Seguimiento", W - M, 12.6, {align: "right"}); y = 32; };
+  const sitio = h => { if (y + h > H - 18){ doc.addPage(); cab(); } };
+  const txt = (t, {tam = 11, color = TINTA, estilo = "normal", sangria = 0} = {}) => { doc.setFont("helvetica", estilo); doc.setFontSize(tam); doc.setTextColor(...color); const a = tam * .3528 * 1.4;
+    for (const l of doc.splitTextToSize(latin1(t), AN - sangria)){ sitio(a); doc.text(l, M + sangria, y + a * .75); y += a; } };
+  cab(); txt(p.nombre, {tam: 20, estilo: "bold"}); txt(`${p.cat ? CAT[p.cat] + "  ·  " : ""}${p.notas.length} notas  ·  informe del ${new Date().toLocaleDateString("es-ES")}`, {tam: 9.5, color: GRIS}); y += 4;
+  const nota = n => { const pt = partesNota(n); y += 2; txt((n.hecha ? "[hecha] " : "") + (pt.titulo || pt.vacio || "Nota"), {estilo: "bold"});
+    const meta = [fechaLarga(n.creada)]; if (n.fecha) meta.push("para el " + fechaLarga(n.fecha) + (n.hora ? " " + n.hora : "")); txt(meta.join("  ·  "), {tam: 9, color: GRIS});
+    if (pt.desc) txt(pt.desc, {tam: 10.5}); for (const it of partirLista(n.texto).items) txt((it.hecho ? "[x] " : "[ ] ") + it.texto, {tam: 10.5, sangria: 3}); };
+  const pend = p.notas.filter(n => !n.hecha && !enArchivo(n)), resto = p.notas.filter(n => !pend.includes(n)).sort((a, b) => b.creada.localeCompare(a.creada));
+  if (pend.length){ y += 4; txt("PENDIENTE", {tam: 10, estilo: "bold", color: GRIS}); pend.forEach(nota); }
+  if (resto.length){ y += 6; txt("HISTORIAL", {tam: 10, estilo: "bold", color: GRIS}); resto.forEach(nota); }
+  const total = doc.getNumberOfPages(); for (let i = 1; i <= total; i++){ doc.setPage(i); doc.setFontSize(8); doc.setTextColor(163, 172, 189); doc.text("Compartido desde Cuaderna", M, H - 9); if (total > 1) doc.text(`${i} / ${total}`, W - M, H - 9, {align: "right"}); }
+  return doc.output("blob");
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-persona]"); if (!b) return; e.stopPropagation(); e.preventDefault(); lsSet("chispa.desdePersonas", false); cerrarHojas(); $("#q").value = ""; ver("notas"); abrirBuzon("p:" + b.dataset.persona); }, true);
+async function nuevaCarpeta(){
+  const nombre = (await pedirTexto({titulo: "Nueva libreta", icono: "libro", marcador: "Por ejemplo, Casa nueva o Viaje a Lisboa", ok: "Crear"}) || "").trim(); if (!nombre) return null;
+  const ya = archivadores().find(c => norm(c.nombre) === norm(nombre)); if (ya) return ya;
+  const c = {id: "c" + Date.now().toString(36), nombre}; config.carpetas = [...archivadores(), c]; guardarConfig(); toast(`Libreta «${nombre}» creada`, "libro"); return c;
+}
+function menuCarpeta(c){
+  const op = prompt(`Archivador «${c.nombre}»\n\nEscribe un nombre nuevo para renombrarlo, o escribe BORRAR para eliminarlo (las notas no se borran, solo salen del archivador).`, c.nombre);
+  if (op === null) return;
+  const v = op.trim();
+  if (v.toUpperCase() === "BORRAR"){
+    config.carpetas = archivadores().filter(x => x.id !== c.id); guardarConfig();
+    for (const n of notas.filter(x => x.carpeta === c.id)){ delete n.carpeta; guardarNotaLocal(n); }
+    toast(`Archivador «${c.nombre}» eliminado`, "borrar"); abrirBuzon(null); return;
+  }
+  if (v && v !== c.nombre){ c.nombre = v; config.carpetas = [...archivadores()]; guardarConfig(); pintarNotas(); toast("Nombre cambiado", "check"); }
+}
+
+// Estadísticas
+const contar = (l, f) => { const o = {}; for (const n of l){ const k = f(n); if (k) o[k] = (o[k] || 0) + 1; } return o; };
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const PERIODOS = [["7", "7 días"], ["30", "30 días"], ["90", "3 meses"], ["365", "Un año"], ["0", "Todo"]];
+let periodo = lsGet("chispa.periodo") || "30";
+function barrasLista(filas, opts = {}){
+  // filas: [{et, v, sub?}] ya ordenadas; ancho proporcional al máximo
+  if (!filas.length) return `<div class="cuenta">${opts.vacio || "Aún sin datos en este periodo."}</div>`;
+  const top = Math.max(...filas.map(f => f.v), 1), total = opts.total || 0;
+  return filas.map(f => `<div class="bar" data-tip="${esc(f.tip || `${f.et}: ${f.v} ${f.v === 1 ? "nota" : "notas"}`)}">
+    <div class="et">${esc(f.et)}${f.sub ? `<small>${esc(f.sub)}</small>` : ""}</div>
+    <div class="pi"><i style="width:${Math.max(2, f.v / top * 100)}%;background:${opts.color || "var(--cw)"}"></i></div>
+    <div class="v">${f.v}${total ? `<small>${pct(f.v, total)}%</small>` : ""}</div></div>`).join("");
+}
+function cubos(desde, dias){
+  // agrupa por día, semana o mes según la longitud del periodo, siempre en orden cronológico
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const modo = dias && dias <= 31 ? "dia" : dias && dias <= 120 ? "semana" : "mes";
+  const lunes = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+  const clave = d => modo === "dia" ? isoDia(d) : modo === "semana" ? isoDia(lunes(d)) : `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+  const lista = [];
+  if (modo === "dia"){ for (let d = new Date(desde); d <= hoy; d.setDate(d.getDate() + 1)) lista.push({k: clave(d), et: d.toLocaleDateString("es-ES", {day: "numeric", month: "short"}).replace(".", ""), d: new Date(d)}); }
+  else if (modo === "semana"){ for (let d = lunes(desde); d <= hoy; d.setDate(d.getDate() + 7)) lista.push({k: clave(d), et: "Semana del " + d.toLocaleDateString("es-ES", {day: "numeric", month: "short"}).replace(".", ""), d: new Date(d)}); }
+  else { const ini = new Date(desde.getFullYear(), desde.getMonth(), 1); for (let d = ini; d <= hoy; d.setMonth(d.getMonth() + 1)) lista.push({k: clave(d), et: capital(d.toLocaleDateString("es-ES", {month: "long", year: "numeric"})), d: new Date(d)}); }
+  return {modo, lista, clave};
+}
+function pintarEstad(){
+  const todas = deNotas(), ahora = Date.now(), dias = Number(periodo);
+  const primera = todas.length ? new Date(todas[todas.length - 1].creada) : new Date();
+  const desde = dias ? new Date(new Date().setHours(0, 0, 0, 0) - (dias - 1) * 864e5) : new Date(primera.getFullYear(), primera.getMonth(), primera.getDate());
+  const enPer = n => new Date(n.creada) >= desde;
+  const ns = todas.filter(enPer);
+  const previas = dias ? todas.filter(n => { const t = new Date(n.creada); return t < desde && t >= new Date(desde - dias * 864e5); }) : [];
+  const hechas = ns.filter(n => n.hecha).length;
+  const pendTodas = todas.filter(n => !n.hecha && !n.ancla && (n.tipo !== "nota" || n.fecha));
+  const vencidas = pendTodas.filter(n => n.fecha && n.fecha < hoyISO()).length;
+  const delta = ns.length - previas.length;
+  const deltaTxt = !dias ? "desde tu primera nota" : !previas.length ? "sin datos del periodo anterior" : delta === 0 ? "igual que el periodo anterior" : `${delta > 0 ? "+" : ""}${delta} frente al periodo anterior`;
+
+  // Actividad en el tiempo
+  const {lista, clave} = cubos(desde, dias || Math.ceil((ahora - desde) / 864e5) + 1);
+  const anot = {}, comp = {};
+  for (const n of ns) anot[clave(new Date(n.creada))] = (anot[clave(new Date(n.creada))] || 0) + 1;
+  for (const n of todas) if (n.hecha && n.hechaEn && new Date(n.hechaEn) >= desde) comp[clave(new Date(n.hechaEn))] = (comp[clave(new Date(n.hechaEn))] || 0) + 1;
+  const maxA = Math.max(1, ...lista.map(c => anot[c.k] || 0));
+  const cada = Math.ceil(lista.length / 6);
+  const columnas = lista.map((c, i) => { const a = anot[c.k] || 0, h = comp[c.k] || 0;
+    return `<div class="col" data-tip="${esc(c.et)}: ${a} ${a === 1 ? "anotada" : "anotadas"}${h ? `, ${h} ${h === 1 ? "completada" : "completadas"}` : ""}"><i style="height:${a ? Math.max(4, a / maxA * 100) : 0}%"></i><span>${i % cada === 0 || i === lista.length - 1 ? esc(c.et.replace("Semana del ", "")) : ""}</span></div>`; }).join("");
+
+  // Para quién y con quién
+  const porCat = Object.entries(contar(ns, n => n.para?.categoria ? CAT[n.para.categoria] : "Sin indicar")).sort((a, b) => b[1] - a[1]).map(([et, v]) => ({et, v}));
+  const personas = {};
+  for (const n of ns){ const nom = n.para?.nombre; if (!nom || n.para.categoria === "personal") continue;
+    const p = personas[nom] ||= {et: nom, v: 0, pend: 0, cat: CAT[n.para.categoria] || ""}; p.v++; if (!n.hecha && n.tipo !== "nota") p.pend++; }
+  const top = Object.values(personas).sort((a, b) => b.v - a.v).slice(0, 8).map(p => ({...p, sub: [p.cat, p.pend ? `${p.pend} ${p.pend === 1 ? "pendiente" : "pendientes"}` : ""].filter(Boolean).join(", "),
+    tip: `${p.et}: ${p.v} ${p.v === 1 ? "nota" : "notas"}${p.pend ? `, ${p.pend} sin cerrar` : ""}`}));
+
+  // Trabajo y personal
+  const trab = ns.filter(n => n.ambito !== "personal").length, pers = ns.length - trab;
+
+  // Cuándo se te ocurren las cosas
+  const FRANJAS = [[0, 7, "0-7"], [7, 10, "7-10"], [10, 13, "10-13"], [13, 16, "13-16"], [16, 19, "16-19"], [19, 22, "19-22"], [22, 24, "22-24"]];
+  const DSEM = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"], DLARGO = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábados", "domingos"];
+  const mapa = DSEM.map(() => FRANJAS.map(() => 0));
+  for (const n of ns){ const d = new Date(n.creada), dia = (d.getDay() + 6) % 7, h = d.getHours(); const f = FRANJAS.findIndex(([a, b]) => h >= a && h < b); mapa[dia][f]++; }
+  const maxM = Math.max(1, ...mapa.flat());
+  let mejor = null; mapa.forEach((fila, i) => fila.forEach((v, j) => { if (v && (!mejor || v > mejor.v)) mejor = {v, i, j}; }));
+  const titular = mejor ? `Donde más anotas: los ${DLARGO[mejor.i]}${mejor.j === 0 ? " de madrugada" : `, de ${FRANJAS[mejor.j][0]} a ${FRANJAS[mejor.j][1]} h`}.` : "";
+  const calor = `<div class="calor"><span></span>${FRANJAS.map(f => `<span class="ej">${f[2]}</span>`).join("")}
+    ${mapa.map((fila, i) => `<span class="ej">${DSEM[i]}</span>` + fila.map((v, j) => `<b data-tip="${DLARGO[i].replace(/s$/, "")} ${j === 0 ? "de madrugada" : FRANJAS[j][2] + " h"}: ${v} ${v === 1 ? "nota" : "notas"}" style="--a:${v ? 0.18 + 0.82 * v / maxM : 0}"></b>`).join("")).join("")}</div>`;
+
+  // Cómo anotas
+  const formas = [
+    {et: "Voz", v: ns.filter(n => n.audio).length}, {et: "Texto", v: ns.filter(n => !n.audio && !n.ancla && n.texto && !(n.fotos || []).some(f => f.includes("trazo"))).length},
+    {et: "A mano", v: ns.filter(n => (n.fotos || []).some(f => f.includes("trazo"))).length}, {et: "Foto", v: ns.filter(n => (n.fotos || []).some(f => !f.includes("trazo"))).length},
+    {et: "Ancla", v: ns.filter(n => n.ancla).length}
+  ].filter(f => f.v).sort((a, b) => b.v - a.v);
+  const dispositivos = Object.entries(contar(ns, n => n.terminal || "Sin nombre")).sort((a, b) => b[1] - a[1]).map(([et, v]) => ({et, v}));
+
+  // Cumplimiento
+  const cerradas = todas.filter(n => n.hecha && n.hechaEn && new Date(n.hechaEn) >= desde);
+  const diasMedio = cerradas.length ? cerradas.reduce((s, n) => s + (new Date(n.hechaEn) - new Date(n.creada)), 0) / cerradas.length / 864e5 : null;
+  const conFecha = cerradas.filter(n => n.fecha), aTiempo = conFecha.filter(n => isoDia(new Date(n.hechaEn)) <= n.fecha).length;
+  const fmtDias = d => d < 1 ? (d * 24 < 1 ? "menos de 1 h" : `${Math.round(d * 24)} h`) : `${d.toFixed(d < 10 ? 1 : 0).replace(".", ",")} días`;
+
+  $("#vEstad").innerHTML = cab("Estadísticas", "Para quién trabajas y cómo anotas", "ajustes")
+    + `<div class="filtros" id="fPer">${PERIODOS.map(([v, t]) => `<button class="fchip ${periodo === v ? "on" : ""}" data-per="${v}">${t}</button>`).join("")}</div>`
+    + (!todas.length ? `<div class="vacio-grande"><div class="halo">${ic("grafico")}</div><b>Aún no hay datos</b><span>Cuando anotes, aquí verás para quién trabajas y cuándo se te ocurren las cosas.</span></div>` : `
+    <div class="kpis">
+      <div class="kpi"><b>${ns.length}</b><span>anotadas</span><em class="${delta > 0 ? "sube" : ""}">${deltaTxt}</em></div>
+      <div class="kpi"><b>${pct(hechas, ns.length)}%</b><span>completadas</span><em>${hechas} de ${ns.length}</em></div>
+      <div class="kpi"><b>${pendTodas.length}</b><span>pendientes ahora</span><em class="${vencidas ? "mal" : ""}">${vencidas ? `${vencidas} ${vencidas === 1 ? "vencida" : "vencidas"}` : "ninguna vencida"}</em></div>
+      <div class="kpi"><b>${ns.filter(n => n.nocturna).length}</b><span>ideas nocturnas</span><em>${pct(ns.filter(n => n.nocturna).length, ns.length)}% de lo anotado</em></div>
+    </div>
+    <div class="panel"><h3>Actividad</h3><p class="nota-panel">Notas anotadas en el periodo. Pasa el dedo o el ratón por una barra para ver el detalle.</p><div class="columnas">${columnas}</div></div>
+    <div class="dos">
+      <div class="panel"><h3>Para quién</h3>${barrasLista(porCat, {total: ns.length})}</div>
+      <div class="panel"><h3>Trabajo y personal</h3>
+        ${ns.length ? `<div class="reparto" role="img" aria-label="Trabajo ${trab}, personal ${pers}"><i style="flex:${trab || 0.0001};background:var(--cw)" data-tip="Trabajo: ${trab}"></i><i style="flex:${pers || 0.0001};background:var(--cp)" data-tip="Personal: ${pers}"></i></div>
+        <div class="leyenda"><span><i style="background:var(--cw)"></i>Trabajo <b>${trab}</b> (${pct(trab, ns.length)}%)</span><span><i style="background:var(--cp)"></i>Personal <b>${pers}</b> (${pct(pers, ns.length)}%)</span></div>` : `<div class="cuenta">Aún sin datos en este periodo.</div>`}
+        <h3 style="margin-top:22px">Cómo anotas</h3>${barrasLista(formas, {total: ns.length, color: "var(--spark)"})}
+      </div>
+    </div>
+    <div class="panel"><h3>Con quién más trabajas</h3>${barrasLista(top, {vacio: "Cuando pongas para quién es cada nota, aparecerán aquí."})}</div>
+    <div class="panel"><h3>Cuándo se te ocurren las cosas</h3>${titular ? `<p class="titular">${titular}</p>` : ""}${calor}</div>
+    <div class="dos">
+      <div class="panel"><h3>Cumplimiento</h3>${cerradas.length ? `
+        <div class="mini-kpi"><b>${fmtDias(diasMedio)}</b><span>tardas de media en cerrar una nota</span></div>
+        ${conFecha.length ? `<div class="mini-kpi"><b>${pct(aTiempo, conFecha.length)}%</b><span>de lo que tenía fecha lo cerraste a tiempo</span></div>` : ""}` : `<div class="cuenta">Se calcula con lo que marques como hecho a partir de ahora.</div>`}</div>
+      <div class="panel"><h3>Desde dónde anotas</h3>${barrasLista(dispositivos, {total: ns.length})}</div>
+    </div>`);
+  document.querySelectorAll("[data-per]").forEach(b => b.onclick = () => { periodo = b.dataset.per; lsSet("chispa.periodo", periodo); pintarEstad(); });
+}
+// Detalle al pasar por encima (o al tocar en el móvil)
+(() => {
+  const tip = document.createElement("div"); tip.className = "tip"; document.body.appendChild(tip); let t = 0;
+  const mostrar = (el, x, y) => { tip.textContent = el.dataset.tip; tip.classList.add("on");
+    const w = tip.offsetWidth; tip.style.left = Math.max(8, Math.min(innerWidth - w - 8, x - w / 2)) + "px"; tip.style.top = (y - tip.offsetHeight - 14) + "px"; };
+  document.addEventListener("pointermove", e => { const el = e.target.closest("#vEstad [data-tip]"); if (el && e.pointerType === "mouse") mostrar(el, e.clientX, e.clientY); else if (e.pointerType === "mouse") tip.classList.remove("on"); });
+  document.addEventListener("pointerdown", e => { const el = e.target.closest("#vEstad [data-tip]"); if (el && e.pointerType !== "mouse"){ mostrar(el, e.clientX, e.clientY); clearTimeout(t); t = setTimeout(() => tip.classList.remove("on"), 2200); } });
+  addEventListener("scroll", () => tip.classList.remove("on"), {passive: true});
+})();
+
+// Ajustes
+function pintarAjustes(){
+  const c = config, cont = c.contactos || {};
+  const plan = acceso?.admin || acceso?.plan === "plus" ? "plus" : acceso?.plan === "fundador" ? "fundador" : "basico";
+  const textoPlan = !plusExigido() ? ["Cuaderna Plus, gratis durante la prueba", "Ahora tienes todas las funciones. Las marcadas como Plus serán de pago más adelante."]
+    : plan === "plus" ? ["Cuaderna Plus", "Tienes todas las funciones, sin límite diario de IA ni de voz."]
+    : plan === "fundador" ? ["Fundador de Cuaderna", "Gracias por probarla desde el principio: tienes todas las funciones gratis de por vida, con un uso diario de IA y voz generoso."]
+    : ["Cuaderna gratis", "Anotar, organizar, recordar e importar no tienen límite. Plus añade " + Object.values(FUNCIONES_PLUS).map(f => f[0].toLowerCase()).join(", ") + "."];
+  const u = acceso?.uso, conLimite = plusExigido() && plan !== "plus" && u;
+  const filaIA = !apiBase() || iaPropia() ? ""
+    : iaServidor() ? `<div class="ajuste">${ic("spark")}<div class="lbl">IA y voz incluidas<small>${conLimite ? `Hoy llevas ${u.ia} de ${u.iaMax} usos de IA y ${u.vozMin} de ${u.vozMax} minutos de voz` : "Ordenan tus notas, leen fotos y pasan la voz a texto"}</small></div></div>`
+    : `<div class="ajuste">${ic("spark")}<div class="lbl">IA y voz de Cuaderna<small>${!token ? "Conecta una cuenta de Microsoft o Google para usar la inteligencia artificial y la voz a texto" : acceso?.estado === "bloqueado" ? "No tienes acceso a la IA ni a la voz" : "Pedidas. En cuanto te autoricen, la IA ordenará tus notas y la voz se pasará a texto sola"}</small></div>${token && acceso?.estado !== "bloqueado" ? `<button class="btn sec" id="kAccesoOtra">Comprobar</button>` : ""}</div>`;
+  $("#vAjustes").innerHTML = cab("Ajustes")
+    + `<h2 class="aj-bloque">Tu cuenta</h2>
+    <div class="grupo"><div class="caja">
+      ${modoLocal() ? `<div class="ajuste conectar-arriba">${ic("nube")}<div class="lbl">Conecta tu cuenta<small>Ahora tus notas están solo en este dispositivo: si borras la app o pierdes el móvil, se pierden. Entra con Google o Microsoft y se suben todas a tu nube; así las verás también en el ordenador y en el móvil.</small></div><button class="btn" id="kConectar">Conectar</button></div>`
+      : `<div class="ajuste">${ic("user")}<div class="lbl">${esc(lsGet("chispa.usuario") || (esGoogle() ? "Cuenta de Google" : "Cuenta de Microsoft"))}<small>${esGoogle() ? "Tus notas están en tu Google Drive, en la carpeta Cuaderna" : "Tus notas están en tu OneDrive, en la carpeta Aplicaciones"}</small></div><button class="btn sec" id="kSalir">${ic("salir")}Salir</button></div>
+      <div class="ajuste" id="kEspacio">${ic("nube")}<div class="lbl">Espacio en tu ${nube()}<small>Mirando…</small></div></div>`}
+      <div class="ajuste">${ic("spark")}<div class="lbl">${textoPlan[0]}${plan === "basico" && !plusExigido() ? "" : plan === "fundador" ? ` <span class="plus-chip fund">Fundador</span>` : plan === "plus" ? ` <span class="plus-chip">Plus</span>` : ""}<small>${textoPlan[1]}</small></div><button class="btn sec" id="kPlus">Ver Plus</button></div>
+      ${filaIA}
+    </div></div>
+
+    <h2 class="aj-bloque">Cómo funciona Cuaderna</h2>
+    <div class="grupo"><h3>Al anotar</h3><div class="caja">
+      <div class="ajuste">${ic("maletin")}<div class="lbl">Trabajo o personal<small>Dónde van las notas nuevas si no dices otra cosa</small></div><select id="kAmb"><option value="trabajo">Trabajo</option><option value="personal">Personal</option></select></div>
+      <div class="ajuste">${ic("mic")}<div class="lbl">Pasar la voz a texto<small>El audio se guarda siempre</small></div><select id="kTrans"><option value="1">Sí</option><option value="0">No</option></select></div>
+      <div class="ajuste">${ic("spark")}<div class="lbl">Ordenar las notas solas<small>La IA pone título, resumen, tareas, para quién y fecha, y lee las fotos</small></div><select id="kIaAuto"><option value="1">Sí</option><option value="0">No</option></select></div>
+      <div class="ajuste">${ic("user")}<div class="lbl">Sobre ti<small>Una frase para que la IA te entienda: a qué te dedicas, quién es quién en tus notas…</small></div><textarea id="kSobre" rows="2" placeholder="Ej.: Soy enfermera, tengo dos hijos y estoy reformando la casa">${esc(sobreMi())}</textarea></div>
+      <div class="ajuste">${ic("tarea")}<div class="lbl">Ayúdame a organizarme<small>Cada tarea dice dónde se hace (llamadas, ordenador, fuera, casa) y puedes dejar cosas para «algún día» sin que estorben en Hoy</small></div><select id="kOrg"><option value="0">No</option><option value="1">Sí</option></select></div>
+      <div class="ajuste">${ic("pin")}<div class="lbl">Guardar dónde anotas<small>La ubicación se guarda en la nota, en tu nube</small></div><select id="kUbi"><option value="0">No</option><option value="1">Sí</option></select></div>
+      <div class="ajuste">${ic("movil")}<div class="lbl">Nombre de este dispositivo<small>Para saber desde dónde anotaste cada nota</small></div><input type="text" id="kTerm" value="${esc(disp.terminal)}" placeholder="Por ejemplo, ${esMovil() ? "Móvil profesional" : "PC oficina"}"></div>
+    </div></div>
+    <div class="grupo"><h3>Aspecto</h3><div class="caja">
+      <div class="ajuste">${ic("sun")}<div class="lbl">Tema</div><select id="kTema"><option value="auto">Como el sistema</option><option value="claro">Claro</option><option value="oscuro">Oscuro</option></select></div>
+      <div class="ajuste">${ic("luna")}<div class="lbl">Modo noche<small>En este horario la pantalla se pone negra y las notas se marcan como nocturnas</small></div><input type="time" id="kDesde" value="${c.nocheDesde}"><input type="time" id="kHasta" value="${c.nocheHasta}"></div>
+      <div class="ajuste">${ic("ayuda")}<div class="lbl">Explicar los botones<small>${esMovil() ? "Al mantener pulsado un botón" : "Al pasar el ratón por encima"}</small></div><select id="kAyudas"><option value="1">Sí</option><option value="0">No</option></select></div>
+    </div></div>
+    ${esApp() ? `<div class="grupo"><h3>Teléfono y coche</h3><div class="caja" id="kTelefono"><div class="ajuste"><div class="lbl">Cargando…</div></div></div></div>` : ""}
+    <div class="grupo"><h3>Pregunta de la mañana</h3><div class="caja" id="kSuenos">${esApp() ? `<div class="ajuste"><div class="lbl">Cargando…</div></div>` : `<div class="ajuste">${ic("luna")}<div class="lbl">«¿Has pensado esta noche en algo?»<small>Solo en la app de Android: te lo pregunta unos minutos después de que suene tu despertador, y lo que anotes va al buzón Sueños</small></div></div>`}</div></div>
+    ${esGoogle() ? `<div class="grupo"><h3>Correo y calendario</h3><div class="caja"><div class="ajuste">${ic("mail")}<div class="lbl">Con cuenta de Google<small>El resumen diario por correo y el calendario de Outlook necesitan una cuenta de Microsoft. Para pasar notas a otros, usa WhatsApp.</small></div></div></div></div>` : ""}
+    <div class="grupo ${esGoogle() ? "oculto" : ""}"><h3>Resumen diario por correo</h3><div class="caja">
+      <div class="ajuste">${ic("mail")}<div class="lbl">Enviarlo<small>Solo llega si hay algo para hoy, atrasado, de la semana o anotado ayer</small></div><select id="kResAct"><option value="1">Sí</option><option value="0">No</option></select><input type="time" id="kResHora" value="${esc(c.resumenHora || "07:30")}"></div>
+      <div class="ajuste">${ic("maletin")}<div class="lbl">Correo de trabajo</div><input type="email" id="kCT" value="${esc(c.correoTrabajo)}" placeholder="tu correo del trabajo"></div>
+      <div class="ajuste">${ic("casa")}<div class="lbl">Correo personal</div><input type="email" id="kCP" value="${esc(c.correoPersonal)}" placeholder="tu correo personal"></div>
+      ${esApp() ? `<div id="kCorreo"><div class="ajuste"><div class="lbl">Cargando…</div></div></div>` : ""}
+      <div id="kCorreoWeb"></div>
+    </div></div>
+    <div class="grupo ${esGoogle() ? "oculto" : ""}"><h3>Calendario de Outlook</h3><div class="caja" id="kCal"></div></div>
+
+    <h2 class="aj-bloque">Tus datos</h2>
+    <div class="grupo"><div class="caja">
+      <div class="ajuste">${ic("escoba")}<div class="lbl">Revisión de Cuaderna ${chipPlus("revision")}<small>Notas olvidadas, repetidas, vacías y lo que más ocupa. Tú decides qué archivar o borrar</small></div><button class="btn sec" id="bRevision">Revisar</button></div>
+      <div class="ajuste">${ic("nota")}<div class="lbl">Importar de OneNote<small>Tus blocs de notas con texto, imágenes y adjuntos. No cambia nada en OneNote</small></div><button class="btn sec" id="bOneNote">Importar</button></div>
+      <div class="ajuste">${ic("archivo")}<div class="lbl">Importar de Evernote<small>Un archivo .enex exportado desde Evernote, con fotos, archivos y etiquetas</small></div><button class="btn sec" id="bEnex">Importar</button><input type="file" id="inEnex" accept=".enex,application/xml,text/xml" multiple class="oculto"></div>
+      <div class="ajuste">${ic("subir")}<div class="lbl">Exportarlo todo<small>Un ZIP con tus notas en Markdown, que se abre con cualquier editor, y si quieres fotos y archivos</small></div><button class="btn sec" id="bExportar">Exportar</button></div>
+      <div class="ajuste">${ic("grafico")}<div class="lbl">Estadísticas<small>Cuánto anotas, con quién y cuándo se te ocurren las cosas</small></div><button class="btn sec" data-ir="estad">Ver</button></div>
+    </div></div>
+    ${esMovil() ? "" : `<div class="grupo"><h3>Usar Cuaderna en el móvil</h3><div class="caja">
+      <div class="ajuste"><div class="lbl">En Android, instala la app desde Google Play. En iPhone, abre <b>${esc(REDIRECT)}</b> en Safari y elige «Añadir a pantalla de inicio». O escanea el código con el móvil.</div></div>
+      <div class="ajuste">${ic("movil")}<input type="text" id="kMovNom" value="Móvil profesional"><select id="kMovAmb"><option value="trabajo">Trabajo</option><option value="personal">Personal</option></select><button class="btn sec" id="kQR">Ver código QR</button></div>
+      <div id="qr" style="text-align:center"></div>
+    </div></div>`}
+
+    <h2 class="aj-bloque">Ayuda y contacto</h2>
+    <div class="grupo"><div class="caja">
+      <div class="ajuste">${ic("ayuda")}<div class="lbl">Ayuda y novedades<small>Cómo funciona cada cosa, el recorrido guiado y lo nuevo de cada versión</small></div><button class="btn sec" data-ir="ayuda">Abrir</button></div>
+      ${modoLocal() ? "" : `<div class="ajuste">${ic("idea")}<div class="lbl">¿Qué mejorarías?<small>Cuéntalo y le llega directamente a quien hace Cuaderna</small></div><button class="btn sec" id="kSug">Escribir</button></div>`}
+      <div class="ajuste">${ic("movil")}<div class="lbl">Versión ${VERSION}${esApp() && infoApp?.version ? ` · app Android ${esc(infoApp.version)}` : ""}<small>${esApp() ? "La app se actualiza desde Google Play; las mejoras de Cuaderna llegan solas al abrirla" : "Las mejoras llegan solas al abrir Cuaderna"}</small></div>${esApp() ? `<button class="btn sec" id="kActualizar">Google Play</button>` : ""}</div>
+      <div class="ajuste">${ic("candado")}<div class="lbl">Privacidad<small>Qué datos usa Cuaderna y dónde se guardan</small></div><a class="btn sec" href="privacidad.html" target="_blank" rel="noopener">Leer</a></div>
+    </div></div>
+
+    <details class="aj-avanzado"><summary>Avanzado<small>Solo si usas tu propio servicio de inteligencia artificial o de voz en Azure. Normalmente no hace falta tocar nada.</small></summary>
+    <div class="grupo"><h3>Inteligencia artificial propia</h3><div class="caja">
+      ${esMovil() ? `<div class="ajuste">${ic("spark")}<div class="lbl">Azure OpenAI<small>${iaPropia() ? "Activa con tu propio servicio" : "Sin configurar. Se configura desde el ordenador"}</small></div></div>` : `
+      <div class="ajuste">${ic("spark")}<div class="lbl">Punto de conexión<small>La dirección que acaba en .openai.azure.com/</small></div><input type="text" id="kIaUrl" value="${esc(c.ia?.endpoint || "")}" placeholder="https://mi-ia.openai.azure.com/" autocomplete="off" spellcheck="false"></div>
+      <div class="ajuste">${ic("ajustes")}<div class="lbl">Clave<small>Se guarda en tu nube, en tu configuración de Cuaderna</small></div><input type="text" id="kIaClave" value="${esc(c.ia?.clave || "")}" placeholder="Pega aquí la clave" autocomplete="off" spellcheck="false"></div>
+      <div class="ajuste">${ic("tag")}<div class="lbl">Nombre de la implementación</div><input type="text" id="kIaDep" value="${esc(c.ia?.despliegue || "gpt-4.1-mini")}" style="max-width:180px"><button class="btn sec" id="kIaProbar">Probar</button><span class="estado-t" id="kIaEstado"></span></div>`}
+    </div></div>
+    <div class="grupo"><h3>Voz a texto propia</h3><div class="caja">
+      ${esMovil() ? `<div class="ajuste">${ic("mic")}<div class="lbl">Azure Speech<small>${vozPropia() ? "Activa con tu propio servicio" : "Sin configurar. Se configura desde el ordenador"}</small></div></div>` : `
+      <div class="ajuste">${ic("mic")}<div class="lbl">Clave de Azure Speech<small>Se guarda en tu nube, en tu configuración de Cuaderna</small></div><input type="text" id="kVozClave" value="${esc(c.voz?.clave || "")}" placeholder="Pega aquí la clave" autocomplete="off" spellcheck="false"></div>
+      <div class="ajuste">${ic("pin")}<div class="lbl">Región</div><input type="text" id="kVozRegion" value="${esc(c.voz?.region || "westeurope")}" style="max-width:180px"><button class="btn sec" id="kVozProbar">Probar</button><span class="estado-t" id="kVozEstado"></span></div>`}
+    </div></div>
+    </details>
+    <a class="autoria firma-enl" href="https://astillerosoftware.es/?utm_source=cuaderna" target="_blank" rel="noopener"><img class="marca" src="astillero.svg" alt="Astillero"><div>Cuaderna ${VERSION}${esApp() ? ` · app Android ${esc(infoApp?.version || "")}` : ""}<small>Una app de Astillero · astillerosoftware.es</small></div></a>`;
+  pintarTelefono(); pintarCorreo(); pintarCorreoWeb(); pintarCalendario(); pintarSuenos(); pintarEspacio();
+  $("#kResAct").value = c.resumenActivo === false ? "0" : "1"; $("#kIaAuto").value = c.ia?.auto === false || c.iaAuto === false ? "0" : "1";
+  $("#kAmb").value = disp.ambito || "trabajo"; $("#kTrans").value = disp.trans === false ? "0" : "1"; $("#kUbi").value = disp.ubi ? "1" : "0"; $("#kTema").value = disp.tema || "auto"; $("#kAyudas").value = ayudasOn() ? "1" : "0"; $("#kOrg").value = organizar() ? "1" : "0";
+  $("#kOrg").onchange = e => { config.organizar = e.target.value === "1"; guardarConfig(); toast(config.organizar ? "Listo: en cada nota verás «Dónde» y «Algún día»" : "Desactivado: tus notas no cambian", "tarea", 4500); }; $("#kAyudas").onchange = e => { lsSet("chispa.ayudas", e.target.value === "1"); toast(e.target.value === "1" ? "Ayudas activadas" : "Ayudas desactivadas"); };
+  document.querySelectorAll("[data-ir]").forEach(b => b.onclick = () => ver(b.dataset.ir));
+  const lineas = id => [...new Set($(id).value.split("\n").map(s => s.trim()).filter(Boolean))];
+  const guardarAjustes = () => {
+    Object.assign(disp, {terminal: $("#kTerm").value.trim() || (esMovil() ? "Móvil" : "PC"), ambito: $("#kAmb").value, trans: $("#kTrans").value === "1", ubi: $("#kUbi").value === "1", tema: $("#kTema").value});
+    lsSet("chispa.disp", disp);
+    if (disp.ubi && navigator.geolocation) navigator.geolocation.getCurrentPosition(() => {}, () => {});
+    Object.assign(config, {nocheDesde: $("#kDesde").value || "23:00", nocheHasta: $("#kHasta").value || "06:00", correoTrabajo: $("#kCT").value.trim(), correoPersonal: $("#kCP").value.trim(), resumenActivo: $("#kResAct").value === "1", resumenHora: $("#kResHora").value || "07:30",
+      contactos: {...config.contactos, ...Object.fromEntries([...document.querySelectorAll("[data-lista]")].map(t => [t.dataset.lista, [...new Set(t.value.split("\n").map(x => x.trim()).filter(Boolean))]]))}});
+    if ($("#kVozClave")) config.voz = {clave: $("#kVozClave").value.trim(), region: ($("#kVozRegion").value.trim() || "westeurope").toLowerCase()};
+    if ($("#kIaUrl")) config.ia = {endpoint: $("#kIaUrl").value.trim(), clave: $("#kIaClave").value.trim(), despliegue: $("#kIaDep").value.trim() || "gpt-4.1-mini", auto: $("#kIaAuto").value === "1"};
+    else if (config.ia) config.ia.auto = $("#kIaAuto").value === "1";
+    config.iaAuto = $("#kIaAuto").value === "1"; config.sobreMi = $("#kSobre").value.trim();
+    guardarConfig(); aplicarTema(); setAmbito(disp.ambito); toast("Guardado", "check", 1200);
+  };
+  // los ajustes se guardan solos al cambiarlos
+  let tAj = 0;
+  document.querySelectorAll("#vAjustes input:not(#kMovNom):not([id^=kSu]),#vAjustes select:not(#kMovAmb):not([id^=kSu]),#vAjustes textarea").forEach(el => {
+    el.addEventListener(el.tagName === "SELECT" || el.type === "time" ? "change" : "input", () => { clearTimeout(tAj); tAj = setTimeout(guardarAjustes, 700); });
+  });
+  if ($("#kIaProbar")) $("#kIaProbar").onclick = async () => {
+    clearTimeout(tAj); guardarAjustes(); const el = $("#kIaEstado"); el.className = "estado-t"; el.textContent = "Probando…";
+    try { await probarIA(); el.className = "estado-t ok"; el.textContent = "Funciona"; } catch(e){ el.textContent = e.message; }
+  };
+  if ($("#kVozProbar")) $("#kVozProbar").onclick = async () => {
+    clearTimeout(tAj); guardarAjustes(); const el = $("#kVozEstado"); el.className = "estado-t"; el.textContent = "Probando…";
+    try { await probarVoz(); el.className = "estado-t ok"; el.textContent = "Funciona"; setTimeout(procesarTranscripciones, 300); }
+    catch(e){ el.textContent = e.message; }
+  };
+  if ($("#kSug")) $("#kSug").onclick = abrirSugerencia;
+  $("#bRevision").onclick = () => conPlus("revision", abrirRevision);
+  $("#bExportar").onclick = exportarTodo; $("#bEnex").onclick = () => $("#inEnex").click(); $("#bOneNote").onclick = abrirOneNote;
+  $("#inEnex").onchange = async () => { const fs = [...$("#inEnex").files]; $("#inEnex").value = ""; for (const f of fs) await importarEnex(f); }; 
+  if ($("#kConectar")) $("#kConectar").onclick = conectarCuenta;
+  if ($("#kConectar2")) $("#kConectar2").onclick = conectarCuenta;
+  if ($("#kPlus")) $("#kPlus").onclick = () => abrirPlus(null);
+  if ($("#kActualizar")) $("#kActualizar").onclick = actualizarApp;
+  if ($("#kAccesoOtra")) $("#kAccesoOtra").onclick = async () => { await comprobarAcceso(); toast(acceso?.estado === "autorizado" ? "¡Autorizado! Ya tienes IA y voz" : "Todavía pendiente", acceso?.estado === "autorizado" ? "check" : "alerta", 3500); pintarAjustes(); };
+  if ($("#kSalir")) $("#kSalir").onclick = () => {
+    const pend = notas.filter(n => n._pend || n._borrar).length;
+    if (pend && !confirm(`Hay ${pend} cambios sin subir que se perderán. ¿Salir igualmente?`)) return;
+    const g = esGoogle();
+    // Google: se retira el permiso en su servidor, para que ese token no sirva aunque alguien lo hubiera copiado
+    try { const t = lsGet("chispa.token"); const r = t?.refresh_token || t?.access_token; if (g && r) navigator.sendBeacon?.("https://oauth2.googleapis.com/revoke?token=" + encodeURIComponent(r)); } catch(e){}
+    // se borra todo lo de Cuaderna en este navegador: sesión, ajustes (con claves propias), borradores y copia local de las notas
+    for (const k of Object.keys(localStorage)) if (k.startsWith("chispa.")) localStorage.removeItem(k);
+    try { for (const k of Object.keys(sessionStorage)) if (k.startsWith("chispa.")) sessionStorage.removeItem(k); } catch(e){}
+    try { caches?.keys().then(ks => ks.forEach(x => caches.delete(x))); } catch(e){}
+    try { indexedDB.deleteDatabase("chispa3"); } catch(e){}
+    location.href = g ? REDIRECT : `${AUTH}/logout?post_logout_redirect_uri=${encodeURIComponent(REDIRECT)}`;
+  };
+  if ($("#kQR")) $("#kQR").onclick = async () => {
+    const url = REDIRECT + "?" + new URLSearchParams({t: $("#kMovNom").value.trim() || "Móvil", a: $("#kMovAmb").value});
+    try {
+      if (!window.qrcode) await new Promise((ok, ko) => { const s = document.createElement("script"); s.src = "lib/qrcode-1.4.4.js"; s.onload = ok; s.onerror = ko; document.head.appendChild(s); });
+      const q = qrcode(0, "M"); q.addData(url, "Byte"); q.make();
+      $("#qr").innerHTML = `<div style="background:#fff;display:inline-block;padding:14px;border-radius:18px;margin:6px 0 14px">${q.createSvgTag({cellSize: 6, margin: 1})}</div>`;
+    } catch(e){ $("#qr").innerHTML = `<div class="cuenta" style="word-break:break-all;margin-bottom:12px">${esc(url)}</div>`; }
+  };
+}
+
+
+// ---------- espacio en la nube: Microsoft y Google dicen cuánto queda ----------
+const fmtB = b => b >= 1e9 ? (b / 1e9).toLocaleString("es", {maximumFractionDigits: 1}) + " GB" : Math.max(1, Math.round(b / 1e6)).toLocaleString("es") + " MB";
+const urlAlmacen = () => esGoogle() ? "https://one.google.com/storage" : lsGet("chispa.espacio")?.trabajo ? "https://www.office.com/" : "https://onedrive.live.com/?v=managestorage";
+function abrirAlmacen(){
+  const url = urlAlmacen(), nat = nativo("ChispaNativo");
+  Promise.resolve(nat?.abrirUrl ? nat.abrirUrl({url}) : Promise.reject()).catch(() => window.open(url, "_blank", "noopener"));
+}
+async function leerEspacio(forzar = false){
+  if (modoLocal() || !token || !navigator.onLine) return null;
+  const c = lsGet("chispa.espacio");
+  if (!forzar && c?.total && Date.now() - c.t < 6 * 36e5) return c;
+  try {
+    let e;
+    if (esGoogle()){
+      const q = (await gJson(`${GD}/about?fields=storageQuota`, {}, "al leer el espacio")).storageQuota || {};
+      if (!+q.limit) return null;   // espacio ilimitado (algunas cuentas de empresa)
+      e = {usado: +q.usage || 0, total: +q.limit};
+    } else {
+      const d = await gJson(`${DRIVE}?$select=quota,driveType`, {}, "al leer el espacio"), q = d.quota || {};
+      if (!q.total) return null;
+      e = {usado: q.used || 0, total: q.total, trabajo: d.driveType === "business"};
+      try { const r = await graph(`${GRAPH}?$select=size`); if (r.ok) e.cuaderna = (await r.json()).size || 0; } catch(x){}
+    }
+    e.t = Date.now(); e.avisado = c?.avisado || 0; lsSet("chispa.espacio", e);
+    // aviso suave al pasar del 90 %, como mucho una vez por semana
+    if (e.usado / e.total > .9 && Date.now() - e.avisado > 7 * 864e5){
+      e.avisado = Date.now(); lsSet("chispa.espacio", e);
+      toast(`Tu ${nube()} está casi lleno: quedan ${fmtB(Math.max(0, e.total - e.usado))}`, "nube", 9000, abrirAlmacen, "Ver espacio");
+    }
+    return e;
+  } catch(x){ return c || null; }
+}
+// Entró con Google sin marcar la casilla de Drive: se explica y se ofrece volver a entrar (no se repite en cada sincronización)
+function faltaPermisoDrive(){
+  if (faltaPermisoDrive.abierto || document.querySelector(".gperm-caja")) return; faltaPermisoDrive.abierto = true;
+  const fondo = document.createElement("div"); fondo.className = "elegir-coche";
+  fondo.innerHTML = `<div class="ec-caja gperm-caja" role="dialog" aria-label="Falta un permiso de Google"><h3>${ic("nube")} Falta un permiso de Google Drive</h3>
+    <p>Al entrar con Google, la casilla <b>«Ver, editar, crear y eliminar solo los archivos de Google Drive que uses con esta aplicación»</b> se quedó sin marcar. Sin ella, Cuaderna no puede guardar tus notas en tu Google Drive.</p>
+    <p>Cuaderna solo ve la carpeta «Cuaderna» que ella misma crea; nunca el resto de tu Drive. Mientras tanto, lo que anotes queda guardado en este dispositivo.</p>
+    <div class="on-pie"><button class="btn sec" data-x>Ahora no</button><button class="btn" data-ok-g>Volver a entrar</button></div></div>`;
+  document.body.appendChild(fondo);
+  const cerrar = () => { fondo.remove(); faltaPermisoDrive.abierto = false; };
+  fondo.onclick = e => { if (e.target === fondo || e.target.closest("[data-x]")) cerrar(); if (e.target.closest("[data-ok-g]")){ cerrar(); irALogin(false, "google"); } };
+}
+// Si una subida falla por falta de espacio: nada se pierde, la nota sigue en el dispositivo y se sube sola cuando haya sitio
+function nubeLlena(){
+  const c = lsGet("chispa.espacio") || {}; c.lleno = Date.now(); lsSet("chispa.espacio", c);
+  if (nubeLlena.avisada) return; nubeLlena.avisada = true;
+  toast(`Tu ${nube()} está lleno. Tus notas se guardan en este dispositivo y se subirán solas cuando liberes o amplíes espacio`, "alerta", 15000, abrirAlmacen, "Ver espacio");
+}
+async function pintarEspacio(){
+  const caja = $("#kEspacio"); if (!caja) return;
+  const e = await leerEspacio();
+  if (!$("#kEspacio")) return;
+  if (!e){ caja.innerHTML = `${ic("nube")}<div class="lbl">Espacio en tu ${nube()}<small>${navigator.onLine ? "Sin límite o no disponible ahora" : "Sin conexión"}</small></div>`; return; }
+  const pc = Math.min(100, Math.round(e.usado / e.total * 100)), alta = pc >= 90 || (e.lleno && Date.now() - e.lleno < 864e5);
+  caja.innerHTML = `${ic("nube")}<div class="lbl">Espacio en tu ${nube()}<small>${fmtB(e.usado)} de ${fmtB(e.total)} (${pc} %)${e.cuaderna ? ` · Cuaderna ocupa ${fmtB(e.cuaderna)}` : ""}${alta ? `. ${e.trabajo ? "Pide más espacio a quien gestiona tu cuenta del trabajo o libera espacio" : "Libera espacio o amplíalo con " + (esGoogle() ? "Google" : "Microsoft")}` : ""}</small><div class="esp-barra ${alta ? "alta" : ""}"><i style="width:${pc}%"></i></div></div><button class="btn sec" id="kEspVer">${alta ? "Liberar o ampliar" : "Ver"}</button>`;
+  $("#kEspVer").onclick = abrirAlmacen;
+}
+
+// ---------- Revisión de Cuaderna (Plus): que el cuaderno no se convierta en un diógenes digital ----------
+// Propone; nunca borra por su cuenta. Lo borrado va a la papelera y se puede deshacer.
+const pesoNota = n => (n.archivos || []).reduce((t, a) => t + (+a.tam || 0), 0) + (n.fotos || []).length * 4e5 + (n.audio ? 1.2e6 : 0) + Object.keys(n.lienzos || {}).length * 2e5;
+function gruposRevision(){
+  const ahora = Date.now(), dia = 864e5, cons = new Set(config.revisionConservar || []);
+  const todas = deNotas().filter(n => !cons.has(n.id)), vivas = todas.filter(n => !enArchivo(n));   // lo archivado ya está resuelto, salvo para liberar espacio
+  const vacia = n => !String(n.titulo || "").trim() && !String(n.texto || "").trim() && !(n.fotos || []).length && !n.audio && !(n.archivos || []).length && !Object.keys(n.lienzos || {}).length && !(n.lista || []).length;
+  const ultimo = n => new Date(n.actualizada || n.creada).getTime() || ahora;
+  const vacias = vivas.filter(n => vacia(n) && ahora - new Date(n.creada) > (n.ancla ? 30 : 1) * dia);
+  const olvidadas = vivas.filter(n => !n.importante && !vacia(n) && ahora - ultimo(n) > 365 * dia && !(n.fecha && new Date(n.fecha) > ahora));
+  const porClave = new Map();
+  for (const n of vivas){
+    const t = norm(`${n.titulo || ""}|${n.texto || ""}`).replace(/\s+/g, " ").trim();
+    if (t.length < 4) continue;
+    const k = t + "|" + (n.fotos || []).length; (porClave.get(k) || porClave.set(k, []).get(k)).push(n);
+  }
+  const repetidas = [];
+  for (const l of porClave.values()) if (l.length > 1){ l.sort((a, b) => ultimo(b) - ultimo(a)); repetidas.push(...l.slice(1)); }   // se queda la más reciente
+  const pesadas = todas.filter(n => pesoNota(n) > 2e6).sort((a, b) => pesoNota(b) - pesoNota(a)).slice(0, 40);
+  return [
+    {k: "vacias", t: "Vacías", d: "Sin texto ni adjuntos, y anclas sin completar de hace más de un mes", l: vacias, marcar: true},
+    {k: "repetidas", t: "Repetidas", d: "Iguales a otra nota más reciente, que se conserva", l: repetidas, marcar: true},
+    {k: "olvidadas", t: "Olvidadas", d: "Sin tocar desde hace más de un año", l: olvidadas},
+    {k: "pesadas", t: "Lo que más ocupa", d: "Notas con fotos, audios o archivos grandes (tamaño aproximado)", l: pesadas, peso: true},
+  ];
+}
+function abrirRevision(){
+  lsSet("chispa.revUlt", Date.now());
+  const fondo = document.createElement("div"); fondo.className = "elegir-coche";
+  const pintar = () => {
+    const gs = gruposRevision(), pares = libretasParecidas(), total = gs.reduce((t, g) => t + g.l.length, 0) + pares.length; fondo._pares = pares;
+    const ruta = c => rutaLib(c).map(r => r.nombre).join(" › ");
+    const fila = (n, g) => { const p = partesNota(n); return `<label><input type="checkbox" data-rv="${esc(n.id)}"${g.marcar ? " checked" : ""}><span><b>${esc(p.titulo || "(sin título)")}</b><small>${new Date(n.creada).toLocaleDateString("es-ES", {day: "numeric", month: "short", year: "numeric"})}${g.peso ? ` · ≈ ${fmtB(pesoNota(n))}` : ""}${enArchivo(n) ? " · archivada" : ""}</small></span></label>`; };
+    fondo.innerHTML = `<div class="ec-caja rv-caja" role="dialog" aria-label="Revisión de Cuaderna"><h3>${ic("escoba")} Revisión de Cuaderna</h3>
+      <p>${total ? "Esto es lo que podrías limpiar. Marca lo que quieras y elige qué hacer: nada se borra sin que lo digas, y lo borrado se puede deshacer." : "¡Todo en orden! No hay notas vacías, repetidas ni olvidadas, ni libretas duplicadas."}</p>
+      ${pares.length ? `<details class="rv-grupo" open><summary>Libretas que parecen la misma <small>Mismo nombre o muy parecido</small><span class="c">${pares.length}</span></summary>
+        <div class="rv-lista">${pares.map((x, i) => `<div class="rv-par"><span><b>«${esc(x.a.nombre)}» y «${esc(x.b.nombre)}»</b><small>${esc(ruta(x.a))} · ${esc(ruta(x.b))}</small></span><button class="btn sec" data-fus="${i}">Fusionar</button><button class="btn sec" data-dist="${i}">Son distintas</button></div>`).join("")}</div></details>` : ""}
+      ${gs.filter(g => g.l.length).map((g, i) => `<details class="rv-grupo"${i ? "" : " open"}><summary>${esc(g.t)} <small>${esc(g.d)}</small><span class="c">${g.l.length}</span></summary>
+        <div class="rv-lista">${g.l.map(n => fila(n, g)).join("")}</div>
+        <div class="rv-acc"><button class="btn sec" data-todas="${g.k}">Marcar todas</button><button class="btn sec" data-ninguna="${g.k}">Ninguna</button></div></details>`).join("")}
+      <div class="on-pie">${total ? `<button class="btn sec" data-rvacc="conservar">Conservar</button><button class="btn sec" data-rvacc="archivar">Archivar</button><button class="btn" data-rvacc="borrar">Borrar</button>` : ""}<button class="btn sec" data-x>Cerrar</button></div></div>`;
+  };
+  pintar(); document.body.appendChild(fondo);
+  const cerrar = () => fondo.remove();
+  fondo.onclick = async e => {
+    if (e.target === fondo || e.target.closest("[data-x]")) return cerrar();
+    const fu = e.target.closest("[data-fus],[data-dist]");
+    if (fu){ const x = fondo._pares[+(fu.dataset.fus ?? fu.dataset.dist)]; if (!x) return;
+      if (fu.dataset.dist !== undefined){ marcarDistintas(x.a.id, x.b.id); toast("Entendido: no te lo volveremos a preguntar", "check"); return pintar(); }
+      // se queda la que tiene más notas; la otra se fusiona en ella
+      const cuenta = c => deNotas().filter(n => n.carpeta === c.id).length, [quita, queda] = cuenta(x.a) > cuenta(x.b) ? [x.b, x.a] : [x.a, x.b];
+      const nombre = await elegirNombreFusion(quita, queda); if (nombre){ await fusionarLibretas(quita, queda, nombre); } return pintar(); }
+    const t = e.target.closest("[data-todas],[data-ninguna]");
+    if (t){ const on = !!t.dataset.todas; t.closest(".rv-grupo").querySelectorAll("[data-rv]").forEach(c => c.checked = on); return; }
+    const b = e.target.closest("[data-rvacc]"); if (!b) return;
+    const ids = [...new Set([...fondo.querySelectorAll("[data-rv]:checked")].map(c => c.dataset.rv))], sel = notas.filter(n => ids.includes(n.id));
+    if (!sel.length) return toast("Marca primero alguna nota", "alerta");
+    const acc = b.dataset.rvacc;
+    if (acc === "conservar"){
+      config.revisionConservar = [...new Set([...(config.revisionConservar || []), ...ids])].slice(-3000); guardarConfig();
+      toast(`${sel.length} ${sel.length === 1 ? "nota no volverá" : "notas no volverán"} a proponerse`, "check");
+    } else if (acc === "archivar"){
+      for (const n of sel){ n.archivada = true; await guardarNotaLocal(n); }
+      refrescar(); toast(`${sel.length} ${sel.length === 1 ? "nota archivada" : "notas archivadas"}`, "archivo", 6000, async () => { for (const n of sel){ delete n.archivada; await guardarNotaLocal(n); } refrescar(); });
+    } else {
+      if (!confirm(`¿Borrar ${sel.length} ${sel.length === 1 ? "nota" : "notas"}? Irán a la papelera de tu nube y podrás deshacerlo justo después.`)) return;
+      for (const n of sel){ n._borrar = true; n._borrarEn = Date.now(); await idb.poner(n); }
+      refrescar(); pintarEstado(); setTimeout(() => sincronizar(true), 9000);
+      toast(`${sel.length} ${sel.length === 1 ? "nota borrada" : "notas borradas"}`, "borrar", 8000, async () => { for (const n of sel){ n._borrar = false; delete n._borrarEn; await idb.poner(n); } refrescar(); pintarEstado(); toast("Recuperadas"); });
+    }
+    pintar();
+  };
+}
+// ---------- Vaciar la entrada: cada nota sin aclarar, de una en una, con las decisiones a mano ----------
+function abrirVaciar(){
+  let cola = deNotas().filter(sinAclarar).sort((a, b) => a.creada.localeCompare(b.creada)), i = 0, hechas = 0, sel = {};
+  if (!cola.length) return toast("No hay nada por aclarar", "check");
+  const fondo = document.createElement("div"); fondo.className = "elegir-coche";
+  const total = cola.length;
+  const pintar = () => {
+    while (i < cola.length && !sinAclarar(cola[i])) i++;
+    if (i >= cola.length){
+      fondo.innerHTML = `<div class="ec-caja vac-caja" role="dialog" aria-label="Vaciar la entrada"><h3>${ic("check")} Entrada a cero</h3><p>${hechas ? `Has aclarado ${hechas} ${hechas === 1 ? "nota" : "notas"}. Todo lo pendiente tiene ya su sitio.` : "Lo que has saltado sigue en la Entrada para otro momento."}</p><div class="on-pie"><button class="btn" data-x>Cerrar</button></div></div>`;
+      return;
+    }
+    const n = cola[i], p = partesNota(n), sug = sel.donde ?? dondeSugerido(n);
+    const libs = arbolLibretas().map(({c, nivel}) => `<option value="${esc(c.id)}">${esc(sangria(nivel) + c.nombre)}</option>`).join("");
+    const texto = (n.texto || "").replace(/\n{3,}/g, "\n\n").slice(0, 400);
+    fondo.innerHTML = `<div class="ec-caja vac-caja" role="dialog" aria-label="Vaciar la entrada">
+      <div class="vac-prog"><span>${i + 1} de ${total}</span><i><b style="width:${Math.round(i / total * 100)}%"></b></i><button class="opc" data-x type="button" aria-label="Cerrar">${ic("x")}</button></div>
+      <div class="vac-nota"><b>${esc(p.titulo || "(sin título)")}</b>${texto && texto !== p.titulo ? `<p>${esc(texto)}</p>` : ""}<small>Anotado el ${new Date(n.creada).toLocaleDateString("es-ES", {weekday: "long", day: "numeric", month: "long"})}</small></div>
+      <div class="vac-g vac-ya"><span>Decidir ya</span><div class="fila-b">
+        <button class="opc" data-va="hecha">${ic("check")}Ya está</button><button class="opc" data-va="algun">${ic("nube")}Algún día</button>
+        <button class="opc" data-va="archivar">${ic("archivo")}Archivar</button><button class="opc" data-va="borrar">${ic("borrar")}Borrar</button></div></div>
+      <div class="vac-g"><span>Cuándo</span><div class="fila-b">
+        ${[["0", "Hoy"], ["1", "Mañana"], ["7", "En una semana"]].map(([d, t]) => `<button class="opc ${sel.fecha === masDias(+d) ? "on" : ""}" data-vf="${d}">${t}</button>`).join("")}
+        <input type="date" data-vfecha aria-label="Otra fecha" value="${sel.fecha && ![0, 1, 7].some(d => masDias(d) === sel.fecha) ? sel.fecha : ""}"></div></div>
+      <div class="vac-g"><span>Dónde se hace</span><div class="fila-b">${Object.entries(DONDE).map(([k, [t, ic2]]) => `<button class="opc ${sug === k ? "on" : ""}" data-vd="${k}">${ic(ic2)}${t}</button>`).join("")}</div></div>
+      <div class="vac-g"><span>Libreta</span><div class="fila-b"><select data-vlib aria-label="Libreta"><option value="">Ninguna</option>${libs}</select></div></div>
+      <div class="vac-g"><span>Depende de otra persona</span><div class="fila-b"><input type="text" data-vesp placeholder="¿De quién? (opcional)" maxlength="60" value="${esc(sel.esperando || "")}"></div></div>
+      <div class="on-pie"><button class="btn sec" data-va="abrir">Abrir</button><button class="btn sec" data-va="saltar">Saltar</button><button class="btn" data-va="listo">Listo, siguiente</button></div></div>`;
+    if (sel.carpeta) fondo.querySelector("[data-vlib]").value = sel.carpeta;
+  };
+  const siguiente = () => { i++; sel = {}; pintar(); };
+  pintar(); document.body.appendChild(fondo);
+  const cerrar = () => { fondo.remove(); refrescar(); };
+  fondo.addEventListener("change", e => {
+    if (e.target.matches("[data-vfecha]")) sel.fecha = e.target.value || undefined;
+    if (e.target.matches("[data-vlib]")) sel.carpeta = e.target.value || undefined;
+    if (e.target.matches("[data-vesp]")) sel.esperando = e.target.value.trim() || undefined;
+    if (e.target.matches("[data-vfecha]")) pintar();
+  });
+  fondo.addEventListener("input", e => { if (e.target.matches("[data-vesp]")) sel.esperando = e.target.value.trim() || undefined; });
+  fondo.onclick = async e => {
+    if (e.target === fondo || e.target.closest("[data-x]")) return cerrar();
+    const n = cola[i];
+    const f = e.target.closest("[data-vf]"); if (f){ const d = masDias(+f.dataset.vf); sel.fecha = sel.fecha === d ? undefined : d; return pintar(); }
+    const d = e.target.closest("[data-vd]"); if (d){ const actual = sel.donde ?? dondeSugerido(n); sel.donde = actual === d.dataset.vd ? "" : d.dataset.vd; return pintar(); }
+    const a = e.target.closest("[data-va]"); if (!a || !n) return;
+    const acc = a.dataset.va;
+    if (acc === "saltar") return siguiente();
+    if (acc === "abrir"){ cerrar(); return abrirEdicion(n); }
+    if (acc === "borrar"){ await borrarNota(n); hechas++; return siguiente(); }
+    if (acc === "hecha"){ n.hecha = true; n.hechaEn = new Date().toISOString(); }
+    else if (acc === "algun"){ n.algunDia = true; delete n.fecha; delete n.hora; }
+    else if (acc === "archivar") n.archivada = true;
+    else {   // listo: aplica lo elegido
+      const donde = sel.donde ?? dondeSugerido(n);
+      if (!sel.fecha && !donde && !sel.carpeta && !sel.esperando) return toast("Elige al menos cuándo, dónde, una libreta o de quién depende", "alerta");
+      if (sel.fecha) n.fecha = sel.fecha;
+      if (donde) n.donde = donde;
+      if (sel.carpeta) n.carpeta = sel.carpeta;
+      if (sel.esperando) n.esperando = {quien: sel.esperando.slice(0, 60), desde: new Date().toISOString()};
+      if (n.tipo === "nota" && (sel.fecha || donde)) n.tipo = "tarea";
+    }
+    await guardarNotaLocal(n); hechas++; vibrar(15); siguiente();
+  };
+}
+// Cada pocos meses, si el cuaderno ha crecido, se propone una revisión (una vez, sin insistir)
+function proponerRevision(){
+  if (deNotas().length < 150) return;
+  const ult = +lsGet("chispa.revUlt") || 0, prop = +lsGet("chispa.revProp") || 0;
+  if (Date.now() - ult < 90 * 864e5 || Date.now() - prop < 30 * 864e5) return;
+  if (!lsGet("chispa.revUlt")){ lsSet("chispa.revUlt", Date.now()); return; }   // la primera vez solo empieza a contar
+  const n = gruposRevision().reduce((t, g) => t + (g.k === "pesadas" ? 0 : g.l.length), 0);
+  if (n < 10) return;
+  lsSet("chispa.revProp", Date.now());
+  toast(`Tienes ${n} notas vacías, repetidas u olvidadas. ¿Hacemos limpieza?`, "escoba", 12000, () => conPlus("revision", abrirRevision), "Revisar");
+}
+setTimeout(() => { try { leerEspacio(); proponerRevision(); } catch(e){} }, 30000);
+
+// ---------- ayudas contextuales: al pasar el ratón (ordenador) o manteniendo pulsado (móvil) ----------
+const AYUDAS = {
+  ".firma-enl": ["Astillero Software", "Visita la web de quien hace Cuaderna: diseño web, apps y software a medida."],
+  '#eFormato [data-fmt="deshacer"]': ["Deshacer", "Quita el último cambio de la descripción."],
+  '#eFormato [data-fmt="rehacer"]': ["Rehacer", "Vuelve a poner el cambio que acabas de deshacer."],
+  '#eFormato [data-fmt="b"]': ["Negrita", "Resalta en negrita el texto seleccionado.", "Ctrl+B"],
+  '#eFormato [data-fmt="i"]': ["Cursiva", "Pone en cursiva el texto seleccionado.", "Ctrl+I"],
+  '#eFormato [data-fmt="h"]': ["Título", "Convierte la línea en un título grande. Púlsalo otra vez para volver a texto normal."],
+  '#eFormato [data-fmt="h2"]': ["Subtítulo", "Convierte la línea en un subtítulo, más pequeño que el título. Púlsalo otra vez para quitarlo."],
+  '#eFormato [data-fmt="ul"]': ["Lista con viñetas", "Empieza una lista de puntos. Intro añade otro punto; dos Intro seguidos la terminan."],
+  '#eFormato [data-fmt="ol"]': ["Lista numerada", "Empieza una lista numerada 1, 2, 3…"],
+  '#eFormato [data-fmt="a"]': ["Enlace", "Convierte el texto seleccionado en un enlace a una página web."],
+  '#eFormato [data-fmt="tabla"]': ["Tabla", "Inserta una tabla: elige cuántas columnas y filas quieres."],
+  '#eFormato [data-fmt="nota"]': ["Enlazar con otra nota", "Inserta un enlace a otra de tus notas para abrirla con un toque."],
+  '#eFormato [data-fmt="limpiar"]': ["Quitar formato", "Deja el texto seleccionado sin negrita, cursiva, títulos ni enlaces."],
+  '#eFormato [data-fmt="original"]': ["Volver al original", "Descarta todos los cambios de la descripción desde que abriste la nota."],
+  "#enX": ["Cerrar", "Cierra sin enlazar ninguna nota."],
+  "#bMic": ["Dictar", "Pulsa y habla. Cuaderna pasa tu voz a texto y guarda el audio. Vuelve a pulsar para terminar."],
+  "#bAncla": ["Ancla", "Guarda la hora exacta de este momento, por ejemplo al colgar una llamada, para completar la nota más tarde."],
+  "#bFoto": ["Foto", "Añade fotos de la galería, escanea un documento o lee una tarjeta de visita."],
+  "#bTeclado": ["Escribir", "En el móvil abre el teclado. En el ordenador muestra u oculta la zona para escribir a mano."],
+  "#bGuardar": ["Guardar la nota", "Guarda lo que has escrito, dictado o dibujado.", "Ctrl + Intro"],
+  "#cAmbito": ["Trabajo o personal", "Elige dónde va la nota. Cada ámbito tiene su propio resumen y sus estadísticas."],
+  "#cTitulo": ["Título", "Opcional. Si lo dejas vacío, se usa la primera línea del texto."],
+  "#hAmpliar": ["Lienzo grande", "Abre el dibujo a pantalla completa con zoom, imágenes, flechas y texto."],
+  "#hPincel": ["Pincel", "Elige grosor y color para escribir o dibujar a mano."],
+  "#hGoma": ["Goma", "Borra solo por donde pases."],
+  "#hBorrar": ["Borrar el dibujo", "Quita todo lo dibujado en esta nota."],
+  "#detect": ["Lo que Cuaderna ha entendido", "Fechas, nombres y tipo de nota detectados mientras escribes. Quita con la ✕ lo que no sea correcto."],
+  "#q": ["Buscar", "Busca en todo: textos, fotos, documentos PDF y #etiquetas."],
+  "#bzPreguntar": ["Pregúntale a tus notas", "Haz una pregunta normal, como «¿Qué tengo esta semana?», y la inteligencia artificial responde con lo que tienes apuntado."],
+  "#crEscanear": ["Escanear documento", "Haz una foto a un papel: se endereza, se lee el texto y se guarda como nota."],
+  "#crWeb": ["Guardar página web", "Pega un enlace y Cuaderna guarda el título, un resumen y la imagen de la página."],
+  "#crPlantilla": ["Plantillas", "Empieza una nota con una estructura ya hecha: visita a cliente, reunión, lista de compra…"],
+  "#bNuevaLib": ["Nueva libreta", "Crea una libreta para agrupar notas de un tema: un cliente, una obra, recetas…"],
+  "#mailT": ["Resumen de trabajo", "Te envía por correo un resumen de lo pendiente del ámbito de trabajo."],
+  "#mailP": ["Resumen personal", "Te envía por correo un resumen de lo pendiente del ámbito personal."],
+  "#eImportante": ["Importante", "Marca la nota con una estrella para tenerla siempre a mano en «Importantes»."],
+  "#eHecha": ["Hecha", "Marca la nota como terminada. Pasa a «Hechas» y deja de aparecer en «Hoy»."],
+  "#eCompartir": ["Enviar como PDF", "Genera un PDF de la nota para mandarlo por correo o por cualquier aplicación."],
+  "#eBorrar": ["Borrar", "Envía la nota a la papelera. Se puede recuperar durante un tiempo."],
+  "#eWa": ["Pasar por WhatsApp", "Manda la nota a la persona implicada con un enlace para abrirla y marcarla como hecha. Te llega el aviso cuando lo haga."],
+  "#eAa": ["Formato", "Negritas, títulos, listas, enlaces y tablas."],
+  "#eAddLista": ["Lista", "Convierte la nota en una lista de puntos para ir marcando."],
+  "#eAddDibujo": ["Dibujo", "Añade un dibujo o escribe a mano dentro de la nota."],
+  "#eAddFoto": ["Foto", "Añade fotos o escanea un documento a esta nota."],
+  "#eAddArch": ["Archivo", "Adjunta cualquier archivo: PDF, hojas de cálculo, documentos…"],
+  "#eArchivar": ["Archivar", "Quita la nota de las vistas diarias sin borrarla. La encuentras en «Archivo»."],
+  "#eVerFicha": ["Ficha de la persona", "Todas las notas de esta persona juntas."],
+  "#eCarpeta": ["Libreta", "Elige en qué libreta guardar la nota."],
+  "#eFecha": ["Fecha", "Pon un día y Cuaderna te lo recuerda en «Hoy» y con un aviso."],
+  "#eAmbito": ["Trabajo o personal", "Cambia el ámbito de la nota."],
+  "#eTipo": ["Tipo de nota", "Tarea, idea, recordatorio… Sirve para filtrar y para las estadísticas."]
+};
+const AYUDAS_VISTA = {
+  anotar: ["Anotar", "Apunta lo que tengas en la cabeza: escribe, dicta, haz una foto o escribe a mano."],
+  hoy: ["Hoy", "Lo que toca hoy y esta semana, y el resumen por correo."],
+  notas: ["Cuaderno", "Todas tus notas: buscar, vistas rápidas, libretas, etiquetas y personas."],
+  estad: ["Estadísticas", "Cuánto anotas y completas, con quién trabajas y cuándo se te ocurren las cosas."],
+  ajustes: ["Ajustes", "Tu cuenta, la inteligencia artificial, la voz, el aspecto y tus datos."],
+  ayuda: ["Ayuda", "Cómo funciona cada cosa, el recorrido guiado y las sugerencias."],
+  admin: ["Administración", "Quién usa Cuaderna, sugerencias y estadísticas de difusión."]
+};
+const ayudasOn = () => lsGet("chispa.ayudas") !== false;
+const SEL_AYUDA = Object.keys(AYUDAS).join(",") + ",[data-buzon],#sideNav [data-v],#tabs [data-v],.sync,#app [title],#hEditar [title]";
+function textoAyuda(el){
+  for (const k in AYUDAS) if (el.matches(k)) return AYUDAS[k];
+  if (el.dataset.v && el.closest("#sideNav,#tabs")){ const a = AYUDAS_VISTA[el.dataset.v]; if (a) return el.dataset.v === "ajustes" && el.closest("#tabs") ? ["Más", "Ajustes, estadísticas y ayuda."] : a; }
+  if (el.dataset.buzon){ const b = (typeof BUZONES !== "undefined" ? BUZONES : []).find(x => x.k === el.dataset.buzon); if (b) return [b.k === "completadas" ? "Hechas" : b.t, b.d]; if (el.dataset.buzon.startsWith("c:")) return ["Libreta", "Abre esta libreta."]; }
+  if (el.classList.contains("sync")) return ["Sincronización", "Indica si tus notas están guardadas en tu nube. Púlsalo para sincronizar ahora."];
+  const t = el.dataset.tt || el.getAttribute("title");
+  return t ? [t, ""] : null;
+}
+let tipEl = null, tipT = 0, tipLargo = false, tipDe = null;
+function mostrarTip(el){
+  const a = textoAyuda(el); if (!a) return;
+  if (el.hasAttribute("title")){ el.dataset.tt = el.getAttribute("title"); el.removeAttribute("title"); }
+  if (!tipEl){ tipEl = document.createElement("div"); tipEl.className = "tip"; tipEl.setAttribute("role", "tooltip"); document.body.appendChild(tipEl); }
+  tipEl.innerHTML = `<b>${esc(a[0])}${a[2] && !esMovil() ? `<kbd>${esc(a[2])}</kbd>` : ""}</b>${a[1] ? `<span>${esc(a[1])}</span>` : ""}`;
+  const r = el.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+  const abajo = r.top < h + 16;
+  let x = Math.max(12, Math.min(innerWidth - w - 12, r.left + r.width / 2 - w / 2));
+  tipEl.style.left = x + "px"; tipEl.style.top = (abajo ? r.bottom + 10 : r.top - h - 10) + "px";
+  tipEl.style.setProperty("--fx", Math.max(14, Math.min(w - 14, r.left + r.width / 2 - x)) + "px");
+  tipEl.className = "tip ver " + (abajo ? "abajo" : "arriba"); tipDe = el;
+}
+function ocultarTip(){ clearTimeout(tipT); if (tipEl) tipEl.classList.remove("ver"); tipDe = null; }
+(() => {
+  const fino = matchMedia("(hover: hover) and (pointer: fine)");
+  document.addEventListener("pointerover", e => {
+    if (e.pointerType !== "mouse" || !ayudasOn() || document.querySelector(".rc-velo")) return;
+    const el = e.target.closest?.(SEL_AYUDA); if (!el || el === tipDe) return;
+    clearTimeout(tipT); if (tipEl) tipEl.classList.remove("ver");
+    if (el.hasAttribute("title")){ el.dataset.tt = el.getAttribute("title"); el.removeAttribute("title"); }
+    tipT = setTimeout(() => mostrarTip(el), tipEl?.classList.contains("ver") ? 60 : 450);
+  });
+  document.addEventListener("pointerout", e => { if (e.pointerType === "mouse" && tipDe && !tipDe.contains(e.relatedTarget)) ocultarTip(); else if (e.pointerType === "mouse") clearTimeout(tipT); });
+  // móvil: mantener pulsado medio segundo muestra la ayuda sin activar el botón
+  let x0 = 0, y0 = 0;
+  document.addEventListener("pointerdown", e => {
+    ocultarTip(); if (e.pointerType === "mouse" || !ayudasOn()) return;
+    const el = e.target.closest?.(SEL_AYUDA); if (!el || el.matches("#cTitulo,#q,#eFecha,#eCarpeta")) return;
+    x0 = e.clientX; y0 = e.clientY;
+    tipT = setTimeout(() => { tipLargo = true; mostrarTip(el); navigator.vibrate?.(12); setTimeout(ocultarTip, 4500); }, 520);
+  }, true);
+  document.addEventListener("pointermove", e => { if (e.pointerType !== "mouse" && Math.hypot(e.clientX - x0, e.clientY - y0) > 10) clearTimeout(tipT); }, true);
+  document.addEventListener("pointerup", () => clearTimeout(tipT), true);
+  document.addEventListener("pointercancel", () => clearTimeout(tipT), true);
+  document.addEventListener("click", e => { if (tipLargo){ tipLargo = false; e.preventDefault(); e.stopPropagation(); } }, true);
+  document.addEventListener("contextmenu", e => { if (e.target.closest?.(SEL_AYUDA) && !e.target.closest("textarea,input,[contenteditable]")) e.preventDefault(); });
+  addEventListener("scroll", ocultarTip, true); addEventListener("keydown", ocultarTip);
+})();
+
+// ---------- recorrido guiado ----------
+const RECORRIDO = [
+  {v: "anotar", sel: "#campo", t: "Bienvenido a Cuaderna", d: "Aquí apuntas lo que tengas en la cabeza. Te enseñamos lo principal en un minuto."},
+  {v: "anotar", sel: "#bMic", t: "Dicta en vez de escribir", d: "Pulsa el botón rojo y habla. Cuaderna pasa tu voz a texto y guarda también el audio."},
+  {v: "anotar", sel: "#bAncla", t: "El ancla", d: "Guarda la hora exacta de un momento, por ejemplo al colgar una llamada, y completas la nota cuando puedas."},
+  {v: "anotar", sel: "#bFoto", t: "Fotos y documentos", d: "Añade fotos, escanea un papel o lee una tarjeta de visita para guardar el contacto."},
+  {v: "anotar", sel: "#cAmbito", t: "Trabajo o personal", d: "Separa lo del trabajo de lo personal. Cada parte tiene su resumen y sus estadísticas."},
+  {v: "anotar", sel: "#bGuardar", t: "Guardar", d: "Cuaderna detecta fechas, personas y tareas, y ordena la nota sola al guardarla."},
+  {v: "hoy", sel: "#vHoy .cab", t: "Hoy", d: "Lo que toca hoy y esta semana. Si una nota tiene fecha, aparece aquí el día que corresponde y te avisa."},
+  {v: "notas", sel: "#bzPreguntar", t: "Pregúntale a tus notas", d: "Haz preguntas normales, como «¿Qué hablé con el fontanero?», y te responde con lo que tienes apuntado."},
+  {v: "notas", sel: "#listaNotas .vistas", t: "Vistas rápidas", d: "Importantes, Por hacer, Ideas, Compartidas… Tus notas ya ordenadas sin hacer nada."},
+  {v: "notas", sel: "#listaNotas .crear", t: "Crear de otras formas", d: "Escanea un documento, guarda una página web o empieza desde una plantilla."},
+  {v: "notas", sel: "#bNuevaLib", t: "Libretas", d: "Agrupa notas por cliente, obra o tema. Al abrir una nota puedes pasarla por WhatsApp a la persona implicada."},
+  {nav: "ajustes", t: "Ajustes y ayuda", d: "Aquí conectas tu cuenta, activas la inteligencia artificial y la voz, y puedes repetir este recorrido."},
+  {fin: true, t: "Un último truco", d: ""}
+];
+let rc = null;
+function selectorNav(v){ const m = esMovil() || getComputedStyle($("#side")).display === "none"; return (m ? "#tabs" : "#sideNav") + ` [data-v="${v}"]`; }
+function recorrido(desde = 0){
+  ocultarTip(); cerrarRecorrido(true);
+  const velo = document.createElement("div"); velo.className = "rc-velo"; velo.innerHTML = `<div class="rc-foco"></div>`;
+  const tarjeta = document.createElement("div"); tarjeta.className = "rc-tarjeta"; tarjeta.setAttribute("role", "dialog"); tarjeta.setAttribute("aria-modal", "true"); tarjeta.setAttribute("aria-labelledby", "rcTit");
+  document.body.append(velo, tarjeta);
+  rc = {i: desde, velo, tarjeta, vistaAntes: vista};
+  velo.addEventListener("click", () => {});   // el velo bloquea toques mientras dura el recorrido
+  addEventListener("resize", colocarRecorrido); addEventListener("keydown", teclaRecorrido);
+  pasoRecorrido();
+}
+function pasoRecorrido(){
+  const p = RECORRIDO[rc.i];
+  if (p.v && vista !== p.v) ver(p.v);
+  const ultimo = rc.i === RECORRIDO.length - 1;
+  const fin = p.fin ? (esMovil() || matchMedia("(pointer: coarse)").matches ? "Si no sabes qué hace un botón, <b>mantenlo pulsado</b> y aparece una explicación." : "Si no sabes qué hace un botón, <b>pasa el ratón por encima</b> y aparece una explicación.") + " Puedes repetir este recorrido en Ayuda." : esc(p.d);
+  rc.tarjeta.innerHTML = `<div class="rc-paso">${rc.i + 1} de ${RECORRIDO.length}</div><h3 id="rcTit">${esc(p.t)}</h3><p>${fin}</p>
+    <div class="rc-puntos">${RECORRIDO.map((_, k) => `<i class="${k <= rc.i ? "on" : ""}"></i>`).join("")}</div>
+    <div class="rc-bot">${ultimo ? "" : `<button class="enl" id="rcSaltar">Ahora no</button>`}<span class="esp"></span>${rc.i ? `<button id="rcAtras">Atrás</button>` : ""}<button class="prim" id="rcSig">${ultimo ? "Empezar a usar Cuaderna" : rc.i ? "Siguiente" : "Empezar"}</button></div>
+    ${ultimo ? "" : `<label class="rc-nomas"><input type="checkbox" id="rcNoMas">No volver a mostrar</label>`}`;
+  rc.tarjeta.querySelector("#rcSig").onclick = () => ultimo ? cerrarRecorrido(false, true) : (rc.i++, pasoRecorrido());
+  rc.tarjeta.querySelector("#rcAtras")?.addEventListener("click", () => { rc.i--; pasoRecorrido(); });
+  rc.tarjeta.querySelector("#rcSaltar")?.addEventListener("click", () => cerrarRecorrido(false, rc.tarjeta.querySelector("#rcNoMas")?.checked));
+  setTimeout(() => { rc && rc.tarjeta.querySelector("#rcSig").focus({preventScroll: true}); }, 50);
+  requestAnimationFrame(() => requestAnimationFrame(colocarRecorrido));
+}
+function colocarRecorrido(){
+  if (!rc) return;
+  const p = RECORRIDO[rc.i], foco = rc.velo.querySelector(".rc-foco"), t = rc.tarjeta;
+  let el = p.nav ? $(selectorNav(p.nav)) : p.sel ? $(p.sel) : null;
+  if (el && !el.getClientRects().length) el = null;
+  const tw = t.offsetWidth, th = t.offsetHeight, m = 12;
+  if (!el){ foco.classList.add("centro"); t.style.left = (innerWidth - tw) / 2 + "px"; t.style.top = Math.max(m, (innerHeight - th) / 2) + "px"; return; }
+  foco.classList.remove("centro");
+  let r = el.getBoundingClientRect();
+  if (r.top < 70 || r.bottom > innerHeight - 90){ el.scrollIntoView({block: "center"}); r = el.getBoundingClientRect(); }
+  const pad = 8;
+  Object.assign(foco.style, {left: r.left - pad + "px", top: r.top - pad + "px", width: r.width + pad * 2 + "px", height: r.height + pad * 2 + "px"});
+  // tarjeta: debajo si cabe; si no, encima; si tampoco, abajo del todo
+  let top = r.bottom + pad + 14;
+  if (top + th > innerHeight - m) top = r.top - pad - 14 - th;
+  if (top < m) top = innerHeight - th - m;
+  let left = Math.max(m, Math.min(innerWidth - tw - m, r.left + r.width / 2 - tw / 2));
+  t.style.left = left + "px"; t.style.top = top + "px";
+}
+function teclaRecorrido(e){
+  if (!rc) return;
+  if (e.key === "Escape") cerrarRecorrido(false);
+  else if (e.key === "ArrowRight" && rc.i < RECORRIDO.length - 1){ rc.i++; pasoRecorrido(); }
+  else if (e.key === "ArrowLeft" && rc.i > 0){ rc.i--; pasoRecorrido(); }
+}
+function cerrarRecorrido(silencio, noMas){
+  if (!rc) return;
+  rc.velo.remove(); rc.tarjeta.remove(); removeEventListener("resize", colocarRecorrido); removeEventListener("keydown", teclaRecorrido);
+  const antes = rc.vistaAntes; rc = null;
+  if (silencio) return;
+  if (noMas) lsSet("chispa.tour", "hecho"); else lsSet("chispa.tourVeces", (lsGet("chispa.tourVeces") || 0) + 1);
+  ver(antes === "ayuda" ? "ayuda" : esMovil() ? "anotar" : antes || "anotar");
+}
+function recorridoAuto(){
+  if (lsGet("chispa.tour") === "hecho" || (lsGet("chispa.tourVeces") || 0) >= 3 || rc) return;
+  if (document.querySelector(".hoja.on,.velo.on")) return;   // si hay algo abierto, mejor otro día
+  recorrido(0);
+}
+// Lo nuevo de cada versión (Ayuda › Novedades; también rellena los correos a probadores)
+const NOVEDADES = `<b>0.54.1</b>: refuerzo de seguridad en toda la app: lo que llega de la nube, de importaciones o de otras personas se comprueba antes de mostrarlo, las librerías se sirven desde Cuaderna y al cerrar sesión se borra todo de este dispositivo.<br><b>0.54</b>: más seguridad. Las notas que pasas con enlace corto se cifran en tu móvil y el servidor ya no puede leerlas; la llave solo va en el enlace.<br><b>0.53.4</b>: si tienes la app de Android instalada desde un archivo de la web, Cuaderna te explica cómo pasarte a la versión de Google Play, que es la que se actualiza. No pierdes ninguna nota.<br><b>0.53.3</b>: guardar una página web, añadir un enlace, nombrar una plantilla o una libreta se hace en ventanas de Cuaderna, con botón para pegar el enlace, en lugar del cuadro gris del sistema.<br><b>0.53.2</b>: escanear un documento, guardar una página web o empezar desde una plantilla pasan a Anotar, debajo de la zona de escribir. El Cuaderno queda para consultar.<br><b>0.53.1</b>: las libretas de consulta (tarjetas, recetas, manuales, facturas…) no entran en «Ayúdame a organizarme». Cuaderna lo deduce por el nombre y lo que contienen, y puedes cambiarlo en cada libreta.<br><b>0.53</b>: con «Ayúdame a organizarme» activado, dos novedades. <b>Vaciar la entrada</b>: en Hoy verás cuántas notas tienes por aclarar y, de una en una, decides si ya está, para cuándo, dónde se hace, en qué libreta va o de quién depende. Y <b>A la espera</b>: marca lo que depende de otra persona (o deja que la IA lo note) y, si pasan 5 días sin novedad, Hoy te lo recuerda para reclamarlo.<br><b>0.52.1</b>: en el editor, «Dónde» y la fecha pasan arriba de los detalles, y «Para quién» queda recogido al final (Persona relacionada), porque para compartir ya está el botón de arriba.<br><b>0.52</b>: nuevo en Ajustes › Al anotar, <b>Ayúdame a organizarme</b> (apagado de serie; si no lo activas, nada cambia). Cada tarea puede decir <b>dónde</b> se hace (llamadas, ordenador, fuera o casa; la IA lo deduce al anotar) y en Hoy filtras por sitio para ver, por ejemplo, todas las llamadas pendientes de una vez. Y con <b>Algún día</b> apartas lo que no toca ahora: sale de Hoy y espera en Cuaderno › Algún día hasta que le pongas fecha.<br><b>0.51.2</b>: los avisos (guardado, novedades, deshacer…) salen en el centro de la pantalla, más grandes y claros, sin tapar ningún botón.<br><b>0.51.1</b>: en Hoy, «Capturado hoy» sube justo debajo de «Para hoy», y lo capturado hoy y las ideas de anoche también tienen su filtro arriba.<br><b>0.51</b>: el equipo de Cuaderna puede enviarte de vez en cuando una nota (novedades, agradecimientos, algo que probar): te llega como una nota más en Hoy, con un aviso para abrirla.<br><b>0.50.5</b>: en Hoy, «para hoy», «vencidas», «esta semana» y «por recordar» son filtros: tócalos para ver solo eso, y otra vez (o «Ver todo») para volver.<br><b>0.50.4</b>: las tipografías se cargan desde la propia Cuaderna (sin pedir nada a Google) y la página está mejor preparada para que la encuentren los buscadores.<br><b>0.50.3</b>: la administración de Cuaderna se hace ahora desde el portal interno de Astillero, así que la app queda más ligera para todos.<br><b>0.50.2</b>: todas las ventanas que suben desde abajo (compartir, libreta, ancla, sugerencias…) tienen un botón ✕ para cerrar, y la de compartir, además, «Cancelar».<br><b>0.50.1</b>: al enviar una nota por correo, el cuadro del mensaje es más grande, crece mientras escribes, admite saltos de línea y queda a la vista sobre el teclado.<br><b>0.50</b>: importar de OneNote y Evernote, ahora a prueba de cortes: primero cuenta lo que hay, importa por tandas mientras sigues usando Cuaderna, se puede pausar y, si se corta la conexión o cierras la app, sigue donde se quedó sin duplicar nada; al final te dice si ha entrado todo. En el ordenador, las libretas se pueden arrastrar unas dentro de otras. Y si mueves o creas una libreta donde ya hay otra igual o parecida («01 Badajoz» y «BADAJOZ»), te deja fusionarlas eligiendo el nombre final o decir que son distintas; la Revisión de Cuaderna también las detecta.<br><b>0.49</b>: al borrar una libreta puedes borrar también sus notas y las libretas que tiene dentro, con opción de deshacer (Plus). Y las libretas estrenan imagen: cada una lleva una ilustración y un color según su nombre (recetas, viajes, facturas, coche, clientes, una ciudad…), y si no, su inicial. Se puede cambiar en la libreta › Imagen.<br><b>0.47.1</b>: el escáner de tarjetas y documentos encuadra mucho mejor: encuentra los cuatro bordes aunque la tarjeta tenga franjas de color, esté girada, haya objetos alrededor o sea una hoja blanca sobre una mesa blanca, y afina cada esquina sobre el borde real.<br><b>0.47</b>: dos funciones Plus nuevas. <b>Convertir en guion</b>: una grabación larga (una clase, una reunión) se convierte en un documento ordenado con resumen, puntos clave y todo el contenido desarrollado. <b>Libreta a contactos</b>: lee todas las tarjetas de visita de una libreta, te avisa de los datos dudosos para corregirlos y las pasa a tus contactos de una vez.<br><b>0.46</b>: en el resumen diario por correo, cada nota lleva su enlace: tócala y se abre directamente en Cuaderna (en la app de Android, si la tienes).<br><b>0.45.2</b>: si al entrar con Google se deja sin marcar el permiso de Google Drive, Cuaderna lo explica y ofrece volver a entrar, en vez de dar un error.<br><b>0.45.1</b>: Estadísticas y Ayuda tienen un botón para volver a Ajustes (y el «atrás» del móvil también vuelve).<br><b>0.45</b>: la pregunta de la mañana ya no salta con cualquier alarma: solo con la primera que suena después de dormir (con el móvil en reposo), una vez cada 12 horas; las de pastillas o recordatorios no cuentan. También puedes fijar una hora. Necesita la nueva versión de la app de Google Play.<br><b>0.44.1</b>: la versión de la app pasa a Ajustes › Ayuda y contacto.<br><b>0.44</b>: Ajustes más claros, en cuatro bloques (tu cuenta, cómo funciona Cuaderna, tus datos y ayuda); lo técnico pasa a «Avanzado». Ves cuánto espacio te queda en tu OneDrive o Google Drive y te avisa antes de que se llene (si se llena, nada se pierde: las notas esperan en el dispositivo). Nueva <b>Revisión de Cuaderna</b> para limpiar notas vacías, repetidas, olvidadas y lo que más ocupa. Importar de OneNote y Evernote es gratis para todos. La app de Android se actualiza solo desde Google Play.<br><b>0.43</b>: llega Cuaderna Plus (en preparación): las funciones avanzadas llevan la etiqueta «Plus» y siguen gratis durante la prueba.<br><b>0.42</b>: libretas dentro de libretas, hasta 6 niveles, como en OneNote. Cada libreta puede tener notas y otras libretas dentro; al importar de OneNote se respetan sus grupos de secciones.<br><b>0.41.3</b>: las fotos de tarjetas de visita (por ejemplo, importadas de OneNote) se convierten en tarjetas con sus datos, una a una o toda una libreta de golpe.<br><b>0.41.2</b>: dentro de una libreta, etiqueta o vista, el buscador busca solo ahí (con un botón para buscar en todas).<br><b>0.41.1</b>: las tarjetas de visita se pueden guardar en tus contactos (Compartir › Guardar en contactos, archivo .vcf).<br><b>0.41</b>: importar de OneNote (Ajustes › Tus datos): eliges blocs y secciones y se traen las páginas con texto, imágenes y adjuntos, cada sección como una libreta.<br><b>0.40.2</b>: mejoras de seguridad: las notas que te pasan se comprueban antes de guardarlas y te pide confirmación; los adjuntos web se descargan en vez de abrirse.<br><b>0.40</b>: la barra de formato explica cada botón al pasar el ratón (o manteniendo pulsado en el móvil); nuevo botón de subtítulo; al insertar una tabla eliges cuántas columnas y filas; y la ventana de enlazar notas tiene botón para cerrar.<br><b>0.39.3</b>: si la usas sin cuenta, ahora es fácil pasar a tu cuenta: botón «Conectar cuenta» siempre a la vista y arriba del todo en Ajustes; y al entrar con Microsoft te deja elegir la cuenta.<br><b>0.39.2</b>: la administración se abre al momento con lo último que viste y se actualiza sola; el servidor se mantiene despierto de día para que todo responda antes.<br><b>0.39.1</b>: el icono de Admin ya no muestra el número de tareas de Hoy.<br><b>0.39</b>: las notas que pasas ya no se quedan en «pendiente»: Cuaderna te dice si la otra persona la ha abierto, cuántos puntos lleva y cuándo la termina, sin que tenga que avisarte.<br><b>0.38</b>: <b>ayudas en los botones</b> (pasa el ratón por encima o, en el móvil, mantén pulsado) y <b>recorrido guiado</b> para conocer Cuaderna en un minuto (Ayuda › Ver el recorrido).<br><b>0.37</b>: Cuaderna estrena casa: ahora vive en <b>cuaderna.astillerosoftware.es</b>. La dirección antigua te trae aquí sola.<br><b>0.36.4</b>: Cuaderna estrena firma: ahora es una app de <b>Astillero</b>.<br><b>0.36</b>: nueva pantalla de entrada; sección propia de <b>Administración</b> (solo para quien administra); al pasar una nota, mensaje más claro con vista previa grande, y si quien la recibe tiene la app de Android, se abre directamente en ella.<br><b>0.34</b>: Cuaderna se usa nada más entrar; solo la inteligencia artificial y la voz a texto incluidas esperan la autorización.<br><b>0.33</b>: entrar con <b>Google</b>: tus notas, fotos y audios en tu Google Drive (carpeta «Cuaderna»), con todo lo demás igual. El resumen por correo y el calendario de Outlook siguen siendo de Microsoft.<br><b>0.32</b>: gasta menos batería y datos: al guardar solo se sube lo que cambia, los cambios de otros dispositivos se miran cada 5 minutos (o al volver a la app), y en segundo plano Cuaderna no hace nada. En Android, el resumen diario ya no se conecta a OneDrive cada media hora.<br><b>0.31</b>: al pasar una nota o enviar un WhatsApp, según escribes un nombre o un número te sugiere personas (las que ya usaste, tus tarjetas de visita y la agenda del móvil). Tu nombre sale de tu cuenta de Microsoft, sin tener que escribirlo.<br><b>0.30.1</b>: al pasar una nota por WhatsApp, el mensaje lleva la nota completa y el enlace va al final, solo para marcarla como hecha; con el servidor activo, el enlace es corto.<br><b>0.30</b>: «Pasar a otra persona» también por WhatsApp, sin permisos de correo: le llega un enlace para ver la nota sin instalar nada, marcarla como hecha y avisarte, con una invitación a probar Cuaderna. Nueva vista <b>Compartidas</b> en el Cuaderno (lo que pasas y lo que te pasan, con su estado). Estadísticas anónimas de difusión para el administrador.<br><b>0.29.2</b>: las versiones nuevas llegan nada más publicarse, sin esperar a que caduque la copia guardada.<br><b>0.29.1</b>: ventana de WhatsApp más clara (botón de cerrar, número a lo ancho, «Enviar a…» por persona e interruptor para el PDF); el botón «atrás» cierra la ventana que está encima del editor sin cerrar la nota.<br><b>0.29</b>: «Enviar por WhatsApp» (en Compartir y junto a «Para quién»): abre WhatsApp directamente en el chat de cada implicado en la nota, con el mensaje ya escrito o con el PDF (app de Android). Toma el móvil de las tarjetas de visita o de la agenda y lo recuerda.<br><b>0.28</b>: se puede usar Cuaderna sin cuenta («Probar sin cuenta» en la entrada). Las notas quedan solo en el dispositivo, con aviso y recordatorio semanal de exportar una copia; al conectar después la cuenta de Microsoft, todo se sube a OneDrive sin perder nada.<br><b>0.27.3</b>: «Convertir en lista» pasa cada línea que ya hayas escrito en la descripción a un punto de la lista.<br><b>0.27.2</b>: al escribir [] o [ ] al principio de una línea de la descripción, se convierte al momento en una casilla de lista.<br><b>0.27.1</b>: el menú de la cámara ya no se descoloca; con el móvil en horizontal la app mantiene el diseño de móvil.<br><b>0.27</b>: Notas y Biblioteca se unen en la pestaña <b>Cuaderno</b>: buscador único, vistas rápidas, crear (escáner, web, plantillas), libretas por pilas, etiquetas y personas. Exportar e importar pasan a Más › Ajustes › Tus datos.<br><b>0.26.2</b>: en la barra de formato, deshacer y rehacer, quitar el formato y volver al texto original.<br><b>0.26.1</b>: pantalla de versiones rediseñada: a pantalla completa, con fecha, título y resumen de cada versión, y fácil de cerrar (X o «atrás»).<br><b>0.26</b>: enlaces entre notas (y «Mencionada en»); historial de versiones de cada nota, para ver y recuperar las anteriores; exportarlo todo en un ZIP (Markdown y adjuntos); importar desde Evernote (.enex) con fotos, archivos y etiquetas.<br><b>0.25</b>: escáner de documentos de varias páginas que crea un PDF (con su texto leído por la IA para buscarlo); guardar páginas web (también compartiendo un enlace desde el navegador); plantillas (reunión, viaje, compra, receta, coche, proyecto, diario) y las tuyas propias; las libretas y etiquetas se abren dentro de Biblioteca.<br><b>0.24</b>: nueva pestaña <b>Biblioteca</b>: libretas agrupadas en pilas, etiquetas (#algo), descripción con formato (negritas, títulos, listas, enlaces y tablas), archivos adjuntos de cualquier tipo y búsqueda dentro de PDF, fotos y etiquetas. Los «archivadores» pasan a llamarse libretas.<br><b>0.23.4</b>: al anotar, el botón para descartar es ahora «Borrar», en rojo, y solo aparece cuando hay algo escrito.<br><b>0.23.3</b>: la fecha de una nota se ve escrita y tiene un botón claro para quitarla o anular la cita del calendario (con deshacer).<br><b>0.23.2</b>: avisos rediseñados, ahora abajo; campo de «Pregúntale a tus notas» más limpio.<br><b>0.23.1</b>: «Pregúntale a tus notas» con botón Cerrar; el botón «atrás» del móvil cierra la ventana abierta en vez de salir.<br><b>0.23</b>: «Sobre ti» en Ajustes para que la IA te entienda; «Para quién» con Personas y Asuntos; botón de sugerencias; preparada para el acceso autorizado con IA y voz incluidas.<br><b>0.22.2</b>: «Pasar a otra persona» para compartir notas con familia, amigos o colegas.<br><b>0.22.1</b>: firma del autor en la entrada, en Ajustes y en Ayuda.<br><b>0.22</b>: nuevo nombre e imagen: ahora es <b>Cuaderna</b>. Tus notas y ajustes siguen igual. Nuevo «Pasar a otra persona» (en Compartir): le llega por correo con el motivo, la añade a su Cuaderna con un toque y, cuando la termina, te avisa y tu nota se marca como hecha.<br><b>0.20</b>: agenda del móvil: botón «Agenda» en «Para quién» y sugerencias de tus contactos al escribir (app de Android). Los contactos no se copian a OneDrive.<br><b>0.19.1</b>: girar y recortar fotos: botón de recorte en cada foto de una nota, o toca la miniatura al anotar.<br><b>0.19</b>: cámara propia de Cuaderna (siempre la trasera, con linterna y marco para tarjetas); «Añadir foto» en el editor permite hacer foto o elegir de la galería. Tarjetas con fijo y móvil por separado y lupa al ajustar las esquinas.<br><b>0.18</b>: tarjetas de visita (botón de la cámara › Tarjeta de visita): se encuadran y enderezan solas, reverso opcional, datos leídos con IA y guardadas como «Empresa@Persona». Buzón Sueños y pregunta de la mañana tras el despertador (app de Android).<br><b>0.16</b>: las notas con fecha y hora pueden ir a tu calendario de Outlook; «Compartir» permite enviar la nota por correo a un compañero con el PDF adjunto; Cuaderna se puede instalar en iPhone desde Safari.<br><b>0.15</b>: inteligencia artificial con tu Azure OpenAI: ordena cada nota sola (título, resumen, tareas, para quién y fecha), lee el texto de las fotos y las tarjetas de visita, y «Pregúntale a tus notas».<br><b>0.14</b>: ficha de cada cliente o contacto con todo su historial, lo pendiente, las llamadas anotadas, nueva nota o dictado para esa persona e informe PDF de seguimiento. Toca un nombre en cualquier nota para abrir su ficha. Resumen por correo también desde el PC.<br><b>0.13</b>: Notas organizadas en buzones (Importantes, Entrada, Por hacer, Ideas, Completadas, Archivo y Todas) y libretas propias. Lo completado pasa solo al Archivo a los 7 días. Deslizar a la izquierda archiva.<br><b>0.12</b>: lienzo a pantalla completa: zoom y desplazamiento con dos dedos o la rueda del ratón, imágenes con recorte (cámara, galería o pegar), pincel, rotulador, goma, flechas, rectángulos, círculos y texto. «Anotar» sobre cualquier foto de una nota y «Dibujo» nuevo desde el editor; se puede seguir editando después.<br><b>0.11</b>: lo que escribes se guarda solo: si la app se cierra, al volver lo recuperas. Al cerrar el editor tocando fuera se guardan los cambios; la X pregunta antes de descartarlos. Los títulos largos bajan de línea.<br><b>0.10</b>: botón «Compartir» en cada nota: la envía como PDF, con su texto, lista, fotos y dibujo. Filtros de Notas en desplegables con varias opciones.<br><b>0.9</b>: escritura a mano con deshacer y rehacer, goma, grosores y colores; «Para quién» con sugerencias bajo el campo; resumen diario por correo, aviso al colgar y modo coche en la app Android.<br><b>0.6</b>: preparada para la app Android (widget, avisos aunque esté cerrada y «Compartir con Cuaderna»).<br><b>0.5</b>: título propio en cada nota, separado de la descripción; los listados muestran el título destacado y la descripción debajo.<br><b>0.4.9</b>: ordenar los puntos de una lista arrastrándolos.<br><b>0.4.8</b>: desde la primera línea con [ ] todo es lista; Intro continúa la lista; lo marcado pasa a «Hechos».<br><b>0.4.7</b>: listas con casillas.<br><b>0.4.6</b>: editor de notas reorganizado, con Guardar, Hecha y Borrar siempre visibles arriba.<br><b>0.4.5</b>: ya no aparece el aviso del nombre del dispositivo al abrir.<br><b>0.4.4</b>: campo de texto bien visible y botón de teclado; en el PC, la zona para escribir a mano se muestra con el botón del lápiz.<br><b>0.4.3</b>: estadísticas nuevas por periodo, con actividad en orden cronológico, mapa de horas y cumplimiento.<br><b>0.4.2</b>: deshacer, deslizar, ajustes que se guardan solos, hora en los recordatorios y transcripción con Azure Speech.<br><b>0.4</b>: diseño nuevo, botón de voz con nivel en vivo, etiquetas automáticas al escribir, hoja de edición con reproductor y galería, filtros y notas agrupadas por día.<br>
+  <b>0.3</b>: una sola Cuaderna para móvil y PC, sincronizada con OneDrive.`;
+function pintarAyuda(){
+  $("#vAyuda").innerHTML = cab("Ayuda", `Cuaderna ${VERSION}`, "ajustes") + `<button class="preguntar" id="ayudaTour">${ic("spark")}<span><b>Ver el recorrido</b><small>Un paseo de un minuto por lo principal de Cuaderna</small></span></button>
+  <p style="margin:10px 2px 18px;color:var(--muted)">¿No sabes qué hace un botón? ${esMovil() ? "<b>Mantenlo pulsado</b>" : "<b>Pasa el ratón por encima</b>"} y aparece una explicación. Puedes desactivarlo en Ajustes › Este dispositivo.</p>
+  <button class="preguntar" id="ayudaSug">${ic("idea")}<span><b>Sugerencias y mejoras</b><small>¿Qué echas en falta o qué cambiarías? Cuéntalo aquí</small></span></button>
+  <h3>Anotar</h3><p>Escribe con el teclado en el recuadro de arriba (en el móvil, también con el botón del teclado), dicta con el sello rojo o escribe a mano en la zona de puntos. Abajo a la izquierda tienes las herramientas: <b>deshacer</b> y <b>rehacer</b> trazo a trazo, el <b>pincel</b> (toca el punto de color para elegir grosor y color), la <b>goma</b> para borrar solo por donde pases y la <b>papelera</b> para borrar el dibujo entero (se puede deshacer). El botón rojo <b>Borrar</b> de arriba (aparece cuando has escrito algo) descarta la nota y empieza otra. En el PC, el botón del lápiz muestra u oculta la zona para escribir a mano. Pulsa <b>✓</b> para guardar. Con la cámara añades fotos. Al dictar se guarda <b>el audio original</b>: si la transcripción no cuadra, escúchalo al abrir la nota.</p>
+  <p>Mientras escribes, Cuaderna detecta <b>fechas</b> («mañana», «el jueves», «el 25 de noviembre», «en 3 días»), <b>nombres</b> de tus listas y el <b>tipo</b> de nota, y te los muestra en etiquetas de color. Si alguna no es correcta, quítala con la ✕.</p>
+  <h3>Título</h3><p>Cada nota tiene un título opcional, arriba del texto. Es lo que se ve destacado en «Hoy» y en «Notas». Si no le pones título, se usa la primera línea del texto.</p>
+  <h3>El ancla</h3><p>Para cuando no puedes anotar: guarda la hora y, si quieres, una palabra. En «Hoy» aparece en «Por recordar» para que lo completes.</p>
+  <h3>Hoy</h3><p>Tu agenda de acciones: lo que tienes por recordar, lo vencido, lo de hoy, las ideas de anoche y los próximos días. Toca el círculo para marcar algo como hecho; toca la nota para abrirla.</p>
+  <h3>Notas</h3><p>Todo lo anotado, agrupado por día. Busca por texto, nombre o fecha y filtra con las etiquetas de arriba.</p>
+  <h3>Editar una nota</h3><p>Al abrirla ves el dictado, escuchas el audio, amplías las fotos y cambias ámbito, tipo, para quién y fecha. Puedes quitar adjuntos o añadir fotos.</p>
+  <h3>Sincronización</h3><p>Cada nota se guarda primero en el dispositivo y se sube sola a tu OneDrive. Sin cobertura se sube al volver. El indicador de la nube te dice si está todo guardado; si pide <b>volver a entrar</b>, tócalo.</p>
+  <h3>Modo noche</h3><p>En tu horario la pantalla del móvil se pone negra. Si abres Cuaderna y la cierras sin tocar nada, queda un ancla con la hora, para que por la mañana recuerdes que se te ocurrió algo. Si miras tus notas o usas la app, no se crea.</p>
+  <h3>En el móvil</h3><p>En Android, instala la app Cuaderna desde Google Play; se actualiza desde allí y las mejoras de Cuaderna le llegan solas. Si mantienes pulsado el icono tienes los atajos <b>Grabar voz</b> y <b>Ancla rápida</b>.</p>
+  <h3>Privacidad</h3><p>Tus notas solo están en tu nube o en tu dispositivo. <a href="privacidad.html" target="_blank" rel="noopener">Lee aquí qué datos usa Cuaderna</a>.</p>
+  <h3>Microsoft o Google</h3><p>Puedes entrar con tu cuenta de Microsoft (tus notas van a OneDrive) o con la de Google (van a Google Drive, en la carpeta «Cuaderna»). Todo funciona igual, salvo el resumen diario por correo y el calendario de Outlook, que necesitan Microsoft. Con Google, para pasar notas a otros usa WhatsApp.</p>
+  <h3>Sin cuenta</h3><p>Puedes usar Cuaderna sin cuenta: todo se guarda solo en este dispositivo y, si borras la app o pierdes el móvil, se pierde. Exporta una copia de vez en cuando (Más › Ajustes › Tus datos) y, cuando quieras, pulsa «Conectar» en Ajustes: todo lo que tienes se sube a tu OneDrive. Calendario, correo, compartir con otros y versiones necesitan la cuenta.</p>
+  <h3>Tus datos</h3><p>En tu OneDrive, dentro de la carpeta Aplicaciones (la carpeta de la app conserva su nombre original): Notas (un fichero legible por nota), Audios, Fotos, Configuracion y Papelera.</p>
+  <h3>En iPhone</h3><p>Abre <b>cuaderna.astillerosoftware.es</b> en Safari, entra con tu cuenta y pulsa <b>Compartir › Añadir a pantalla de inicio</b>. Funciona igual que en Android salvo el widget, el aviso al colgar y el modo coche, que son exclusivos de la app de Android. <a href="iphone/" target="_blank" rel="noopener">Ver la guía con imágenes</a>.</p>
+  <h3>Gestos</h3><p>En las listas, desliza una nota a la derecha para marcarla hecha y a la izquierda para archivarla (o sacarla del archivo). Para borrar, ábrela y pulsa la papelera. Siempre puedes <b>deshacer</b> desde el aviso que aparece arriba.</p>
+  <h3>Hora y avisos</h3><p>Si escribes «a las 5» o «a las 17:30», Cuaderna pone la hora. Mientras Cuaderna esté abierta o en segundo plano, te avisa a esa hora.</p>
+  <h3>Transcripción</h3><p>Con Azure Speech configurado en Ajustes, las notas de voz se pasan a texto solas al guardarlas. El audio original siempre se conserva.</p>
+  <h3>Estadísticas</h3><p>Elige el periodo arriba. Verás cuánto anotas y completas frente al periodo anterior, para quién trabajas, con quién más, cuándo se te ocurren las cosas, cómo anotas y cuánto tardas en cerrar lo pendiente.</p>
+  <h3>Listas</h3><p>Empieza una línea por <b>[ ]</b> y, a partir de ahí, cada línea es un punto de la lista (al pulsar Intro, la siguiente ya empieza por [ ]; pulsa Intro en una línea vacía para salir). También puedes pulsar «Convertir en lista» al editar una nota. Lo que marcas pasa a «Hechos», al final de la nota, y arriba solo queda lo pendiente. Para cambiar el orden, arrastra cada punto desde los seis puntitos de su izquierda (en el PC también con Alt + flecha arriba/abajo). Márcalas con un toque en «Hoy», en «Notas» o dentro de la nota; verás cuántos puntos llevas hechos.</p>
+  <h3>Autoría</h3><div class="autoria izq"><img class="marca" src="astillero.svg" alt="Astillero"><div>Cuaderna es una app de <b>Astillero</b>, un proyecto independiente: idea, diseño y desarrollo.<small>© ${new Date().getFullYear()} Astillero. Todos los derechos reservados.</small></div></div>
+  <h3>Novedades</h3><p>${NOVEDADES}</p>`;
+  $("#ayudaSug").onclick = abrirSugerencia;
+  $("#ayudaTour").onclick = () => recorrido(0);
+}
+
+/* ================= Arranque ================= */
+(async () => {
+  if ("serviceWorker" in navigator){
+    const habia = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register("sw.js").then(reg => { reg.update().catch(() => {}); }).catch(() => {});
+    // si mientras está abierta llega una versión nueva, se ofrece recargar (sin interrumpir lo que estés escribiendo)
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (habia && !avisoVersion){ avisoVersion = true; toast("Hay una versión nueva de Cuaderna", "subir", 15000, () => location.reload(), "Actualizar"); } });
+  }
+  try { navigator.storage?.persist?.(); } catch(e){}
+  disp = Object.assign(disp, lsGet("chispa.disp") || {});
+  config = Object.assign(config, lsGet("chispa.config") || {});
+  const q = new URLSearchParams(location.search), accion = q.get("accion") || lsGet("chispa.accion");
+  if (q.get("t")){ disp.terminal = q.get("t").replace(/[<>"'`]/g, "").slice(0, 30); disp.ambito = q.get("a") === "personal" ? "personal" : "trabajo"; lsSet("chispa.disp", disp); }
+  localStorage.removeItem("chispa.accion");
+  if (q.get("asignacion")) lsSet("chispa.asigPend", q.get("asignacion"));
+  if (q.get("hecho")) lsSet("chispa.hechoPend", q.get("hecho"));
+  if (/^[\w-]{4,60}$/.test(q.get("nota") || "")) lsSet("chispa.notaPend", q.get("nota"));   // enlace directo a una nota (resumen por correo)
+  if (/android/i.test(navigator.userAgent) && !esApp() && (q.has("hecho") || q.has("asignacion") || q.has("nota")) && !q.has("web")){
+    const qs = ["hecho", "asignacion", "nota"].filter(k => q.has(k)).map(k => k + "=" + encodeURIComponent(q.get(k))).join("&");
+    const respaldo = location.origin + location.pathname + "?" + qs + "&web=1";
+    location.href = `intent://abrir?${qs}#Intent;scheme=es.astillerosoftware.cuaderna;package=es.astillerosoftware.cuaderna;S.browser_fallback_url=${encodeURIComponent(respaldo)};end`;
+  }
+  const vuelta = await volverDeLogin();
+  if (lsGet("chispa.tras") === "onenote" && (vuelta === "onenote" || vuelta === "ok")){ localStorage.removeItem("chispa.tras"); setTimeout(() => { const j = impPlan(); if (j?.tipo === "onenote" && j.estado !== "fin") reanudarImportacion(); else { ver("ajustes"); abrirOneNote(); } }, 1800); }
+  else if (vuelta && lsGet("chispa.tras") === "onenote"){ localStorage.removeItem("chispa.tras"); lsSet("chispa.permNotas", false); /* sin el permiso, que no se pida en cada renovación */ setTimeout(() => toast("No se pudo conectar con OneNote: " + vuelta, "alerta", 6000), 1500); }
+  const vueltaCorreo = /^[\wÀ-ÿ .,:()-]{1,120}$/.test(q.get("correo") || "") ? q.get("correo") : q.has("correo") ? "error" : null;
+  if (!vuelta && (q.has("t") || q.has("accion") || q.has("correo") || q.has("asignacion") || q.has("hecho") || q.has("nota"))) history.replaceState(null, "", REDIRECT);
+  if (vueltaCorreo) setTimeout(() => { ver("ajustes"); setTimeout(() => $("#kCorreo")?.scrollIntoView({block: "center"}), 400);
+    toast(vueltaCorreo === "ok" ? "Correo conectado. El resumen se enviará solo cada día" : "No se pudo conectar: " + vueltaCorreo, vueltaCorreo === "ok" ? "check" : "alerta", 7000); }, 1500);
+  aplicarTema();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", aplicarTema);
+
+  if (vuelta === "ok" && lsGet("chispa.local")){ localStorage.removeItem("chispa.local"); lsSet("chispa.migrar", true); lsSet("chispa.migrarNotas", true); }
+  if (!token && !lsGet("chispa.local")){
+    if (vuelta && !["ok", "login_required", "interaction_required"].includes(vuelta)) { $("#loginMsg").classList.remove("oculto"); $("#loginMsg").textContent = `No se pudo entrar: ${vuelta}. Inténtalo de nuevo.`; }
+    if (accion) lsSet("chispa.accion", accion);
+    mostrarAsignacionEnLogin();
+    $("#login").classList.remove("oculto"); $("#bLogin").onclick = () => irALogin(false, "ms");
+    $("#bGoogle").classList.toggle("oculto", !hayGoogle()); $("#bGoogle").onclick = () => irALogin(false, "google");
+    $("#bSinCuenta").onclick = () => { $("#loginLocal").classList.remove("oculto"); $(".lg-botones").classList.add("oculto"); };
+    $("#bLocalNo").onclick = () => { $("#loginLocal").classList.add("oculto"); $(".lg-botones").classList.remove("oculto"); };
+    $("#bLocalSi").onclick = () => { estadistica("sin_cuenta"); lsSet("chispa.local", true); lsSet("chispa.localDesde", Date.now()); location.reload(); };
+    return;
+  }
+  if (token && Date.now() >= token.exp && navigator.onLine){
+    try { await accessToken(); } catch(e){ if (e.login && !esGoogle() && !["login_required", "interaction_required"].includes(vuelta)){ if (accion) lsSet("chispa.accion", accion); return irALogin(true); } }   // con Google no se reintenta en silencio: la nube avisa «Volver a entrar»
+  }
+  if (token && apiBase()) comprobarAcceso().then(() => { pintarNav(); if (vista === "ajustes") pintarAjustes(); setTimeout(recibirMensajes, 4000); }).catch(() => {});   // la app se usa ya; la IA y la voz, cuando te autoricen
+  notas = (await idb.todas()) || []; ordenar();
+  if (token && lsGet("chispa.cuentaCambia")){   // se entró con otra nube sin salir antes: lo de la nube anterior sigue allí, se quita de aquí
+    localStorage.removeItem("chispa.cuentaCambia");
+    if (!lsGet("chispa.migrarNotas")){ for (const n of notas.filter(x => !x._pend)){ await idb.quitar(n.id); } notas = notas.filter(x => x._pend); ["chispa.cfgEtag", "chispa.agenda", "chispa.gRaiz"].forEach(k => localStorage.removeItem(k)); }
+  }
+  if (token && lsGet("chispa.migrarNotas")){   // venía de usarla sin cuenta: todo lo de este dispositivo se sube a OneDrive
+    for (const n of notas){ n._pend = true; n._subir = [...new Set([...(n._subir || []), n.audio, ...(n.fotos || []), ...Object.values(n.lienzos || {}), ...(n.archivos || []).map(a => a.ruta)].filter(Boolean))]; await idb.poner(n); }
+    localStorage.removeItem("chispa.migrarNotas"); estadistica("cuenta_conectada");
+    setTimeout(() => toast(notas.length ? `Cuenta conectada. Subiendo tus ${notas.length} notas a ${nube()}` : "Cuenta conectada", "nube", 6000), 1200);
+  }
+  $("#app").classList.remove("oculto");
+  ver(esMovil() ? "anotar" : "hoy");
+  addEventListener("resize", () => { prepararTeclado(); ajustarLienzo(); aplicarTema(); pintarEstado(); });
+  const capturaPrevia = await leerCapturaGuardada();
+  nuevoBorrador(); ajustarLienzo();
+  if (capturaPrevia) await recuperarCaptura(capturaPrevia);
+  avisarEdicionPendiente();
+  if (!disp.terminal){ disp.terminal = esMovil() ? "Móvil" : "PC"; lsSet("chispa.disp", disp); }   // nombre por defecto, cambiable en Ajustes
+  if (accion === "ancla"){ anclaAbierta = null; await guardarAncla(new Date(), true); }
+  if (accion === "voz"){ tocado = true; empezarVoz(); }
+  sincronizar(true, true);
+  if (!lsGet("chispa.instalada")){ lsSet("chispa.instalada", Date.now()); estadistica("app_nueva"); }
+  if (lsGet("chispa.diaEst") !== hoyISO()){ lsSet("chispa.diaEst", hoyISO()); estadistica("app_dia"); }
+  if (modoLocal()){   // recordatorio semanal de hacer una copia
+    const ult = lsGet("chispa.ultExport") || lsGet("chispa.localDesde") || Date.now();
+    if (notas.some(n => !n._borrar) && Date.now() - ult > 7 * 864e5) setTimeout(() => toast("Tus notas están solo en este dispositivo. Haz una copia", "alerta", 12000, abrirLocal, "Ver"), 2500);
+  }
+  setTimeout(procesarAsignaciones, 1200);
+  if (!accion && !capturaPrevia) setTimeout(recorridoAuto, 1800);   // primer uso: recorrido guiado (hasta 3 veces o hasta que digan que no)
+  setTimeout(enviarSugerenciasPendientes, 3000);
+  setTimeout(() => { procesarTranscripciones(); revisarAvisos(); }, 2500);
+  iniciarApp();
+})();
