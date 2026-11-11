@@ -7,4 +7,5 @@ description = "Públicos por diseño"
 # librerías de terceros alojadas en /lib (contienen textos de ejemplo con forma de clave)
 paths = ['''^lib/''']
 # identificador de Cloudflare Web Analytics: va visible en cada página, no es secreto
+regexTarget = "line"
 regexes = ['''data-cf-beacon='\{"token": "[0-9a-f]{32}"\}''']
