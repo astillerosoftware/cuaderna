@@ -92,8 +92,19 @@ const I = {
   play: '<path d="M8 5.5v13l10.5-6.5z"/>'
 };
 function bytesDe(b64){ const s = atob(b64.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((b64.length + 3) % 4)); return Uint8Array.from(s, c => c.charCodeAt(0)); }
+// Enlaces cortos cifrados: el servidor solo guarda texto cifrado; la llave va en el enlace, tras «#», y nunca le llega
+async function llaveDe(b){ return crypto.subtle.importKey("raw", b, "AES-GCM", false, ["encrypt", "decrypt"]); }
+async function descifrarCorto(datos, llave){
+  const b = bytesDe(datos), clave = await llaveDe(bytesDe(llave));
+  const claro = await crypto.subtle.decrypt({name: "AES-GCM", iv: b.slice(0, 12)}, clave, b.slice(12));
+  return new TextDecoder().decode(claro);
+}
 async function desempaquetar(t){
-  if (t[0] === "c"){ const b = String(window.CUADERNA_API || "").replace(/\/+$/, ""); const r = await fetch(`${b}/corto/${encodeURIComponent(t.slice(1))}`); if (!r.ok) throw new Error("caducado"); t = (await r.json()).d; }
+  if (t[0] === "c"){
+    const [id, llave] = t.slice(1).split(".");
+    const b = String(window.CUADERNA_API || "").replace(/\/+$/, ""); const r = await fetch(`${b}/corto/${encodeURIComponent(id)}`); if (!r.ok) throw new Error("caducado"); t = (await r.json()).d;
+    if (t[0] === "e"){ if (!llave) throw new Error("incompleto"); t = await descifrarCorto(t.slice(1), llave); }
+  }
   const bytes = bytesDe(t.slice(1));
   if (t[0] === "z"){ const st = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw")); return JSON.parse(await new Response(st).text()); }
   return JSON.parse(new TextDecoder().decode(bytes));

@@ -75,6 +75,9 @@ cambiar(manifiesto, m => {
   m = m.replace("</activity>", compartir);
   const extra = fs.readFileSync(path.join(nativo, "manifiesto-aplicacion.xml"), "utf8");
   m = m.replace("</application>", extra + "\n    </application>");
+  // sin copias de seguridad de los datos de la app: ahí viven los permisos del correo (Mail.Send) y no deben salir del móvil
+  m = m.replace(/android:allowBackup="true"/, 'android:allowBackup="false"');
+  if (!/android:allowBackup=/.test(m)) m = m.replace(/<application/, '<application android:allowBackup="false"');
   if (!/configChanges="[^"]*density/.test(m)) m = m.replace(/android:configChanges="([^"]*)"/, 'android:configChanges="$1|density"');
   return m;
 });

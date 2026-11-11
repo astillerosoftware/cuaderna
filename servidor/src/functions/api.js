@@ -26,6 +26,30 @@ async function urlPublica(u){
   const ips = net.isIP(host) ? [host] : (await dns.lookup(host, {all: true}).catch(() => [])).map(x => x.address);
   return ips.length > 0 && !ips.some(ipPrivada);
 }
+// Descarga una página conectándose SOLO a direcciones públicas: la comprobación se hace en el mismo momento de conectar
+// (no antes), así un dominio que cambie de IP entre la comprobación y la descarga no puede colar la red interna.
+const https = require("https"), http = require("http");
+function buscarPublica(host, opts, cb){
+  dns.lookup(host, {all: true}).then(l => {
+    const ok = l.filter(x => !ipPrivada(x.address));
+    if (!l.length || ok.length !== l.length) return cb(Object.assign(new Error("Dirección no permitida"), {code: "PRIVADA"}));
+    if (opts && opts.all) cb(null, ok); else cb(null, ok[0].address, ok[0].family);
+  }, cb);
+}
+function traerPagina(u, {signal, max = 400000} = {}){
+  return new Promise((res, rej) => {
+    const mod = u.protocol === "https:" ? https : http;
+    const req = mod.get(u, {lookup: buscarPublica, signal, headers: {"User-Agent": "Mozilla/5.0 (compatible; CuadernaBot/1.0)", "Accept-Language": "es-ES,es;q=0.9", "Accept": "text/html,*/*;q=0.5"}}, r => {
+      const status = r.statusCode, cabeceras = {get: k => { const v = r.headers[k.toLowerCase()]; return Array.isArray(v) ? v[0] : v || null; }};
+      if ([301, 302, 303, 307, 308].includes(status) || !/html|text/.test(r.headers["content-type"] || "")){ r.destroy(); return res({status, headers: cabeceras, texto: ""}); }
+      const trozos = []; let n = 0;
+      r.on("data", c => { trozos.push(c); n += c.length; if (n >= max) r.destroy(); });
+      const fin = () => res({status, headers: cabeceras, texto: Buffer.concat(trozos).subarray(0, max).toString("utf8")});
+      r.on("end", fin); r.on("close", fin); r.on("error", fin);
+    });
+    req.on("error", rej);
+  });
+}
 // lee como mucho «max» bytes del cuerpo, sin cargar en memoria páginas enormes
 async function leerTexto(r, max){
   const lector = r.body?.getReader?.(); if (!lector) return (await r.text()).slice(0, max);
@@ -40,7 +64,11 @@ const EMISOR = "https://login.microsoftonline.com/9188040d-6c67-4c5b-b112-36a304
 // uno o varios correos de administrador, separados por comas (p. ej. tu cuenta de Microsoft y tu Gmail)
 const ADMINS = (process.env.ADMIN_EMAIL || "").split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
 const ADMIN = ADMINS[0] || "";
-const esAdmin = email => !!email && ADMINS.includes(String(email).toLowerCase());
+// Opcional y más seguro: ADMIN_IDS con los identificadores fijos de las cuentas (no cambian aunque cambie el correo).
+// Si está puesto, para ser administrador hacen falta el correo Y el identificador.
+const ADMIN_IDS = (process.env.ADMIN_IDS || "").split(",").map(s => s.trim()).filter(Boolean);
+const esAdminEmail = email => !!email && ADMINS.includes(String(email).toLowerCase());
+const esAdmin = (email, id) => esAdminEmail(email) && (!ADMIN_IDS.length || id === undefined || ADMIN_IDS.includes(id));
 // la dirección nueva y la antigua (que redirige) siempre valen, aunque en Azure haya otra lista
 const lista = (env, base) => [...new Set([...(env || "").split(","), ...base].map(s => s.trim()).filter(Boolean))];
 const ORIGENES = lista(process.env.ORIGENES, ["https://cuaderna.astillerosoftware.es", "https://astillerosoftware.es", "https://www.astillerosoftware.es", "https://jamormar.github.io"]);
@@ -129,10 +157,12 @@ async function quienEs(request){
 function cors(request){
   const o = request.headers.get("origin") || "";
   const h = {"Access-Control-Allow-Headers": "Authorization, Content-Type", "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Max-Age": "86400", "Vary": "Origin"};
-  if (ORIGENES.includes(o) || /^https?:\/\/localhost(:\d+)?$/.test(o)) h["Access-Control-Allow-Origin"] = o;
+  if (ORIGENES.includes(o) || (process.env.PERMITIR_LOCALHOST === "1" && /^https?:\/\/localhost(:\d+)?$/.test(o))) h["Access-Control-Allow-Origin"] = o;
   return h;
 }
-const json = (request, cuerpo, status = 200, extra = {}) => ({status, headers: {...cors(request), "Content-Type": "application/json", ...extra}, body: JSON.stringify(cuerpo)});
+// nada de lo que devuelve la API debe guardarse en cachés intermedias ni interpretarse como otra cosa que JSON
+const SEGURIDAD = {"X-Content-Type-Options": "nosniff", "Cache-Control": "no-store", "Referrer-Policy": "no-referrer"};
+const json = (request, cuerpo, status = 200, extra = {}) => ({status, headers: {...cors(request), ...SEGURIDAD, "Content-Type": "application/json", ...extra}, body: JSON.stringify(cuerpo)});
 const hoy = () => new Date().toISOString().slice(0, 10);
 
 // mensajes del equipo que aún no han llegado a este usuario (solo los activos y que van para él)
@@ -152,11 +182,11 @@ async function usuarioDe(yo){
   let u = await leer(t, "u", yo.id);
   const ahora = new Date().toISOString();
   if (!u){
-    u = {partitionKey: "u", rowKey: yo.id, email: yo.email, nombre: yo.nombre, estado: esAdmin(yo.email) ? "autorizado" : "pendiente", creado: ahora, ultimo: ahora, iaTotal: 0, vozSegTotal: 0};
+    u = {partitionKey: "u", rowKey: yo.id, email: yo.email, nombre: yo.nombre, estado: esAdmin(yo.email, yo.id) ? "autorizado" : "pendiente", creado: ahora, ultimo: ahora, iaTotal: 0, vozSegTotal: 0};
     await t.createEntity(u);
   } else if (Date.now() - new Date(u.ultimo).getTime() > 10 * 60e3 || u.email !== yo.email || (yo.nombre && u.nombre !== yo.nombre)){
     u.ultimo = ahora; u.email = yo.email; if (yo.nombre) u.nombre = yo.nombre;
-    if (esAdmin(yo.email)) u.estado = "autorizado";
+    if (esAdmin(yo.email, yo.id)) u.estado = "autorizado";
     await t.updateEntity(u, "Merge");
   }
   return u;
@@ -164,7 +194,7 @@ async function usuarioDe(yo){
 // Planes: «basico» (gratis), «plus» (de pago) y «fundador» (quienes probaron Cuaderna: todo gratis de por vida, con IA y voz limitadas al día).
 // Mientras PLUS_EXIGIDO no sea 1, todo el mundo tiene los límites generales.
 const PLANES = ["basico", "plus", "fundador"];
-const planDe = (u, yo) => esAdmin(yo.email) ? "plus" : PLANES.includes(u.plan) ? u.plan : "basico";
+const planDe = (u, yo) => esAdmin(yo.email, yo.id) ? "plus" : PLANES.includes(u.plan) ? u.plan : "basico";
 function limites(u, yo){
   const plan = planDe(u, yo);
   if (process.env.PLUS_EXIGIDO !== "1" || plan === "plus") return {ia: MAX_IA, voz: MAX_VOZ};
@@ -186,7 +216,7 @@ const rutas = {
     const u = await usuarioDe(yo);
     // Cuaderna Plus: PLUS_EXIGIDO=1 en la Function App activa el cobro; mientras no, todo el mundo tiene las funciones Plus
     const lim = limites(u, yo), esHoy = u.dia === hoy();
-    return {estado: u.estado, admin: esAdmin(yo.email), ia: hayIA(), voz: hayVoz(), plan: planDe(u, yo), plusExigido: process.env.PLUS_EXIGIDO === "1",
+    return {estado: u.estado, admin: esAdmin(yo.email, yo.id), ia: hayIA(), voz: hayVoz(), plan: planDe(u, yo), plusExigido: process.env.PLUS_EXIGIDO === "1",
       uso: {ia: esHoy ? u.iaHoy || 0 : 0, iaMax: lim.ia, vozMin: Math.round((esHoy ? u.vozSegHoy || 0 : 0) / 60), vozMax: lim.voz},
       mensajes: u.estado === "autorizado" ? await mensajesPara(u) : []};
   },
@@ -299,15 +329,15 @@ const rutas = {
     try {
       let r, actual = dir;
       for (let salto = 0; ; salto++){   // las redirecciones se siguen a mano para comprobar cada destino
-        r = await fetch(actual.href, {signal: ctl.signal, redirect: "manual", headers: {"User-Agent": "Mozilla/5.0 (compatible; CuadernaBot/1.0)", "Accept-Language": "es-ES,es;q=0.9"}});
+        r = await traerPagina(actual, {signal: ctl.signal});
         if (![301, 302, 303, 307, 308].includes(r.status)) break;
         if (salto >= 3) return [{error: "Demasiadas redirecciones"}, 502];
         actual = new URL(r.headers.get("location") || "", actual);
         if (!(await urlPublica(actual))) return [{error: "Dirección no permitida"}, 400];
       }
-      if (!/html|text/.test(r.headers.get("content-type") || "")) return {titulo: "", descripcion: "", imagen: "", texto: "", resumen: ""};
-      html = await leerTexto(r, 400000);
-    } catch(e){ return [{error: "No se pudo abrir la página"}, 502]; } finally { clearTimeout(t); }
+      if (!r.texto) return {titulo: "", descripcion: "", imagen: "", texto: "", resumen: ""};
+      html = r.texto;
+    } catch(e){ return [{error: e.code === "PRIVADA" ? "Dirección no permitida" : "No se pudo abrir la página"}, e.code === "PRIVADA" ? 400 : 502]; } finally { clearTimeout(t); }
     const ent = s => s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ").replace(/&#(\d+);/g, (m, n) => String.fromCharCode(+n));
     const meta = k => ent((html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${k}["'][^>]*content=["']([^"']*)`, "i")) || html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]*(?:property|name)=["']${k}["']`, "i")) || [])[1] || "").trim();
     const titulo = meta("og:title") || ent((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1] || "").trim();
@@ -316,7 +346,7 @@ const rutas = {
     const cuerpo = (html.match(/<article[\s\S]*?<\/article>/i) || html.match(/<main[\s\S]*?<\/main>/i) || html.match(/<body[\s\S]*<\/body>/i) || [html])[0];
     const texto = ent(cuerpo.replace(/<(script|style|noscript|svg|nav|footer|header|form)[\s\S]*?<\/\1>/gi, " ").replace(/<br\s*\/?>|<\/(p|div|li|h\d)>/gi, "\n").replace(/<[^>]+>/g, " ")).replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim().slice(0, 40000);
     let resumen = "";
-    if (hayIA() && texto.length > 200 && !(u.dia === hoy() && (u.iaHoy || 0) >= MAX_IA)){
+    if (hayIA() && texto.length > 200 && !(u.dia === hoy() && (u.iaHoy || 0) >= limites(u, yo).ia)){
       try {
         let base = process.env.AOAI_ENDPOINT.trim(); try { base = new URL(base).origin; } catch(e){}
         const r = await fetch(`${base}/openai/deployments/${encodeURIComponent(process.env.AOAI_DESPLIEGUE || "gpt-4.1-mini")}/chat/completions?api-version=2024-10-21`, {method: "POST", headers: {"Content-Type": "application/json", "api-key": process.env.AOAI_CLAVE.trim()},
@@ -352,7 +382,7 @@ const rutas = {
     if (!["autorizado", "bloqueado", "pendiente"].includes(e.estado)) return [{error: "Estado no válido"}, 400];
     const t = await tabla("usuarios"); const u = await leer(t, "u", String(e.id));
     if (!u) return [{error: "No existe"}, 404];
-    if (esAdmin(u.email)) return [{error: "No puedes cambiar el acceso de un administrador"}, 400];
+    if (esAdmin(u.email, u.rowKey)) return [{error: "No puedes cambiar el acceso de un administrador"}, 400];
     await t.updateEntity({partitionKey: "u", rowKey: u.rowKey, estado: e.estado, cambiado: new Date().toISOString()}, "Merge");
     return {ok: true};
   },
@@ -413,7 +443,7 @@ rutas["GET admin/estadisticas"] = async (request, yo) => {
   for await (const x of u.listEntities()){ usuarios.total++; usuarios[x.estado] = (usuarios[x.estado] || 0) + 1; }
   return {dias, total, usuarios};
 };
-function soloAdmin(yo){ if (!yo.portal && !esAdmin(yo.email)) throw new NoAutorizado("Solo el administrador"); }
+function soloAdmin(yo){ if (!yo.portal && !esAdmin(yo.email, yo.id)) throw new NoAutorizado("Solo el administrador"); }
 
 app.http("api", {
   methods: ["GET", "POST", "OPTIONS"], authLevel: "anonymous", route: "{*ruta}",
@@ -440,12 +470,13 @@ app.http("api", {
       } else return json(request, {error: "Datos no válidos"}, 400);
       const r = await fetch("https://oauth2.googleapis.com/token", {method: "POST", headers: {"Content-Type": "application/x-www-form-urlencoded"}, body: p});
       const t = await r.text();
-      return {status: r.status, headers: {...cors(request), "Content-Type": "application/json", "Cache-Control": "no-store"}, body: t};
+      return {status: r.status, headers: {...cors(request), ...SEGURIDAD, "Content-Type": "application/json"}, body: t};
     }
-    // enlaces cortos de notas pasadas: se guarda el paquete (ya comprimido) y se da una clave de 8 letras; caducan a los 180 días
+    // enlaces cortos de notas pasadas: se guarda el paquete cifrado (la llave solo está en el enlace) y se da una clave de 8 letras; caducan a los 180 días
     if (request.method === "POST" && ruta === "corto"){
       const d = (await request.text()).trim();
-      if (!/^[zj][A-Za-z0-9_-]{4,6000}$/.test(d) || frenar(request)) return json(request, {error: "No válido"}, 400);
+      // «e…» = paquete cifrado en el móvil (el servidor no tiene la llave); «z/j» = enlaces antiguos sin cifrar
+      if (!/^[zje][A-Za-z0-9_-]{4,8200}$/.test(d) || frenar(request)) return json(request, {error: "No válido"}, 400);
       const t = await tabla("cortos"), abc = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
       for (let i = 0; i < 4; i++){
         const id = [...crypto.randomBytes(8)].map(x => abc[x % abc.length]).join("");
@@ -507,7 +538,7 @@ app.http("api", {
       if (yo.portal && !ruta.startsWith("admin/")) throw new NoAutorizado("La llave del portal solo sirve para la administración");
       const r = await f(request, yo);
       if (Array.isArray(r)) return json(request, r[0], r[1]);
-      if (r && r.crudo !== undefined) return {status: r.status, headers: {...cors(request), "Content-Type": "application/json", ...(r.extra || {})}, body: r.crudo};
+      if (r && r.crudo !== undefined) return {status: r.status, headers: {...cors(request), ...SEGURIDAD, "Content-Type": "application/json", ...(r.extra || {})}, body: r.crudo};
       return json(request, r);
     } catch(e){
       if (e instanceof NoAutorizado) return json(request, {error: e.message}, 401);

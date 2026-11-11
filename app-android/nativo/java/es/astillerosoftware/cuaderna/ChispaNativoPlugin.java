@@ -265,8 +265,13 @@ public class ChispaNativoPlugin extends Plugin {
     /** Abre un enlace fuera de la app (por ejemplo, para descargar la versión nueva). */
     @PluginMethod
     public void abrirUrl(PluginCall call) {
+        Uri u = Uri.parse(call.getString("url", ""));
+        String esquema = u.getScheme() == null ? "" : u.getScheme().toLowerCase(java.util.Locale.ROOT);
+        // solo enlaces web, correo o teléfono: nunca intent:, file:, content: ni otras apps a ciegas
+        if (!esquema.equals("https") && !esquema.equals("http") && !esquema.equals("mailto") && !esquema.equals("tel")) { call.reject("Enlace no permitido"); return; }
         try {
-            Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(call.getString("url", "")));
+            Intent i = new Intent(Intent.ACTION_VIEW, u);
+            i.addCategory(Intent.CATEGORY_BROWSABLE);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             getContext().startActivity(i);
             call.resolve();

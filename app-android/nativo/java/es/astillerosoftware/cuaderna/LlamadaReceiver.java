@@ -20,6 +20,10 @@ public class LlamadaReceiver extends BroadcastReceiver {
 
     private static final String ESTADO = "llamada_estado";
     private static final String DESDE = "llamada_desde";   // cuándo empezó la llamada (descolgado o marcado)
+    private static final String ENTRANTE = "llamada_entrante";   // sonó antes de descolgar: es una llamada recibida y contestada
+    /** Sin registro de llamadas (versión de Google Play) no se sabe si alguien contestó una llamada que haces tú:
+     *  si dura menos que esto, lo más probable es que nadie descolgara (o fue tan breve que no hay nada que anotar). */
+    private static final long SALIENTE_MINIMA_MS = 40 * 1000L;
 
     @Override
     public void onReceive(Context ctx, Intent intent) {
@@ -30,7 +34,8 @@ public class LlamadaReceiver extends BroadcastReceiver {
         String anterior = p.getString(ESTADO, TelephonyManager.EXTRA_STATE_IDLE);
         if (estado.equals(anterior)) return;   // Android avisa dos veces de cada cambio
         SharedPreferences.Editor ed = p.edit().putString(ESTADO, estado);
-        if (TelephonyManager.EXTRA_STATE_OFFHOOK.equals(estado)) ed.putLong(DESDE, System.currentTimeMillis());
+        if (TelephonyManager.EXTRA_STATE_OFFHOOK.equals(estado))
+            ed.putLong(DESDE, System.currentTimeMillis()).putBoolean(ENTRANTE, TelephonyManager.EXTRA_STATE_RINGING.equals(anterior));
         ed.apply();
 
         if (!p.getBoolean(Ajustes.LLAMADAS, false)) return;
@@ -39,6 +44,11 @@ public class LlamadaReceiver extends BroadcastReceiver {
 
         final Context app = ctx.getApplicationContext();
         final long desde = p.getLong(DESDE, 0);
+        if (ctx.checkSelfPermission(Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED && desde > 0) {
+            long dura = System.currentTimeMillis() - desde;
+            boolean entrante = p.getBoolean(ENTRANTE, false);
+            if (entrante ? dura < 5000 : dura < SALIENTE_MINIMA_MS) return;   // sin respuesta o demasiado breve: no molestar
+        }
         final PendingResult pendiente = goAsync();
         final Handler h = new Handler(Looper.getMainLooper());
         // espera a que el registro de llamadas tenga la última; si aún no está, lo intenta una vez más

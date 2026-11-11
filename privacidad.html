@@ -22,7 +22,7 @@ header img{width:56px;height:56px;border-radius:14px}
 </style>
 </head>
 <body><main>
-<header><img src="icon-192.png" alt=""><h1>Privacidad en Cuaderna</h1><div class="fecha">Última actualización: 1 de noviembre de 2026</div></header>
+<header><img src="icon-192.png" alt=""><h1>Privacidad en Cuaderna</h1><div class="fecha">Última actualización: 11 de noviembre de 2026</div></header>
 
 <div class="caja"><b>En resumen:</b> tus notas son tuyas. Se guardan en tu propio OneDrive o Google Drive, o solo en tu dispositivo si la usas sin cuenta. Cuaderna no vende datos, no muestra publicidad y no lee tus archivos fuera de su propia carpeta.</div>
 
@@ -42,7 +42,7 @@ header img{width:56px;height:56px;border-radius:14px}
 <ul>
 <li><b>Tu nombre y tu correo</b> (los de tu cuenta de Microsoft o Google), para autorizar el uso de la IA y la voz, y el número de usos al día para poner un límite.</li>
 <li><b>Las sugerencias</b> que envías desde la app, con tu nombre y correo.</li>
-<li><b>Las notas que pasas a otra persona con enlace corto:</b> el contenido de esa nota se guarda en el servidor durante 180 días, para que quien la recibe pueda abrirla. Después se borra.</li>
+<li><b>Las notas que pasas a otra persona con enlace corto:</b> la nota se cifra en tu dispositivo antes de salir de él, y el servidor solo guarda ese texto cifrado durante 180 días, para que quien la recibe pueda abrirla. La llave para leerla va únicamente dentro del enlace que envías (en la parte que los navegadores no mandan al servidor), así que en Astillero no podemos leerla. Después de 180 días se borra.</li>
 <li><b>El estado de las notas que pasas:</b> un código aleatorio, cuándo se abrió, cuántos puntos van hechos y cuándo se terminó, para que quien la envió vea cómo va. Sin texto, sin nombres y sin teléfonos. Se borra a los 90 días.</li>
 <li><b>Estadísticas anónimas:</b> solo totales por día (por ejemplo, «12 notas pasadas hoy»), sin datos de ninguna persona.</li>
 <li><b>Visitas a las páginas informativas</b> (bienvenida, guía de iPhone y esta página): se cuentan con Cloudflare Web Analytics, de forma agregada, sin cookies y sin guardar tu dirección IP. No se usa ni dentro de la app ni en las notas que se comparten.</li>
@@ -57,6 +57,14 @@ header img{width:56px;height:56px;border-radius:14px}
 <h2>Datos de Google</h2>
 <p>El uso que hace Cuaderna de la información recibida de las API de Google cumple la <a href="https://developers.google.com/terms/api-services-user-data-policy">Política de datos de usuario de los servicios de API de Google</a>, incluidos los requisitos de uso limitado. Cuaderna solo usa tu nombre y tu correo para identificarte, y Google Drive solo para guardar y leer los archivos que ella misma crea.</p>
 
+<h2>Cómo protegemos tus datos</h2>
+<ul>
+<li>Todas las conexiones van cifradas (HTTPS). Las notas viajan directamente entre tu dispositivo y tu nube.</li>
+<li>Los permisos para entrar en tu OneDrive o Google Drive se quedan en tu dispositivo; el servidor de Cuaderna no los guarda.</li>
+<li>Las claves de la inteligencia artificial y de la voz solo están en el servidor, nunca en la app.</li>
+<li>El servidor no guarda lo que envías a la IA o a la voz: lo pasa a Microsoft y te devuelve la respuesta.</li>
+<li>La app limpia el contenido que llega de fuera (páginas web, notas importadas o recibidas) antes de mostrarlo.</li>
+</ul>
 <h2 id="borrar">Cómo borrar tus datos y tu cuenta</h2>
 <ul>
 <li><b>Tus notas:</b> borra la carpeta de Cuaderna de tu OneDrive o Google Drive. Puedes exportarlo todo antes en Más › Ajustes › Tus datos.</li>
