@@ -25,7 +25,7 @@ jobs:
         lenguaje: [javascript-typescript, java-kotlin]
     steps:
       - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.lenguaje }}
           queries: security-extended
@@ -33,7 +33,7 @@ jobs:
           config: |
             paths-ignore:
               - lib
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v4
         with:
           category: "/lenguaje:${{ matrix.lenguaje }}"
   secretos:
