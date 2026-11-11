@@ -1,0 +1,31 @@
+# Copia en /lib las librerías externas que usa Cuaderna, en versiones fijas, para servirlas desde nuestro propio dominio
+# (sin depender de CDN de terceros). Se lanza a mano desde Actions › Librerías cuando haya que cambiar de versión.
+name: Librerías
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  copiar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descargar versiones fijas desde npm
+        run: |
+          set -e
+          tmp=$(mktemp -d); cd "$tmp"
+          for p in jspdf@2.5.1 pdfjs-dist@3.11.174 jszip@3.10.1 qrcode-generator@1.4.4 microsoft-cognitiveservices-speech-sdk@1.40.0; do npm pack -q "$p"; done
+          for f in *.tgz; do mkdir -p "${f%.tgz}"; tar -xzf "$f" -C "${f%.tgz}"; done
+          L="$GITHUB_WORKSPACE/lib"; mkdir -p "$L"
+          cp jspdf-2.5.1/package/dist/jspdf.umd.min.js "$L/jspdf-2.5.1.min.js"
+          cp pdfjs-dist-3.11.174/package/build/pdf.min.js "$L/pdf-3.11.174.min.js"
+          cp pdfjs-dist-3.11.174/package/build/pdf.worker.min.js "$L/pdf.worker-3.11.174.min.js"
+          cp jszip-3.10.1/package/dist/jszip.min.js "$L/jszip-3.10.1.min.js"
+          cp qrcode-generator-1.4.4/package/qrcode.js "$L/qrcode-1.4.4.js"
+          cp microsoft-cognitiveservices-speech-sdk-1.40.0/package/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js "$L/speech-sdk-1.40.0.min.js"
+          cd "$L"; sha256sum *.js > SHA256SUMS; cat SHA256SUMS
+      - name: Guardar en el repositorio
+        run: |
+          git config user.name "github-actions"; git config user.email "github-actions@users.noreply.github.com"
+          git add lib
+          git diff --cached --quiet && echo "Sin cambios" || (git commit -m "Librerías externas alojadas en /lib (versiones fijas)" && git push)
