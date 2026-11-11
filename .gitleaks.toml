@@ -1,0 +1,10 @@
+# Gitleaks: falsos positivos revisados a mano (11/11/2026). Todo lo demás se sigue vigilando.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Públicos por diseño"
+# librerías de terceros alojadas en /lib (contienen textos de ejemplo con forma de clave)
+paths = ['''^lib/''']
+# identificador de Cloudflare Web Analytics: va visible en cada página, no es secreto
+regexes = ['''data-cf-beacon='\{"token": "[0-9a-f]{32}"\}''']
