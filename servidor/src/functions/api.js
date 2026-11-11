@@ -475,8 +475,9 @@ app.http("api", {
     // enlaces cortos de notas pasadas: se guarda el paquete cifrado (la llave solo está en el enlace) y se da una clave de 8 letras; caducan a los 180 días
     if (request.method === "POST" && ruta === "corto"){
       const d = (await request.text()).trim();
-      // «e…» = paquete cifrado en el móvil (el servidor no tiene la llave); «z/j» = enlaces antiguos sin cifrar
-      if (!/^[zje][A-Za-z0-9_-]{4,8200}$/.test(d) || frenar(request)) return json(request, {error: "No válido"}, 400);
+      // solo paquetes cifrados en el móvil («e…»): el servidor no tiene la llave. Una app antigua que mande uno sin cifrar
+      // recibe un error y pone la nota entera dentro del enlace, sin guardar nada aquí.
+      if (!/^e[A-Za-z0-9_-]{4,8200}$/.test(d) || frenar(request)) return json(request, {error: "No válido"}, 400);
       const t = await tabla("cortos"), abc = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
       for (let i = 0; i < 4; i++){
         const id = [...crypto.randomBytes(8)].map(x => abc[x % abc.length]).join("");
@@ -487,7 +488,8 @@ app.http("api", {
     }
     if (request.method === "GET" && /^corto\/[A-Za-z0-9]{8}$/.test(ruta)){
       const e = await leer(await tabla("cortos"), "c", ruta.slice(6));
-      if (!e || Date.now() - new Date(e.creado) > 180 * 864e5) return json(request, {error: "Enlace caducado"}, 404);
+      // los enlaces antiguos sin cifrar se dan por caducados (y la limpieza diaria los borra)
+      if (!e || !String(e.d || "").startsWith("e") || Date.now() - new Date(e.creado) > 180 * 864e5) return json(request, {error: "Enlace caducado"}, 404);
       return json(request, {d: e.d}, 200, {"Cache-Control": "public, max-age=3600"});
     }
     // formulario de contacto del portal astillerosoftware.es: anónimo; llega al panel de Administración como una sugerencia más
@@ -560,6 +562,8 @@ app.timer("limpiarEstados", {
     }
     const c = await tabla("cortos"), lim2 = new Date(Date.now() - 180 * 864e5).toISOString();
     for await (const e of c.listEntities({queryOptions: {filter: `PartitionKey eq 'c' and creado lt '${lim2}'`}})){ try { await c.deleteEntity(e.partitionKey, e.rowKey); borrados++; } catch(err){} }
+    // enlaces cortos sin cifrar (anteriores al 11/11/2026): se borran todos, sin esperar a que caduquen
+    for await (const e of c.listEntities({queryOptions: {filter: `PartitionKey eq 'c'`, select: ["RowKey", "d"]}})){ if (!String(e.d || "").startsWith("e")){ try { await c.deleteEntity("c", e.rowKey); borrados++; } catch(err){} } }
     context.log(`limpiarEstados: ${borrados} borrados (estados de 90 días y enlaces cortos de 180)`);
   }
 });
