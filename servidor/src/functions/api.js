@@ -6,7 +6,7 @@
 // - Cuenta, de forma anónima (solo totales por día), cómo se difunde Cuaderna: notas pasadas, abiertas, instalaciones…
 // Ajustes de la Function App: ADMIN_EMAIL, AOAI_ENDPOINT, AOAI_CLAVE, AOAI_DESPLIEGUE,
 // SPEECH_CLAVE, SPEECH_REGION, ORIGENES (opcional), MAX_IA_DIA (opcional), MAX_VOZ_MIN_DIA (opcional),
-// PLUS_EXIGIDO (1 = cobrar Plus), LIMITE_IA_FUNDADOR / LIMITE_VOZ_FUNDADOR / LIMITE_IA_BASICO / LIMITE_VOZ_BASICO (opcionales, por día),
+// PLUS_EXIGIDO (1 = cobrar Plus), LIMITES_DIARIOS (0 = sin límites diarios mientras no se cobre Plus), AUTORIZAR_A_MANO (1 = las personas nuevas esperan a que el administrador las autorice), LIMITE_IA_FUNDADOR / LIMITE_VOZ_FUNDADOR / LIMITE_IA_BASICO / LIMITE_VOZ_BASICO (opcionales, por día),
 // GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET (para entrar con Google: el secreto solo vive aquí).
 const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
@@ -182,22 +182,25 @@ async function usuarioDe(yo){
   let u = await leer(t, "u", yo.id);
   const ahora = new Date().toISOString();
   if (!u){
-    u = {partitionKey: "u", rowKey: yo.id, email: yo.email, nombre: yo.nombre, estado: esAdmin(yo.email, yo.id) ? "autorizado" : "pendiente", creado: ahora, ultimo: ahora, iaTotal: 0, vozSegTotal: 0};
+    u = {partitionKey: "u", rowKey: yo.id, email: yo.email, nombre: yo.nombre, estado: esAdmin(yo.email, yo.id) || !AUTORIZAR_A_MANO ? "autorizado" : "pendiente", creado: ahora, ultimo: ahora, iaTotal: 0, vozSegTotal: 0};
     await t.createEntity(u);
   } else if (Date.now() - new Date(u.ultimo).getTime() > 10 * 60e3 || u.email !== yo.email || (yo.nombre && u.nombre !== yo.nombre)){
     u.ultimo = ahora; u.email = yo.email; if (yo.nombre) u.nombre = yo.nombre;
-    if (esAdmin(yo.email, yo.id)) u.estado = "autorizado";
+    if (esAdmin(yo.email, yo.id) || (!AUTORIZAR_A_MANO && u.estado === "pendiente")) u.estado = "autorizado";
     await t.updateEntity(u, "Merge");
   }
   return u;
 }
 // Planes: «basico» (gratis), «plus» (de pago) y «fundador» (quienes probaron Cuaderna: todo gratis de por vida, con IA y voz limitadas al día).
-// Mientras PLUS_EXIGIDO no sea 1, todo el mundo tiene los límites generales.
+// Los límites diarios de IA y voz se aplican desde el lanzamiento, aunque Plus aún no se cobre (LIMITES_DIARIOS=0 los quita).
+// Las personas nuevas quedan autorizadas solas, con esos límites; el administrador puede bloquear a quien abuse.
+const LIMITES_ON = () => process.env.LIMITES_DIARIOS !== "0" || process.env.PLUS_EXIGIDO === "1";
+const AUTORIZAR_A_MANO = process.env.AUTORIZAR_A_MANO === "1";
 const PLANES = ["basico", "plus", "fundador"];
 const planDe = (u, yo) => esAdmin(yo.email, yo.id) ? "plus" : PLANES.includes(u.plan) ? u.plan : "basico";
 function limites(u, yo){
   const plan = planDe(u, yo);
-  if (process.env.PLUS_EXIGIDO !== "1" || plan === "plus") return {ia: MAX_IA, voz: MAX_VOZ};
+  if (plan === "plus" || !LIMITES_ON()) return {ia: MAX_IA, voz: MAX_VOZ};
   if (plan === "fundador") return {ia: +process.env.LIMITE_IA_FUNDADOR || 30, voz: +process.env.LIMITE_VOZ_FUNDADOR || 15};
   return {ia: +process.env.LIMITE_IA_BASICO || 10, voz: +process.env.LIMITE_VOZ_BASICO || 5};
 }
@@ -216,7 +219,7 @@ const rutas = {
     const u = await usuarioDe(yo);
     // Cuaderna Plus: PLUS_EXIGIDO=1 en la Function App activa el cobro; mientras no, todo el mundo tiene las funciones Plus
     const lim = limites(u, yo), esHoy = u.dia === hoy();
-    return {estado: u.estado, admin: esAdmin(yo.email, yo.id), ia: hayIA(), voz: hayVoz(), plan: planDe(u, yo), plusExigido: process.env.PLUS_EXIGIDO === "1",
+    return {estado: u.estado, admin: esAdmin(yo.email, yo.id), ia: hayIA(), voz: hayVoz(), plan: planDe(u, yo), plusExigido: process.env.PLUS_EXIGIDO === "1", limitesActivos: planDe(u, yo) !== "plus" && LIMITES_ON(),
       uso: {ia: esHoy ? u.iaHoy || 0 : 0, iaMax: lim.ia, vozMin: Math.round((esHoy ? u.vozSegHoy || 0 : 0) / 60), vozMax: lim.voz},
       mensajes: u.estado === "autorizado" ? await mensajesPara(u) : []};
   },
