@@ -7,7 +7,8 @@
 // Ajustes de la Function App: ADMIN_EMAIL, AOAI_ENDPOINT, AOAI_CLAVE, AOAI_DESPLIEGUE,
 // SPEECH_CLAVE, SPEECH_REGION, ORIGENES (opcional), MAX_IA_DIA (opcional), MAX_VOZ_MIN_DIA (opcional),
 // PLUS_EXIGIDO (1 = cobrar Plus), LIMITES_DIARIOS (0 = sin límites diarios mientras no se cobre Plus), AUTORIZAR_A_MANO (1 = las personas nuevas esperan a que el administrador las autorice), LIMITE_IA_FUNDADOR / LIMITE_VOZ_FUNDADOR / LIMITE_IA_BASICO / LIMITE_VOZ_BASICO (opcionales, por día),
-// GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET (para entrar con Google: el secreto solo vive aquí).
+// GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET (para entrar con Google: el secreto solo vive aquí),
+// GOOGLE_PLAY_CUENTA (JSON de la cuenta de servicio con acceso a Play Console, tal cual o en base64: comprueba los pagos de Plus).
 const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
 const crypto = require("crypto");
@@ -83,6 +84,58 @@ const G_REDIRECCIONES = lista(process.env.GOOGLE_REDIRECTS, ["https://cuaderna.a
 const MAX_VOZ = +process.env.MAX_VOZ_MIN_DIA || 60;
 const hayIA = () => !!(process.env.AOAI_ENDPOINT && process.env.AOAI_CLAVE);
 const hayVoz = () => !!(process.env.SPEECH_CLAVE && process.env.SPEECH_REGION);
+
+// ---------- Cuaderna Plus con Google Play ----------
+const PAQUETE = "es.astillerosoftware.cuaderna", PRODUCTO_PLUS = "cuaderna_plus";
+const RX_TOKEN_PLAY = /^[A-Za-z0-9._-]{20,700}$/;
+const ESTADOS_VALIDOS = ["SUBSCRIPTION_STATE_ACTIVE", "SUBSCRIPTION_STATE_IN_GRACE_PERIOD", "SUBSCRIPTION_STATE_CANCELED"];   // cancelada = pagada hasta su fecha
+const cuentaPlay = () => {
+  let v = (process.env.GOOGLE_PLAY_CUENTA || "").trim(); if (!v) return null;
+  if (!v.startsWith("{")){ try { v = Buffer.from(v, "base64").toString("utf8"); } catch(e){ return null; } }
+  try { const j = JSON.parse(v); return j.client_email && j.private_key ? j : null; } catch(e){ return null; }
+};
+// identificador anónimo de cada cuenta para Google Play (sin nombre ni correo): así se sabe de quién es cada pago
+const cuentaAnonima = id => crypto.createHash("sha256").update("cuaderna-plus:" + id).digest("hex").slice(0, 40);
+let accesoPlayCache = null;
+async function accesoPlay(){
+  if (accesoPlayCache && accesoPlayCache.hasta > Date.now() + 60e3) return accesoPlayCache.t;
+  const c = cuentaPlay(); if (!c) throw new Error("Falta GOOGLE_PLAY_CUENTA");
+  const b64 = o => Buffer.from(JSON.stringify(o)).toString("base64url"), ahora = Math.floor(Date.now() / 1000);
+  const firmado = b64({alg: "RS256", typ: "JWT"}) + "." + b64({iss: c.client_email, scope: "https://www.googleapis.com/auth/androidpublisher", aud: "https://oauth2.googleapis.com/token", iat: ahora, exp: ahora + 3600});
+  const jwt = firmado + "." + crypto.createSign("RSA-SHA256").update(firmado).sign(c.private_key, "base64url");
+  const r = await fetch("https://oauth2.googleapis.com/token", {method: "POST", headers: {"Content-Type": "application/x-www-form-urlencoded"},
+    body: new URLSearchParams({grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: jwt}), signal: AbortSignal.timeout(15000)});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.access_token) throw new Error("Google no acepta la cuenta de servicio de Play");
+  accesoPlayCache = {t: j.access_token, hasta: Date.now() + (j.expires_in || 3600) * 1000};
+  return j.access_token;
+}
+const API_PLAY = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${PAQUETE}/purchases`;
+// Pregunta a Google Play por la suscripción («token», o la última guardada) y actualiza la cuenta. Devuelve {ok} o {error, codigo}.
+async function revisarPlus(u, token){
+  token = token || u.plusToken; if (!token) return {error: "Sin suscripción"};
+  const acceso = await accesoPlay();
+  const r = await fetch(`${API_PLAY}/subscriptionsv2/tokens/${encodeURIComponent(token)}`, {headers: {Authorization: "Bearer " + acceso}, signal: AbortSignal.timeout(15000)});
+  const t = await tabla("usuarios"), ahora = new Date().toISOString();
+  if (r.status === 404 || r.status === 410 || r.status === 400){
+    if (token === u.plusToken){ u.plusHasta = ""; u.plusRevisado = ahora; await t.updateEntity({partitionKey: "u", rowKey: u.rowKey, plusHasta: "", plusRevisado: ahora}, "Merge"); }
+    return {error: "Google Play no reconoce esta suscripción", codigo: 400};
+  }
+  if (!r.ok) return {error: `Google Play no contesta (${r.status}). Inténtalo en un rato`, codigo: 502};
+  const s = await r.json();
+  const item = (s.lineItems || []).find(x => x.productId === PRODUCTO_PLUS);
+  if (!item) return {error: "Esa suscripción no es de Cuaderna Plus", codigo: 400};
+  const dueno = s.externalAccountIdentifiers?.obfuscatedExternalAccountId;
+  if (dueno && dueno !== cuentaAnonima(u.rowKey)) return {error: "Esta suscripción se contrató con otra cuenta de Cuaderna", codigo: 409};
+  const vale = ESTADOS_VALIDOS.includes(s.subscriptionState) && Date.parse(item.expiryTime) > Date.now();
+  // Google devuelve el dinero si no se confirma la compra en 3 días: se confirma aquí, una vez comprobada
+  if (s.acknowledgementState === "ACKNOWLEDGEMENT_STATE_PENDING" && s.subscriptionState === "SUBSCRIPTION_STATE_ACTIVE"){
+    await fetch(`${API_PLAY}/subscriptions/${PRODUCTO_PLUS}/tokens/${encodeURIComponent(token)}:acknowledge`, {method: "POST", headers: {Authorization: "Bearer " + acceso, "Content-Type": "application/json"}, body: "{}", signal: AbortSignal.timeout(15000)}).catch(() => null);
+  }
+  Object.assign(u, {plusToken: token, plusHasta: vale ? item.expiryTime : "", plusBase: item.offerDetails?.basePlanId || "", plusRenueva: !!item.autoRenewingPlan?.autoRenewEnabled, plusRevisado: ahora, plusPrueba: !!s.testPurchase});
+  await t.updateEntity({partitionKey: "u", rowKey: u.rowKey, plusToken: u.plusToken, plusHasta: u.plusHasta, plusBase: u.plusBase, plusRenueva: u.plusRenueva, plusRevisado: ahora, plusPrueba: u.plusPrueba}, "Merge");
+  return vale ? {ok: true} : {error: s.subscriptionState === "SUBSCRIPTION_STATE_PENDING" ? "El pago está pendiente en Google Play: en cuanto se complete tendrás Plus" : "La suscripción ya no está activa", codigo: 402};
+}
 
 // ---------- tablas ----------
 const tablas = {};
@@ -197,7 +250,9 @@ async function usuarioDe(yo){
 const LIMITES_ON = () => process.env.LIMITES_DIARIOS !== "0" || process.env.PLUS_EXIGIDO === "1";
 const AUTORIZAR_A_MANO = process.env.AUTORIZAR_A_MANO === "1";
 const PLANES = ["basico", "plus", "fundador"];
-const planDe = (u, yo) => esAdmin(yo.email, yo.id) ? "plus" : PLANES.includes(u.plan) ? u.plan : "basico";
+// Plus pagado en Google Play: plusHasta guarda hasta cuándo está pagado (el plan de base, p. ej. «fundador», no se toca)
+const plusPagado = u => !!u.plusHasta && Date.parse(u.plusHasta) > Date.now();
+const planDe = (u, yo) => esAdmin(yo.email, yo.id) || plusPagado(u) ? "plus" : PLANES.includes(u.plan) ? u.plan : "basico";
 function limites(u, yo){
   const plan = planDe(u, yo);
   if (plan === "plus" || !LIMITES_ON()) return {ia: MAX_IA, voz: MAX_VOZ};
@@ -217,13 +272,31 @@ async function contar(u, campo, cantidad){
 const rutas = {
   async "POST registro"(request, yo){
     const u = await usuarioDe(yo);
+    // si el Plus pagado ha llegado a su fecha, se pregunta a Google Play si se ha renovado (como mucho cada 6 horas)
+    if (u.plusToken && !plusPagado(u) && Date.now() - Date.parse(u.plusRevisado || 0) > 6 * 3600e3) await revisarPlus(u).catch(() => null);
     // Cuaderna Plus: PLUS_EXIGIDO=1 en la Function App activa el cobro; mientras no, todo el mundo tiene las funciones Plus
     const lim = limites(u, yo), esHoy = u.dia === hoy();
     return {estado: u.estado, admin: esAdmin(yo.email, yo.id), ia: hayIA(), voz: hayVoz(), plan: planDe(u, yo), plusExigido: process.env.PLUS_EXIGIDO === "1", limitesActivos: planDe(u, yo) !== "plus" && LIMITES_ON(),
+      fundador: u.plan === "fundador", plusPlay: !!cuentaPlay(), cuentaPlay: cuentaAnonima(u.rowKey), plusHasta: plusPagado(u) ? u.plusHasta : "", plusRenueva: !!u.plusRenueva, plusBase: u.plusBase || "",
       uso: {ia: esHoy ? u.iaHoy || 0 : 0, iaMax: lim.ia, vozMin: Math.round((esHoy ? u.vozSegHoy || 0 : 0) / 60), vozMax: lim.voz},
       mensajes: u.estado === "autorizado" ? await mensajesPara(u) : []};
   },
   // la app avisa de que el mensaje ya es una nota en su Cuaderna («recibida»), de cuándo la abre («leida») y de cuándo la marca como hecha («hecha»)
+  // Cuaderna Plus: la app manda el justificante de Google Play y aquí se comprueba con Google antes de dar Plus
+  async "POST plus/verificar"(request, yo){
+    let e = {}; try { e = JSON.parse((await request.text()).slice(0, 2000)); } catch(err){}
+    const token = String(e.token || "");
+    if (!RX_TOKEN_PLAY.test(token)) return [{error: "Justificante no válido"}, 400];
+    if (!cuentaPlay()) return [{error: "Plus todavía no se puede comprobar. Inténtalo más tarde"}, 503];
+    const u = await usuarioDe(yo);
+    // un justificante solo vale para una cuenta de Cuaderna
+    const tc = await tabla("compras"), clave = crypto.createHash("sha256").update(token).digest("hex").slice(0, 60), previo = await leer(tc, "t", clave);
+    if (previo && previo.usuario !== u.rowKey) return [{error: "Esta suscripción ya está unida a otra cuenta de Cuaderna"}, 409];
+    const r = await revisarPlus(u, token);
+    if (r.error) return [{error: r.error}, r.codigo || 400];
+    if (!previo) await tc.upsertEntity({partitionKey: "t", rowKey: clave, usuario: u.rowKey, creado: new Date().toISOString()});
+    return {plan: planDe(u, yo), plusHasta: plusPagado(u) ? u.plusHasta : "", plusRenueva: !!u.plusRenueva, plusBase: u.plusBase || ""};
+  },
   async "POST mensaje/estado"(request, yo){
     let e = {}; try { e = JSON.parse((await request.text()).slice(0, 600)); } catch(err){}
     const id = String(e.id || "");
@@ -375,7 +448,7 @@ const rutas = {
   async "GET admin/usuarios"(request, yo){
     soloAdmin(yo);
     const t = await tabla("usuarios"), lista = [];
-    for await (const u of t.listEntities()) lista.push({id: u.rowKey, email: u.email, nombre: u.nombre, estado: u.estado, plan: PLANES.includes(u.plan) ? u.plan : "basico", creado: u.creado, ultimo: u.ultimo, iaHoy: u.dia === hoy() ? u.iaHoy || 0 : 0, iaTotal: u.iaTotal || 0, vozMinTotal: Math.round((u.vozSegTotal || 0) / 60)});
+    for await (const u of t.listEntities()) lista.push({id: u.rowKey, email: u.email, nombre: u.nombre, estado: u.estado, plan: PLANES.includes(u.plan) ? u.plan : "basico", creado: u.creado, ultimo: u.ultimo, iaHoy: u.dia === hoy() ? u.iaHoy || 0 : 0, iaTotal: u.iaTotal || 0, vozMinTotal: Math.round((u.vozSegTotal || 0) / 60), plusHasta: plusPagado(u) ? u.plusHasta : "", plusRenueva: !!u.plusRenueva});
     lista.sort((a, b) => (a.estado === "pendiente" ? 0 : 1) - (b.estado === "pendiente" ? 0 : 1) || String(b.creado).localeCompare(a.creado));
     return {usuarios: lista};
   },
