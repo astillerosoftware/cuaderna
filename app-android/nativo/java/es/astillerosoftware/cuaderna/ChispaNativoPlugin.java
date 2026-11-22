@@ -280,6 +280,23 @@ public class ChispaNativoPlugin extends Plugin {
         }
     }
 
+    // ---------------------------------------------------------------- Cuaderna Plus (Google Play)
+
+    /** Planes de Plus con sus precios de Google Play. */
+    @PluginMethod
+    public void plusPlanes(PluginCall call) { Compras.planes(getContext(), call); }
+
+    /** Abre el pago de Google Play para un plan («token» de plusPlanes) y devuelve el justificante. */
+    @PluginMethod
+    public void plusComprar(PluginCall call) {
+        if (getActivity() == null) { call.reject("La app no está abierta"); return; }
+        Compras.comprar(getActivity(), call);
+    }
+
+    /** Suscripciones de Plus que ya tiene esta cuenta de Google Play. */
+    @PluginMethod
+    public void plusCompras(PluginCall call) { Compras.compras(getContext(), call); }
+
     // ---------------------------------------------------------------- resumen por correo
 
     @PluginMethod

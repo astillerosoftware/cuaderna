@@ -97,6 +97,8 @@ cambiar(gradle, g => {
     }
     buildTypes {`);
   g = g.replace(/buildTypes\s*\{\s*release\s*\{/, m0 => m0 + "\n            signingConfig = signingConfigs.release");
+  // Google Play Billing, para contratar Cuaderna Plus desde la app
+  g = g.replace(/dependencies\s*\{/, m0 => m0 + '\n    implementation "com.android.billingclient:billing:8.0.0"');
   return g;
 });
 
