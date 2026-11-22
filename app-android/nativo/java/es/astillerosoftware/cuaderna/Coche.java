@@ -40,7 +40,7 @@ final class Coche {
         final AtomicBoolean conectado = new AtomicBoolean(false), cerrado = new AtomicBoolean(false);
         final Runnable decidir = () -> {
             if (cerrado.getAndSet(true)) return;
-            if (conectado.get()) programar(app); else Ajustes.ponerEnCoche(app, false);
+            if (conectado.get()) programar(app); else Ajustes.bajarDelCoche(app);
             acabar.run();
         };
         BluetoothProfile.ServiceListener oyente = new BluetoothProfile.ServiceListener() {

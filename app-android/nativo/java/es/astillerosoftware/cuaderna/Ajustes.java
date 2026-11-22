@@ -19,11 +19,15 @@ final class Ajustes {
     static final String COCHE_DIR = "coche_dir";
     static final String COCHE_NOMBRE = "coche_nombre";
     static final String EN_COCHE = "en_coche";
+    static final String FUERA = "fuera";            // títulos de lo pendiente «Fuera» (JSON), solo en este móvil
+    static final String FUERA_AVISADO = "fuera_avisado";
 
     static final String CANAL_LLAMADAS = "chispa_llamadas";
     static final String CANAL_COCHE = "chispa_coche";
+    static final String CANAL_FUERA = "chispa_fuera";
     static final int ID_LLAMADA = 7001;
     static final int ID_COCHE = 7002;
+    static final int ID_FUERA = 7003;
 
     private Ajustes() {}
 
@@ -56,6 +60,9 @@ final class Ajustes {
             c.setDescription("Botón de grabar mientras vas en el coche");
             c.setShowBadge(false);
             nm.createNotificationChannel(c);
+            NotificationChannel f = new NotificationChannel(CANAL_FUERA, "Al bajar del coche", NotificationManager.IMPORTANCE_DEFAULT);
+            f.setDescription("Te recuerda lo que tienes pendiente fuera al desconectarte del coche");
+            nm.createNotificationChannel(f);
         }
         return nm;
     }
@@ -104,6 +111,44 @@ final class Ajustes {
             Coche.cancelar(ctx);
         }
         ChispaWidget.actualizar(ctx);
+    }
+
+    /** El móvil se ha desconectado del coche: sale del modo coche y recuerda lo pendiente «Fuera». */
+    static void bajarDelCoche(Context ctx) {
+        ponerEnCoche(ctx, false);
+        // una vez cada 15 minutos como mucho (paradas cortas, cortes del Bluetooth)
+        long ahora = System.currentTimeMillis(), antes = prefs(ctx).getLong(FUERA_AVISADO, 0);
+        if (ahora - antes < 15 * 60 * 1000L) return;
+        if (avisoFuera(ctx)) prefs(ctx).edit().putLong(FUERA_AVISADO, ahora).apply();
+    }
+
+    /** Aviso con lo pendiente «Fuera». Devuelve false si no hay nada que recordar. */
+    static boolean avisoFuera(Context ctx) {
+        java.util.List<String> tareas = new java.util.ArrayList<>();
+        int total = 0;
+        try {
+            org.json.JSONObject o = new org.json.JSONObject(prefs(ctx).getString(FUERA, "{}"));
+            org.json.JSONArray l = o.optJSONArray("tareas");
+            if (l != null) for (int i = 0; i < l.length(); i++) tareas.add(l.optString(i));
+            total = Math.max(o.optInt("total", 0), tareas.size());
+        } catch (Exception e) { return false; }
+        if (total == 0) return false;
+        String titulo = total == 1 ? "Al bajar del coche: tienes 1 cosa fuera" : "Al bajar del coche: tienes " + total + " cosas fuera";
+        NotificationCompat.InboxStyle estilo = new NotificationCompat.InboxStyle().setBigContentTitle(titulo);
+        for (String t : tareas) estilo.addLine("• " + t);
+        if (total > tareas.size()) estilo.setSummaryText("y " + (total - tareas.size()) + " más");
+        NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, CANAL_FUERA)
+                .setSmallIcon(R.drawable.ic_stat_chispa)
+                .setColor(0xFFA8322D)
+                .setContentTitle(titulo)
+                .setContentText(tareas.isEmpty() ? "Toca para verlas" : String.join(" · ", tareas))
+                .setStyle(estilo)
+                .setCategory(NotificationCompat.CATEGORY_REMINDER)
+                .setAutoCancel(true)
+                .setTimeoutAfter(60 * 60 * 1000L)
+                .setContentIntent(abrir(ctx, 301, "fuera", null, null));
+        publicar(ctx, ID_FUERA, b.build());
+        return true;
     }
 
     private static void publicar(Context ctx, int id, Notification n) {

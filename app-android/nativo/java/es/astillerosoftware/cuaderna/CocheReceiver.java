@@ -30,6 +30,7 @@ public class CocheReceiver extends BroadcastReceiver {
             if (!conecta && Ajustes.enCoche(ctx)) { PendingResult pr = goAsync(); Coche.comprobar(ctx, pr::finish); }
             return;
         }
-        if (conecta != Ajustes.enCoche(ctx)) Ajustes.ponerEnCoche(ctx, conecta);
+        if (conecta && !Ajustes.enCoche(ctx)) Ajustes.ponerEnCoche(ctx, true);
+        else if (!conecta && Ajustes.enCoche(ctx)) Ajustes.bajarDelCoche(ctx);
     }
 }

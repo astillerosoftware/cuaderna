@@ -185,6 +185,7 @@ public class ChispaNativoPlugin extends Plugin {
         r.put("cocheDir", p.getString(Ajustes.COCHE_DIR, ""));
         r.put("cocheNombre", p.getString(Ajustes.COCHE_NOMBRE, ""));
         r.put("enCoche", Ajustes.enCoche(getContext()));
+        r.put("avisoFuera", true);
         r.put("permisoLlamadas", permiso("llamadas"));
         r.put("permisoBluetooth", permiso("bluetooth"));
         r.put("permisoContactos", permiso("contactos"));
@@ -278,6 +279,29 @@ public class ChispaNativoPlugin extends Plugin {
         } catch (Exception e) {
             call.reject("No se pudo abrir el enlace");
         }
+    }
+
+    /** Guarda en el móvil lo pendiente «Fuera» (títulos y total) para avisar al bajar del coche. */
+    @PluginMethod
+    public void guardarFuera(PluginCall call) {
+        org.json.JSONObject o = new org.json.JSONObject();
+        try {
+            JSArray l = call.getArray("tareas", new JSArray());
+            org.json.JSONArray t = new org.json.JSONArray();
+            for (int i = 0; i < Math.min(l.length(), 6); i++) { String s = l.optString(i, ""); t.put(s.length() > 80 ? s.substring(0, 80) : s); }
+            o.put("tareas", t);
+            o.put("total", Math.max(0, call.getInt("total", t.length())));
+        } catch (Exception e) { call.reject("Datos no válidos"); return; }
+        Ajustes.prefs(getContext()).edit().putString(Ajustes.FUERA, o.toString()).apply();
+        call.resolve();
+    }
+
+    /** Muestra el aviso de «al bajar del coche» para probarlo. */
+    @PluginMethod
+    public void probarFuera(PluginCall call) {
+        JSObject r = new JSObject();
+        r.put("aviso", Ajustes.avisoFuera(getContext()));
+        call.resolve(r);
     }
 
     // ---------------------------------------------------------------- Cuaderna Plus (Google Play)
