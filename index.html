@@ -333,7 +333,7 @@ textarea.crece{resize:none;overflow:hidden;display:block;white-space:pre-wrap;wo
 .galeria .x svg{width:15px;height:15px}
 .galeria .anotar{position:absolute;left:6px;bottom:6px;height:28px;padding:0 9px;border-radius:10px;background:rgba(10,15,28,.62);color:#fff;display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;backdrop-filter:blur(6px)}
 .galeria .anotar svg{width:14px;height:14px}
-.h4-b{display:inline-flex;gap:14px;margin-left:auto}
+.h4-b{display:inline-flex;flex-wrap:wrap;justify-content:flex-end;gap:6px 12px;margin-left:auto}
 .galeria .add{width:118px;height:118px;border-radius:16px;border:1.5px dashed var(--line);color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:13px;flex:none}
 .player{display:flex;align-items:center;gap:12px;background:var(--raise);border-radius:16px;padding:10px 12px;margin-top:10px}
 .player .pp{width:40px;height:40px;border-radius:50%;background:var(--ink);color:var(--on-ink);display:grid;place-items:center;flex:none}
@@ -916,6 +916,7 @@ a.firma-side,a.firma-login{color:var(--faint)}a.autoria{color:var(--muted)}.firm
 .ayuda-pant .ap-cab{display:flex;align-items:center;gap:12px}.ayuda-pant .ap-cab>div{flex:1}.ayuda-pant .ap-cab small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}.ayuda-pant h3{margin:0}.ap-ic{width:40px;height:40px;border-radius:12px;background:var(--raise);display:inline-flex;align-items:center;justify-content:center;color:#A8322D}.ap-ic svg{width:22px;height:22px}
 .ap-intro{margin:0;color:var(--text)}.ap-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}.ap-lista li{display:flex;gap:10px;align-items:flex-start}.ap-lista li>svg{width:18px;height:18px;flex:none;margin-top:2px;color:#A8322D}.ap-lista span{display:flex;flex-direction:column}.ap-lista small{color:var(--muted);font-size:13.5px;line-height:1.4}
 .ap-trucos{background:var(--raise);border-radius:12px;padding:8px 12px}.ap-trucos p{display:flex;gap:8px;margin:6px 0;font-size:13.5px}.ap-trucos svg{width:16px;height:16px;flex:none;margin-top:2px;color:#c78a14}.ayuda-pant .on-pie{flex-wrap:wrap}
+.vz-caja{text-align:center}.vz-caja h3{display:flex;align-items:center;justify-content:center;gap:10px}.vz-punto{width:12px;height:12px;border-radius:50%;background:#C2412D;animation:vzlate 1s infinite}@keyframes vzlate{50%{opacity:.25}}.vz-t{font:700 40px/1 Georgia,serif;margin:6px 0}.vz-ayuda{color:var(--muted);font-size:14px}
 .sig-paso{display:flex;align-items:center;gap:10px;width:100%;margin:8px 0 4px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--raise);text-align:left;color:inherit;font:inherit;cursor:pointer}.sig-paso>svg{width:18px;height:18px;color:#A8322D;flex:none}.sig-paso>span{display:flex;flex-direction:column;flex:1;min-width:0}.sig-paso small{color:var(--muted);font-size:12px}.sig-paso b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sig-paso.vacio{cursor:default;border-style:dashed}.sig-paso input{border:0;background:transparent;font:inherit;padding:2px 0;color:inherit;min-width:0}.sig-paso input:focus{outline:none}
 .rp-caja h3{margin:6px 0 2px}.rp-txt{color:var(--muted);font-size:14px;margin:0 0 10px}.rp-ok{display:flex;align-items:center;gap:8px;color:#3d7a4a;font-weight:600}.rp-ok svg{width:18px;height:18px}
 .rp-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:48vh;overflow:auto}.rp-fila,.rp-lib{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:12px;background:var(--raise)}.rp-nota{flex:1;min-width:140px;display:flex;flex-direction:column;text-align:left;background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer}.rp-nota small{color:var(--muted);font-size:12px}.rp-acc{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.rp-acc em{font-style:normal;font-size:12px;color:var(--muted)}.rp-acc em.rp-venc{color:#C2412D;font-weight:700}.rp-lib-n{display:flex;align-items:center;gap:6px;font-weight:700;color:var(--lib)}.rp-lib-n svg{width:16px;height:16px}.rp-paso{display:flex;gap:6px;flex:1;min-width:200px}.rp-paso input{flex:1;min-width:0;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:inherit;font:inherit}
@@ -1094,7 +1095,7 @@ a.firma-side,a.firma-login{color:var(--faint)}a.autoria{color:var(--muted)}.firm
       <div id="eHechos"></div>
     </section>
     <section class="esec">
-      <h4>Adjuntos<span class="h4-b"><button class="enl" id="eAddDibujo"></button><button class="enl" id="eAddFoto"></button><button class="enl" id="eAddArch"></button></span></h4>
+      <h4>Adjuntos<span class="h4-b"><button class="enl" id="eAddDibujo"></button><button class="enl" id="eAddFoto"></button><button class="enl" id="eAddVoz" type="button"></button><button class="enl" id="eAddArch"></button></span></h4>
       <div id="eAudio"></div>
       <div class="galeria" id="eFotos"></div>
       <div class="archs" id="eArchs"></div>
@@ -1369,6 +1370,6 @@ a.firma-side,a.firma-login{color:var(--faint)}a.autoria{color:var(--muted)}.firm
 
 <script src="arranque.js"></script>
 <script src="servidor.js"></script>
-<script src="app.js?v=0.55.4"></script>
+<script src="app.js?v=0.56"></script>
 </body>
 </html>
